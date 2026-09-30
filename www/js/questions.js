@@ -34,9 +34,9 @@ const QUESTIONS = {
   ]
 };
 
-// Etichette mostrate sui bottoni della home
-const SUBJECT_LABELS = {
-  matematica: "Matematica",
-  italiano: "Italiano",
-  inglese: "Inglese"
+// Aspetto delle materie nella home: nome, icona, colore, sottotitolo
+const SUBJECT_META = {
+  matematica: { label: "Matematica", icon: "🔢", color: "#3b82f6", sub: "Conti e problemi" },
+  italiano:   { label: "Italiano",   icon: "📖", color: "#f97316", sub: "Parole e grammatica" },
+  inglese:    { label: "Inglese",    icon: "🇬🇧", color: "#10b981", sub: "Words & phrases" }
 };

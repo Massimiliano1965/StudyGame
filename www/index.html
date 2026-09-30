@@ -4,58 +4,81 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
-  <title>Studia e Gioca</title>
+  <title>StudyGame</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-  <!-- HUD credito: visibile in home e quiz -->
+  <!-- HUD credito -->
   <header id="hud">
-    <div class="hud-row">
-      <span>Credito</span>
-      <strong><span data-credit>0</span> / <span data-target>60</span> min</strong>
+    <div class="hud-card">
+      <div class="hud-left">
+        <span class="hud-label">Il tuo tempo</span>
+        <span class="hud-value"><span data-credit>0</span><small> min</small></span>
+      </div>
+      <div class="hud-right">
+        <span class="hud-label">Obiettivo</span>
+        <span class="hud-goal">🏆 <span data-target>60</span></span>
+      </div>
     </div>
     <div class="bar"><div class="bar-fill"></div></div>
+    <p class="hud-hint" id="hud-hint"></p>
   </header>
 
-  <!-- HOME: scelta materia -->
+  <!-- HOME -->
   <section id="scr-home" class="screen" hidden>
-    <h1>Scegli la materia</h1>
-    <p class="muted">Risposta giusta: guadagni minuti. Sbagliata: ne perdi qualcuno.</p>
-    <div id="subjects" class="stack"></div>
+    <h1 class="title">Cosa studiamo oggi?</h1>
+    <div id="subjects" class="tiles"></div>
+    <div class="rules">
+      <span class="pill pill-ok">✓ giusta +5</span>
+      <span class="pill pill-ko">✗ sbagliata −2</span>
+    </div>
   </section>
 
   <!-- QUIZ -->
   <section id="scr-quiz" class="screen" hidden>
     <div class="quiz-top">
+      <button id="btn-exit" class="back">←</button>
       <span id="quiz-subject" class="tag"></span>
-      <button id="btn-exit" class="link">Esci</button>
+      <span id="streak" class="streak"></span>
     </div>
-    <h2 id="quiz-text"></h2>
-    <div id="quiz-options" class="stack"></div>
-    <p id="quiz-feedback" class="feedback"></p>
+    <div class="q-card">
+      <h2 id="quiz-text"></h2>
+    </div>
+    <div id="quiz-options" class="options"></div>
+    <div id="quiz-feedback" class="feedback"></div>
   </section>
 
   <!-- VITTORIA -->
-  <section id="scr-win" class="screen center" hidden>
-    <p class="big">🏆</p>
-    <h1>Obiettivo raggiunto!</h1>
-    <p class="muted">Hai guadagnato <strong><span data-credit>0</span> minuti</strong> di gioco.</p>
-    <button id="btn-premio" class="btn primary">Premio OK</button>
+  <section id="scr-win" class="screen full win" hidden>
+    <div class="confetti" aria-hidden="true"></div>
+    <div class="trophy">🏆</div>
+    <h1>Ce l'hai fatta!</h1>
+    <p class="win-sub">Hai guadagnato</p>
+    <p class="win-min"><span data-credit>0</span> minuti</p>
+    <p class="win-sub">di gioco</p>
+    <button id="btn-premio" class="btn-big">Premio OK 🎮</button>
   </section>
 
   <!-- TEMPO DI GIOCO -->
-  <section id="scr-play" class="screen center" hidden>
-    <p class="muted">Tempo di gioco rimasto</p>
-    <p id="countdown" class="countdown">00:00</p>
-    <p class="muted">Puoi usare il telefono. Quando il tempo finisce si torna a studiare.</p>
+  <section id="scr-play" class="screen full play" hidden>
+    <p class="play-label">Tempo di gioco</p>
+    <div class="ring">
+      <svg viewBox="0 0 200 200">
+        <circle class="ring-bg" cx="100" cy="100" r="88"/>
+        <circle class="ring-fg" id="ring-fg" cx="100" cy="100" r="88"/>
+      </svg>
+      <p id="countdown" class="countdown">00:00</p>
+    </div>
+    <p class="play-sub">Divertiti! Quando finisce si torna a studiare.</p>
   </section>
 
   <!-- FINE TEMPO -->
-  <section id="scr-end" class="screen center" hidden>
-    <h1>Tempo finito</h1>
-    <p class="muted">Domani riparti con il bonus iniziale.</p>
-    <button id="btn-restart" class="btn primary">Torna a studiare</button>
+  <section id="scr-end" class="screen full end" hidden>
+    <div class="trophy">⏰</div>
+    <h1>Tempo finito!</h1>
+    <p class="win-sub">Rispondi a nuove domande per guadagnare altro tempo.</p>
+    <button id="btn-restart" class="btn-big">Torna a studiare 📚</button>
   </section>
 
   <script src="cordova.js"></script>
