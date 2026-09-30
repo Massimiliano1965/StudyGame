@@ -1,0 +1,10 @@
+{
+  "name": "it.massi.studygame",
+  "displayName": "StudyGame",
+  "version": "1.0.0",
+  "private": true,
+  "cordova": {
+    "platforms": [],
+    "plugins": {}
+  }
+}

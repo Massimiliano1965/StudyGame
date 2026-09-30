@@ -1,0 +1,61 @@
+/* ===== Variabili: cambia qui colori e forme ===== */
+:root {
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --accent: #2563eb;
+  --ok: #16a34a;
+  --ko: #dc2626;
+  --radius: 12px;
+  --gap: 12px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+h1 { font-size: 1.5rem; margin-bottom: 8px; }
+h2 { font-size: 1.25rem; margin: 16px 0; line-height: 1.4; }
+.muted { color: var(--muted); margin-bottom: 16px; }
+.stack { display: flex; flex-direction: column; gap: var(--gap); }
+.center { text-align: center; padding-top: 15vh; }
+.big { font-size: 4rem; margin-bottom: 8px; }
+
+/* HUD */
+#hud { padding: 16px 0; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+.hud-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar-fill { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+
+/* Bottoni */
+.btn {
+  display: block; width: 100%;
+  padding: 16px; font-size: 1.05rem; text-align: left;
+  background: var(--bg); color: var(--fg);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  cursor: pointer;
+}
+.btn:active { background: var(--line); }
+.btn.primary { background: var(--accent); color: #fff; border: 0; text-align: center; }
+.btn.correct { border-color: var(--ok); background: #f0fdf4; }
+.btn.wrong   { border-color: var(--ko); background: #fef2f2; }
+.btn:disabled { opacity: 1; }
+.link { background: none; border: 0; color: var(--muted); font-size: 1rem; }
+
+/* Quiz */
+.quiz-top { display: flex; justify-content: space-between; align-items: center; }
+.tag { font-size: .85rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 99px; }
+.feedback { min-height: 1.5em; margin-top: 16px; font-weight: 600; }
+.feedback.ok { color: var(--ok); }
+.feedback.ko { color: var(--ko); }
+
+/* Countdown */
+.countdown { font-size: 4rem; font-variant-numeric: tabular-nums; margin: 16px 0; }

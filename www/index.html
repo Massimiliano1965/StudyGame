@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+  <title>Studia e Gioca</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- HUD credito: visibile in home e quiz -->
+  <header id="hud">
+    <div class="hud-row">
+      <span>Credito</span>
+      <strong><span data-credit>0</span> / <span data-target>60</span> min</strong>
+    </div>
+    <div class="bar"><div class="bar-fill"></div></div>
+  </header>
+
+  <!-- HOME: scelta materia -->
+  <section id="scr-home" class="screen" hidden>
+    <h1>Scegli la materia</h1>
+    <p class="muted">Risposta giusta: guadagni minuti. Sbagliata: ne perdi qualcuno.</p>
+    <div id="subjects" class="stack"></div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="scr-quiz" class="screen" hidden>
+    <div class="quiz-top">
+      <span id="quiz-subject" class="tag"></span>
+      <button id="btn-exit" class="link">Esci</button>
+    </div>
+    <h2 id="quiz-text"></h2>
+    <div id="quiz-options" class="stack"></div>
+    <p id="quiz-feedback" class="feedback"></p>
+  </section>
+
+  <!-- VITTORIA -->
+  <section id="scr-win" class="screen center" hidden>
+    <p class="big">🏆</p>
+    <h1>Obiettivo raggiunto!</h1>
+    <p class="muted">Hai guadagnato <strong><span data-credit>0</span> minuti</strong> di gioco.</p>
+    <button id="btn-premio" class="btn primary">Premio OK</button>
+  </section>
+
+  <!-- TEMPO DI GIOCO -->
+  <section id="scr-play" class="screen center" hidden>
+    <p class="muted">Tempo di gioco rimasto</p>
+    <p id="countdown" class="countdown">00:00</p>
+    <p class="muted">Puoi usare il telefono. Quando il tempo finisce si torna a studiare.</p>
+  </section>
+
+  <!-- FINE TEMPO -->
+  <section id="scr-end" class="screen center" hidden>
+    <h1>Tempo finito</h1>
+    <p class="muted">Domani riparti con il bonus iniziale.</p>
+    <button id="btn-restart" class="btn primary">Torna a studiare</button>
+  </section>
+
+  <script src="cordova.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/questions.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/credit.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/lock.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
