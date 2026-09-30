@@ -1,7 +1,9 @@
 // ===== Gestione domande: estrazione senza ripetizioni =====
+// subject = chiave materia oppure "all" per tutte le materie mescolate
 const Quiz = (() => {
-  let subject = null;
+  let subject = "all";
   let pool = [];
+  let count = 0;
 
   function shuffle(arr) {
     const a = arr.slice();
@@ -12,24 +14,30 @@ const Quiz = (() => {
     return a;
   }
 
-  function start(subj) {
-    subject = subj;
-    pool = shuffle(QUESTIONS[subj]);
+  function source() {
+    const keys = subject === "all" ? Object.keys(QUESTIONS) : [subject];
+    return keys.flatMap(k => QUESTIONS[k].map(q => ({ ...q, subject: k })));
   }
 
-  // Ritorna la prossima domanda con opzioni mescolate
+  function start(subj) {
+    subject = subj;
+    pool = shuffle(source());
+    count = 0;
+  }
+
+  // Prossima domanda con opzioni mescolate
   function next() {
-    if (pool.length === 0) pool = shuffle(QUESTIONS[subject]); // ricomincia il giro
+    if (pool.length === 0) pool = shuffle(source());
     const q = pool.pop();
     const order = shuffle(q.a.map((_, i) => i));
+    count++;
     return {
       ...q,
+      number: count,
       options: order.map(i => q.a[i]),
       correctIndex: order.indexOf(q.c)
     };
   }
 
-  const currentSubject = () => subject;
-
-  return { start, next, currentSubject };
+  return { start, next };
 })();

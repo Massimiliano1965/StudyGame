@@ -2,176 +2,152 @@
 (() => {
   const $ = sel => document.querySelector(sel);
   const $$ = sel => document.querySelectorAll(sel);
-  const RING_LEN = 553; // circonferenza anello countdown (2π·88)
   let state;
-  let busy = false;   // evita doppi tap durante il feedback
-  let streak = 0;     // risposte giuste di fila
-  let playTotalMs = 0;
+  let answered = false;   // evita doppi tap dopo la risposta
+  let subject = "all";    // materia selezionata
 
-  const meta = key => SUBJECT_META[key] || { label: key, icon: "📝", color: "#7c3aed", sub: "" };
+  const meta = key => SUBJECT_META[key] || { label: key, icon: "fa-pen", color: "#4f46e5" };
 
-  // ---------- Navigazione ----------
-  function show(id) {
-    $$(".screen").forEach(s => (s.hidden = s.id !== id));
-    $("#hud").hidden = !(id === "scr-home" || id === "scr-quiz");
+  // ---------- Viste ----------
+  function showView(id) {
+    ["view-quiz", "view-play", "view-end"].forEach(v => ($("#" + v).hidden = v !== id));
+    window.scrollTo(0, 0);
   }
 
-  // ---------- HUD ----------
+  // ---------- Credito e barra ----------
   function renderCredit(credit) {
     $$("[data-credit]").forEach(el => (el.textContent = credit));
     $$("[data-target]").forEach(el => (el.textContent = CONFIG.TARGET));
-    $(".bar-fill").style.width = Credit.progress() * 100 + "%";
+    const pct = Math.round(Credit.progress() * 100);
+    $("#progress-fill").style.width = pct + "%";
+    $("#progress-pct").textContent = pct + "%";
     const left = CONFIG.TARGET - credit;
-    $("#hud-hint").textContent = left > 0
-      ? `Ancora ${left} minuti al premio!`
-      : "Premio sbloccato!";
+    $("#progress-hint").textContent = left > 0 ? `Mancano ${left} min al premio` : "Premio sbloccato!";
   }
 
-  function bumpHud() {
-    const c = $(".hud-card");
-    c.classList.remove("bump");
+  function animateCard(ok) {
+    const c = $("#credit-card");
+    c.classList.remove("pulse", "shake");
     void c.offsetWidth; // riavvia l'animazione
-    c.classList.add("bump");
+    c.classList.add(ok ? "pulse" : "shake");
   }
 
-  // ---------- Home ----------
-  function renderHome() {
-    const box = $("#subjects");
+  // ---------- Schede materie ----------
+  function renderTabs() {
+    const tabs = [{ key: "all", label: "Tutte", icon: "fa-layer-group", color: null }]
+      .concat(Object.keys(QUESTIONS).map(k => ({ key: k, ...meta(k) })));
+    const box = $("#tabs");
     box.innerHTML = "";
-    Object.keys(QUESTIONS).forEach(key => {
-      const m = meta(key);
+    tabs.forEach(t => {
       const b = document.createElement("button");
-      b.className = "tile";
-      b.innerHTML = `
-        <span class="tile-icon" style="background:${m.color}22">${m.icon}</span>
-        <span>
-          <span class="tile-name" style="color:${m.color}">${m.label}</span><br>
-          <span class="tile-sub">${m.sub}</span>
-        </span>
-        <span class="tile-arrow">›</span>`;
-      b.onclick = () => openQuiz(key);
+      b.className = "tab" + (t.key === subject ? " active" : "");
+      b.innerHTML = `<i class="fa-solid ${t.icon}"${t.color ? ` style="color:${t.color}"` : ""}></i> ${t.label}`;
+      b.onclick = () => selectSubject(t.key);
       box.appendChild(b);
     });
-    $(".pill-ok").textContent = `✓ giusta +${CONFIG.BONUS}`;
-    $(".pill-ko").textContent = `✗ sbagliata −${CONFIG.MALUS}`;
-    show("scr-home");
   }
 
-  // ---------- Quiz ----------
-  function openQuiz(subject) {
-    const m = meta(subject);
+  function selectSubject(key) {
+    if (answered) return; // non cambia materia mentre si legge la spiegazione
+    subject = key;
+    renderTabs();
     Quiz.start(subject);
-    streak = 0;
-    renderStreak();
-    const tag = $("#quiz-subject");
-    tag.textContent = `${m.icon} ${m.label}`;
-    tag.style.background = m.color;
     nextQuestion();
-    show("scr-quiz");
   }
 
-  function renderStreak() {
-    $("#streak").textContent = streak >= 2 ? `🔥 ${streak}` : "";
-  }
-
+  // ---------- Domande ----------
   function nextQuestion() {
+    answered = false;
     const q = Quiz.next();
-    $("#quiz-text").textContent = q.q;
-    const fb = $("#quiz-feedback");
-    fb.textContent = "";
-    fb.className = "feedback";
+    const m = meta(q.subject);
 
-    const box = $("#quiz-options");
-    box.innerHTML = "";
+    const box = $("#quiz-box");
+    box.style.animation = "none"; void box.offsetWidth; box.style.animation = "";
+
+    const cat = $("#q-cat");
+    cat.textContent = m.label;
+    cat.style.color = m.color;
+    cat.style.background = m.color + "1a";
+    $("#q-num").textContent = `Domanda #${q.number}`;
+    $("#q-text").textContent = q.q;
+    $("#feedback").hidden = true;
+
+    const opts = $("#options");
+    opts.innerHTML = "";
     q.options.forEach((text, i) => {
       const b = document.createElement("button");
       b.className = "opt";
-      b.innerHTML = `<span class="opt-letter">${"ABCD"[i]}</span><span></span><span class="opt-mark"></span>`;
-      b.children[1].textContent = text;
-      b.onclick = () => handleAnswer(q, i);
-      box.appendChild(b);
+      b.innerHTML = `<span></span><i class="fa-regular fa-circle"></i>`;
+      b.firstChild.textContent = text;
+      b.onclick = () => answer(q, i);
+      opts.appendChild(b);
     });
-    busy = false;
   }
 
-  function handleAnswer(q, i) {
-    if (busy) return;
-    busy = true;
+  function answer(q, i) {
+    if (answered) return;
+    answered = true;
 
     const ok = i === q.correctIndex;
     const res = Credit.answer(ok, q);
-    const buttons = [...$("#quiz-options").children];
 
-    // Segni visivi (non solo colore): ✓ sulla giusta, ✗ sulla scelta sbagliata
-    buttons.forEach((b, idx) => {
+    // Evidenzia: icona ✓/✗ oltre al colore
+    [...$("#options").children].forEach((b, idx) => {
+      const icon = b.querySelector("i");
       if (idx === q.correctIndex) {
         b.classList.add("correct");
-        b.querySelector(".opt-mark").textContent = "✓";
+        icon.className = "fa-solid fa-circle-check";
       } else if (idx === i) {
         b.classList.add("wrong");
-        b.querySelector(".opt-mark").textContent = "✗";
+        icon.className = "fa-solid fa-circle-xmark";
       } else {
         b.classList.add("dim");
       }
     });
 
-    streak = ok ? streak + 1 : 0;
-    renderStreak();
-    bumpHud();
-
-    const fb = $("#quiz-feedback");
-    fb.className = "feedback " + (ok ? "ok" : "ko");
-    fb.textContent = ok
-      ? `🎉 Bravo! +${res.delta} min`
-      : (res.delta < 0 ? `😬 Ops! ${res.delta} min` : "😬 Ops! Riprova");
+    animateCard(ok);
     if (!ok && navigator.vibrate) navigator.vibrate(150);
 
-    setTimeout(() => (res.reached ? showWin() : nextQuestion()), CONFIG.FEEDBACK_MS);
+    const fb = $("#feedback");
+    fb.className = "feedback " + (ok ? "ok" : "ko");
+    $("#fb-icon").className = "fb-icon fa-solid " + (ok ? "fa-circle-check" : "fa-circle-xmark");
+    $("#fb-title").textContent = ok
+      ? `Risposta corretta! (+${res.delta} min)`
+      : `Risposta sbagliata (${res.delta < 0 ? res.delta : "−0"} min)`;
+    $("#fb-text").textContent = q.e || "";
+    fb.hidden = false;
+
+    if (res.reached) setTimeout(showWin, 900);
   }
 
-  // ---------- Vittoria ----------
-  function makeConfetti() {
-    const box = $(".confetti");
-    box.innerHTML = "";
-    const colors = ["#fde047", "#fff", "#34d399", "#60a5fa", "#f472b6"];
-    for (let i = 0; i < 40; i++) {
-      const c = document.createElement("i");
-      c.style.left = Math.random() * 100 + "%";
-      c.style.background = colors[i % colors.length];
-      c.style.animationDuration = 2.5 + Math.random() * 3 + "s";
-      c.style.animationDelay = -Math.random() * 5 + "s";
-      box.appendChild(c);
-    }
-  }
-
+  // ---------- Premio ----------
   function showWin() {
     state.phase = "win";
     Storage.save(state);
-    makeConfetti();
-    show("scr-win");
+    $("#modal-win").hidden = false;
     if (navigator.vibrate) navigator.vibrate([100, 80, 100, 80, 300]);
   }
 
-  // ---------- Gioco (countdown) ----------
+  // ---------- Gioco (countdown, senza pausa) ----------
   function startPlay() {
     const minutes = state.credit;
     state.phase = "play";
-    state.playEndsAt = Date.now() + minutes * 60 * 1000;
     state.playTotalMs = minutes * 60 * 1000;
+    state.playEndsAt = Date.now() + state.playTotalMs;
     Storage.save(state);
+    $("#modal-win").hidden = true;
     Lock.unlock(minutes);
     runCountdown();
   }
 
   function runCountdown() {
-    show("scr-play");
-    playTotalMs = state.playTotalMs || Math.max(1, state.playEndsAt - Date.now());
-    const ring = $("#ring-fg");
+    showView("view-play");
+    const total = state.playTotalMs || Math.max(1, state.playEndsAt - Date.now());
     Timer.start(
       state.playEndsAt,
       left => {
         $("#countdown").textContent = Timer.format(left);
-        ring.style.strokeDashoffset = RING_LEN * (1 - left / playTotalMs);
+        $("#play-fill").style.width = (left / total) * 100 + "%";
       },
       endPlay
     );
@@ -185,44 +161,51 @@
     Storage.save(state);
     renderCredit(0);
     if (navigator.vibrate) navigator.vibrate([400, 200, 400]);
-    show("scr-end");
+    showView("view-end");
   }
 
   function restart() {
     const day = state.day;
     state = Storage.fresh();
-    // Stesso giorno: niente nuovo bonus, si riparte da 0
-    if (day === state.day) state.credit = 0;
+    if (day === state.day) state.credit = 0; // stesso giorno: niente nuovo bonus
     Storage.save(state);
     Credit.init(state);
     Lock.lock();
-    renderHome();
+    showView("view-quiz");
+    Quiz.start(subject);
+    nextQuestion();
   }
 
   // ---------- Avvio ----------
   function boot() {
+    $("#app-name").textContent = CONFIG.APP_NAME;
+    $("#footer-name").textContent = CONFIG.APP_NAME;
+    $("#rule-ok").textContent = `+${CONFIG.BONUS}m giusta`;
+    $("#rule-ko").textContent = `−${CONFIG.MALUS}m sbagliata`;
+
     state = Storage.load();
     Credit.onChange(renderCredit);
     Credit.init(state);
 
-    $("#btn-exit").onclick = renderHome;
+    $("#btn-next").onclick = nextQuestion;
     $("#btn-premio").onclick = startPlay;
     $("#btn-restart").onclick = restart;
+
+    renderTabs();
+    Quiz.start(subject);
+    nextQuestion();
 
     // Riprende dalla fase salvata
     if (state.phase === "play" && state.playEndsAt > Date.now()) return runCountdown();
     if (state.phase === "play") return endPlay();
-    if (state.phase === "win") { makeConfetti(); return show("scr-win"); }
-    if (state.phase === "end") return show("scr-end");
+    if (state.phase === "end") return showView("view-end");
+    showView("view-quiz");
+    if (state.phase === "win") return showWin();
     Lock.lock();
-    renderHome();
   }
 
-  // Tasto indietro Android: dal quiz torna alla home, altrove non fa niente
-  document.addEventListener("backbutton", e => {
-    e.preventDefault();
-    if (!$("#scr-quiz").hidden) renderHome();
-  }, false);
+  // Tasto indietro Android: non esce dall'app per errore
+  document.addEventListener("backbutton", e => e.preventDefault(), false);
 
   // Quando l'app torna in primo piano, riallinea il timer
   document.addEventListener("resume", () => {

@@ -2,84 +2,114 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self' 'unsafe-inline'">
   <title>StudyGame</title>
+  <link rel="stylesheet" href="vendor/fa/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-  <!-- HUD credito -->
-  <header id="hud">
-    <div class="hud-card">
-      <div class="hud-left">
-        <span class="hud-label">Il tuo tempo</span>
-        <span class="hud-value"><span data-credit>0</span><small> min</small></span>
+  <!-- Barra in alto -->
+  <header class="topbar">
+    <div class="wrap topbar-in">
+      <div class="brand">
+        <div class="brand-logo"><i class="fa-solid fa-gamepad"></i></div>
+        <div>
+          <div class="brand-name" id="app-name">StudyGame</div>
+          <div class="brand-sub">Studio &amp; Gioco</div>
+        </div>
       </div>
-      <div class="hud-right">
-        <span class="hud-label">Obiettivo</span>
-        <span class="hud-goal">🏆 <span data-target>60</span></span>
+      <div class="badge">
+        <i class="fa-solid fa-trophy gold"></i>
+        <span>Target: <strong><span data-target>60</span>m</strong></span>
       </div>
     </div>
-    <div class="bar"><div class="bar-fill"></div></div>
-    <p class="hud-hint" id="hud-hint"></p>
   </header>
 
-  <!-- HOME -->
-  <section id="scr-home" class="screen" hidden>
-    <h1 class="title">Cosa studiamo oggi?</h1>
-    <div id="subjects" class="tiles"></div>
-    <div class="rules">
-      <span class="pill pill-ok">✓ giusta +5</span>
-      <span class="pill pill-ko">✗ sbagliata −2</span>
-    </div>
-  </section>
+  <main class="wrap main">
 
-  <!-- QUIZ -->
-  <section id="scr-quiz" class="screen" hidden>
-    <div class="quiz-top">
-      <button id="btn-exit" class="back">←</button>
-      <span id="quiz-subject" class="tag"></span>
-      <span id="streak" class="streak"></span>
-    </div>
-    <div class="q-card">
-      <h2 id="quiz-text"></h2>
-    </div>
-    <div id="quiz-options" class="options"></div>
-    <div id="quiz-feedback" class="feedback"></div>
-  </section>
+    <!-- ===== VISTA QUIZ ===== -->
+    <div id="view-quiz" class="view">
 
-  <!-- VITTORIA -->
-  <section id="scr-win" class="screen full win" hidden>
-    <div class="confetti" aria-hidden="true"></div>
-    <div class="trophy">🏆</div>
-    <h1>Ce l'hai fatta!</h1>
-    <p class="win-sub">Hai guadagnato</p>
-    <p class="win-min"><span data-credit>0</span> minuti</p>
-    <p class="win-sub">di gioco</p>
-    <button id="btn-premio" class="btn-big">Premio OK 🎮</button>
-  </section>
+      <!-- Card credito -->
+      <section class="card credit" id="credit-card">
+        <div class="credit-top">
+          <div>
+            <div class="label">Tempo accumulato</div>
+            <div class="credit-num"><span data-credit>20</span><span class="credit-unit">minuti</span></div>
+          </div>
+          <div class="credit-rules">
+            <span class="chip chip-ok"><i class="fa-solid fa-circle-plus"></i> <span id="rule-ok">+5m</span></span>
+            <span class="chip chip-ko"><i class="fa-solid fa-circle-minus"></i> <span id="rule-ko">−3m</span></span>
+          </div>
+        </div>
+        <div class="progress-head">
+          <span id="progress-hint">Avanzamento</span>
+          <span id="progress-pct">33%</span>
+        </div>
+        <div class="progress"><div class="progress-fill" id="progress-fill"></div></div>
+      </section>
 
-  <!-- TEMPO DI GIOCO -->
-  <section id="scr-play" class="screen full play" hidden>
-    <p class="play-label">Tempo di gioco</p>
-    <div class="ring">
-      <svg viewBox="0 0 200 200">
-        <circle class="ring-bg" cx="100" cy="100" r="88"/>
-        <circle class="ring-fg" id="ring-fg" cx="100" cy="100" r="88"/>
-      </svg>
-      <p id="countdown" class="countdown">00:00</p>
+      <!-- Schede materie -->
+      <nav class="tabs" id="tabs"></nav>
+
+      <!-- Card domanda -->
+      <section class="card quiz" id="quiz-box">
+        <div class="quiz-head">
+          <span class="q-cat" id="q-cat">Matematica</span>
+          <span class="q-num" id="q-num">Domanda #1</span>
+        </div>
+        <h2 class="q-text" id="q-text">Caricamento…</h2>
+        <div class="options" id="options"></div>
+
+        <div class="feedback" id="feedback" hidden>
+          <div class="fb-row">
+            <i class="fb-icon" id="fb-icon"></i>
+            <div>
+              <div class="fb-title" id="fb-title"></div>
+              <div class="fb-text" id="fb-text"></div>
+            </div>
+          </div>
+          <button class="btn-dark" id="btn-next">Prossima domanda <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </section>
     </div>
-    <p class="play-sub">Divertiti! Quando finisce si torna a studiare.</p>
-  </section>
 
-  <!-- FINE TEMPO -->
-  <section id="scr-end" class="screen full end" hidden>
-    <div class="trophy">⏰</div>
-    <h1>Tempo finito!</h1>
-    <p class="win-sub">Rispondi a nuove domande per guadagnare altro tempo.</p>
-    <button id="btn-restart" class="btn-big">Torna a studiare 📚</button>
-  </section>
+    <!-- ===== VISTA GIOCO (countdown) ===== -->
+    <div id="view-play" class="view" hidden>
+      <section class="card play">
+        <div class="play-icon"><i class="fa-solid fa-gamepad"></i></div>
+        <div class="play-label">Sessione di gioco attiva</div>
+        <div class="play-timer" id="countdown">60:00</div>
+        <div class="progress progress-light"><div class="progress-fill" id="play-fill"></div></div>
+        <p class="play-sub">Divertiti! Allo scadere del tempo si torna a studiare.</p>
+      </section>
+    </div>
+
+    <!-- ===== VISTA FINE TEMPO ===== -->
+    <div id="view-end" class="view" hidden>
+      <section class="card end">
+        <div class="end-icon"><i class="fa-solid fa-hourglass-end"></i></div>
+        <h2>Tempo finito!</h2>
+        <p>Rispondi a nuove domande per guadagnare altro tempo di gioco.</p>
+        <button class="btn-main" id="btn-restart"><i class="fa-solid fa-book-open"></i> Torna a studiare</button>
+      </section>
+    </div>
+
+  </main>
+
+  <footer class="wrap footer"><span id="footer-name">StudyGame</span> · impara e guadagna tempo</footer>
+
+  <!-- ===== MODALE PREMIO ===== -->
+  <div class="modal" id="modal-win" hidden>
+    <div class="modal-box">
+      <div class="win-icon"><i class="fa-solid fa-trophy"></i></div>
+      <h3>Obiettivo raggiunto!</h3>
+      <p>Hai accumulato <strong><span data-credit>60</span> minuti</strong> di credito studiando. Ora puoi sbloccare il tuo tempo di gioco.</p>
+      <button class="btn-main" id="btn-premio"><i class="fa-solid fa-lock-open"></i> Premio OK – Sblocca gioco</button>
+    </div>
+  </div>
 
   <script src="cordova.js"></script>
   <script src="js/config.js"></script>
