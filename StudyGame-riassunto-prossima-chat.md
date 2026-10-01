@@ -53,6 +53,18 @@ Intestazione con avatar, nome, classe, ⚙️ e il pulsante grande che legge la 
 - Provato da Claude in browser headless (1 ottobre): 1560 giri di gioco su tecnologia, arte, musica, civica e seconda lingua (francese, spagnolo, tedesco) senza errori; voce straniera controllata per lingua (fr-FR, es-ES, de-DE); impostazione della lingua salvata; banchi senza risposte duplicate né domande doppie.
 - STATO DEL CODICE: tutto pubblicato su main. Le 6 materie nuove, le domande allargate di italiano/scienze e Trova l'intruso NON sono ancora provati da Massi sul telefono.
 
+## Novità del 1 ottobre (tutto su main, build riuscita, commit 94db602)
+- Pulsanti fissi in alto: 🔊 Voce ON/OFF (rosso se spento: allora non si sente MAI nulla, in ogni gioco) e 🎵 Musica ON/OFF. Tolto il vecchio tasto "leggi". Tocco fuori dalla scheda = esce. Fotocamera vera (cordova-plugin-camera@7.0.0, aggiunto in build.yml). "Seleziona tutto / Deseleziona tutto" per le materie.
+- js/music.js: jingle sintetizzati con WebAudio (nessun file, nessun copyright), stacchetto 3–4 s per età e materia (pop 1ª–2ª/3ª–5ª/medie, robot per matematica, mare, animali, arpa, fanfara, classica: Ode alla gioia, Eine kleine Nachtmusik, Für Elise; organo). La lettura parte quando il jingle finisce.
+- Disclaimer (pulsante info): non sostituisce insegnamento né genitori; basato su Indicazioni nazionali D.M. 254/2012 + "nuovi scenari" 2018 (valide nel 2026/27 per le classi 2ª–5ª e 2ª–3ª media) e nuove Indicazioni D.M. 221 del 9/12/2025 (GU 27/1/2026), in vigore dal 2026/27 solo per infanzia, 1ª primaria e 1ª media; supervisione dei genitori.
+- Matematica: geometria (figure, perimetri, aree, angoli, Pitagora, cerchio, volumi) e problemi "moderni" (algoritmi, binario, risparmio). Filtro per classe: `cl: [da, a]` nelle domande/temi + `Questions.inClass()`.
+- File nuovi: q_nuove_ind.js (1ª media nuove Indicazioni, geografia italiana, tecnologia, IA, scienze), q_extra4.js (storia e tecnologia fasce A/B). Seconda lingua: 9 categorie nuove + frasi, `L2.seqs()`.
+- Nuovo gioco 13: "Metti in fila" (ordina giorni, mesi, pianeti, eventi, numeri, alfabeto, ecc.; un errore perdonato, al secondo mostra la soluzione). Provato in headless su 12 materie × classi 0/3/4/7.
+- Animazioni personaggio: sbaglia = si schiaccia e piange (lacrime + 😭); giusto = balla (moonwalk, giravolta o posa) con cappello 🎩 e guanto 🧤. CSS in style.css, funzione `animateHero` in app.js.
+- Impostazioni più arie (niente sovrapposizioni).
+- NON ancora provato da Massi sul telefono: tutto questo elenco.
+- Aperto: confronto 1ª elementare con le nuove Indicazioni solo di copertura temi (il testo ufficiale non è stato letto riga per riga: la ricerca web non ha dato il testo); banchi fascia A già ampi (40–110 domande per materia).
+
 ## Da fare (decide Massi)
 - Eventualmente altre domande per tecnologia, arte, musica, civica (ora 37–47 per fascia) e più parole nel vocabolario di seconda lingua.
 - Eventualmente nuovi giochi (Massi vuole varietà continua, niente "sempre i soliti due esercizi").
