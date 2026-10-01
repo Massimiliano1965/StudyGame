@@ -78,6 +78,41 @@ const L2 = (() => {
       ["mangiare", "manger", "comer", "essen"], ["bere", "boire", "beber", "trinken"], ["parlare", "parler", "hablar", "sprechen"],
       ["andare", "aller", "ir", "gehen"], ["giocare", "jouer", "jugar", "spielen"], ["leggere", "lire", "leer", "lesen"],
       ["scrivere", "écrire", "escribir", "schreiben"], ["dormire", "dormir", "dormir", "schlafen"], ["amare", "aimer", "amar", "lieben"]
+    ] },
+    { name: "vestiti", rows: [
+      ["maglietta", "t-shirt", "camiseta", "T-Shirt"], ["pantaloni", "pantalon", "pantalones", "Hose"], ["scarpe", "chaussures", "zapatos", "Schuhe"],
+      ["cappello", "chapeau", "sombrero", "Hut"], ["giacca", "veste", "chaqueta", "Jacke"], ["gonna", "jupe", "falda", "Rock"],
+      ["calzini", "chaussettes", "calcetines", "Socken"], ["sciarpa", "écharpe", "bufanda", "Schal"], ["guanti", "gants", "guantes", "Handschuhe"]
+    ] },
+    { name: "trasporti", rows: [
+      ["treno", "train", "tren", "Zug"], ["aereo", "avion", "avión", "Flugzeug"], ["nave", "bateau", "barco", "Schiff"],
+      ["bicicletta", "vélo", "bicicleta", "Fahrrad"], ["autobus", "bus", "autobús", "Bus"], ["moto", "moto", "moto", "Motorrad"],
+      ["stazione", "gare", "estación", "Bahnhof"], ["biglietto", "billet", "billete", "Fahrkarte"]
+    ] },
+    { name: "frutta e verdura", rows: [
+      ["pera", "poire", "pera", "Birne"], ["fragola", "fraise", "fresa", "Erdbeere"], ["uva", "raisin", "uva", "Traube"],
+      ["limone", "citron", "limón", "Zitrone"], ["ciliegia", "cerise", "cereza", "Kirsche"], ["pomodoro", "tomate", "tomate", "Tomate"],
+      ["carota", "carotte", "zanahoria", "Karotte"], ["cipolla", "oignon", "cebolla", "Zwiebel"], ["insalata", "salade", "ensalada", "Salat"]
+    ] },
+    { name: "mesi e stagioni", rows: [
+      ["primavera", "printemps", "primavera", "Frühling"], ["estate", "été", "verano", "Sommer"], ["autunno", "automne", "otoño", "Herbst"],
+      ["inverno", "hiver", "invierno", "Winter"], ["gennaio", "janvier", "enero", "Januar"], ["febbraio", "février", "febrero", "Februar"],
+      ["aprile", "avril", "abril", "April"], ["maggio", "mai", "mayo", "Mai"], ["giugno", "juin", "junio", "Juni"]
+    ] },
+    { name: "aggettivi", rows: [
+      ["felice", "heureux", "feliz", "glücklich"], ["triste", "triste", "triste", "traurig"], ["grande", "grand", "grande", "groß"],
+      ["piccolo", "petit", "pequeño", "klein"], ["bello", "beau", "bonito", "schön"], ["nuovo", "nouveau", "nuevo", "neu"],
+      ["vecchio", "vieux", "viejo", "alt"], ["caldo", "chaud", "caliente", "heiß"], ["freddo", "froid", "frío", "kalt"]
+    ] },
+    { name: "lavori e luoghi", rows: [
+      ["medico", "médecin", "médico", "Arzt"], ["cuoco", "cuisinier", "cocinero", "Koch"], ["pompiere", "pompier", "bombero", "Feuerwehrmann"],
+      ["panettiere", "boulanger", "panadero", "Bäcker"], ["pittore", "peintre", "pintor", "Maler"], ["ospedale", "hôpital", "hospital", "Krankenhaus"],
+      ["negozio", "magasin", "tienda", "Geschäft"], ["parco", "parc", "parque", "Park"], ["biblioteca", "bibliothèque", "biblioteca", "Bibliothek"]
+    ] },
+    { name: "sport e tempo libero", rows: [
+      ["calcio", "football", "fútbol", "Fußball"], ["palla", "ballon", "pelota", "Ball"], ["nuoto", "natation", "natación", "Schwimmen"],
+      ["gioco", "jeu", "juego", "Spiel"], ["musica", "musique", "música", "Musik"], ["film", "film", "película", "Film"],
+      ["canzone", "chanson", "canción", "Lied"]
     ] }
   ];
 
