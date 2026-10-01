@@ -50,6 +50,10 @@
   const _speak = Voice.speak;
   Voice.speak = function (...a) { if (profile && !profile.autoRead) return; return _speak.apply(Voice, a); };
 
+  Music.init(() => !!profile && profile.music !== false);
+  const JINGLE_GAP = 90000;   // dentro una sfida con tante materie, uno stacchetto al massimo ogni 90 secondi
+  let lastJingle = { sid: null, at: 0 };
+
   Games.setTap(() => Sfx.tap());
   Games.setBoom(() => Sfx.no());
   Games.setAvatar(() => charSvg(profile, "happy"));
@@ -269,6 +273,7 @@
     const ok = ids.filter(isReady);
     if (!ok.length) { toast("Scegli almeno una sfida con il bollino verde."); return; }
     game = { subjects: ok, streak: 0, right: 0, listening: false, lastKind: "", round: null };
+    lastJingle = { sid: null, at: 0 };
     nextQuestion();
   }
 
@@ -283,7 +288,17 @@
     game.q = game.round ? null : Questions.next(game.sid, profile.classId);
     game.answered = false; game.chosen = -1; game.mood = "happy"; game.fb = null; game.listening = false;
     renderGame();
-    if (profile.autoRead) readQuestion();
+    // stacchetto musicale: all'inizio della sfida, poi solo se cambia materia e sono passati 90 secondi
+    const now = Date.now();
+    if (lastJingle.sid === null || (game.sid !== lastJingle.sid && now - lastJingle.at > JINGLE_GAP)) {
+      if (Music.play(game.sid, profile.classId)) lastJingle = { sid: game.sid, at: now };
+      else if (lastJingle.sid === null) lastJingle = { sid: game.sid, at: now };
+    }
+    if (profile.autoRead) {
+      const cur = game.round || game.q;
+      // la voce parte quando lo stacchetto è finito (se nel frattempo non si è già risposto)
+      Music.whenDone(() => { if (game && (game.round || game.q) === cur && !game.answered) readQuestion(); });
+    }
   }
 
   // ---- voce inglese: spezza il testo in pezzi italiani e inglesi ----
@@ -557,9 +572,20 @@
   Voice.onState(refreshNarrate);
 
   // interruttore Voce ON / Voce OFF: ricorda la scelta (profile.autoRead) per ogni esercizio e gioco
-  const $vt = document.getElementById("voicetoggle");
+  const $vt = document.getElementById("voicetoggle"), $mt = document.getElementById("musictoggle");
   function refreshVoiceToggle() {
     if (!$vt) return;
+    if ($mt) {
+      const showM = !!profile && !askCb;
+      $mt.hidden = !showM;
+      if (showM) {
+        const m = profile.music !== false;
+        $mt.textContent = m ? "🎵 Musica ON" : "🎵 Musica OFF";
+        $mt.classList.toggle("off", !m);
+        $mt.setAttribute("aria-pressed", String(m));
+        $mt.setAttribute("aria-label", m ? "Musica accesa: tocca per spegnerla" : "Musica spenta: tocca per accenderla");
+      }
+    }
     const show = !!profile && !askCb && Voice.canSpeak();
     $vt.hidden = !show;
     if (!show) return;
@@ -594,7 +620,7 @@
   function openInfo() {
     openModal(`<h2>ℹ️ Avvertenze e informazioni</h2>
       <p><b>Non sostituisce la scuola.</b> Studia e Gioca non sostituisce l'insegnamento né l'aiuto dei genitori: è solo un piccolo aiuto per fissare in mente alcune cose divertendosi, perché la ripetizione è ciò che fa davvero imparare e diventare bravi in qualcosa.</p>
-      <p><b>Da dove vengono le domande.</b> Si basano sui programmi ministeriali italiani: le <i>Indicazioni nazionali per il curricolo della scuola dell'infanzia e del primo ciclo d'istruzione</i> (Ministero dell'Istruzione, D.M. 254 del 16 novembre 2012, con l'aggiornamento «Indicazioni nazionali e nuovi scenari» del 2018), consultate su internet. Le domande sono state scritte per questa app e possono contenere errori.</p>
+      <p><b>Da dove vengono le domande.</b> Si basano sui programmi ministeriali italiani, consultati su internet: le <i>Indicazioni nazionali per il curricolo della scuola dell'infanzia e del primo ciclo d'istruzione</i> (D.M. 254 del 16 novembre 2012, con il documento di aggiornamento «Indicazioni nazionali e nuovi scenari» del 2018), ancora in vigore nell'anno scolastico 2026/27 per quasi tutte le classi. Le nuove Indicazioni (D.M. 221 del 9 dicembre 2025, Gazzetta Ufficiale n. 21 del 27 gennaio 2026) dal 2026/27 si applicano solo alle classi prime di primaria e media e poi, anno dopo anno, alle altre. Le domande sono state scritte per questa app e possono contenere errori.</p>
       <p><b>Genitori.</b> Si raccomanda a mamma e papà di tenere sotto controllo i figli quando usano il cellulare, soprattutto se sono piccoli, e di usare sempre buon senso e discrezione sul tempo davanti allo schermo.</p>
       <button class="btn" data-act="close">Ho capito</button>`);
   }
@@ -652,7 +678,7 @@
     "narr-no": () => narrChoice(false),
     mic: () => listenForAnswer(),
     "next-q": () => nextQuestion(),
-    exit: () => { Voice.stopSpeaking(); showHome(); },
+    exit: () => { Voice.stopSpeaking(); Music.stop(); showHome(); },
     // impostazioni
     close: () => closeModal(),
     edit: () => { closeModal(); startWizard(true, 0); },
@@ -665,6 +691,11 @@
       profile.autoRead = !profile.autoRead; Storage.saveProfile(profile);
       Voice.stopSpeaking(); refreshVoiceToggle();
       if (profile.autoRead) { const t = getNarration(); if (t) Voice.speak(t, msg => toast(msg, 6000)); }
+    },
+    "music-toggle": () => {
+      profile.music = profile.music === false;
+      Storage.saveProfile(profile); refreshVoiceToggle();
+      if (profile.music) Music.play(game ? game.sid : "italiano", profile.classId); else Music.stop(true);
     },
     "photo-cam": () => takePhoto(true),
     "photo-gal": () => takePhoto(false),
@@ -711,7 +742,7 @@
     if (wiz) {
       if (wiz.step > 0) { wiz.step--; renderWizard(); window.scrollTo(0, 0); return; }
       if (profile) { wiz = null; showHome(); return; }
-    } else if (game) { Voice.stopSpeaking(); showHome(); return; }
+    } else if (game) { Voice.stopSpeaking(); Music.stop(); showHome(); return; }
     if (navigator.app && navigator.app.exitApp) navigator.app.exitApp();
   }
 
