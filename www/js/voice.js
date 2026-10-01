@@ -94,6 +94,22 @@ const Voice = (() => {
   const LANG_EN = "en-US";
   const hasWord = s => /[A-Za-z0-9À-ÿ]/.test(s);
 
+  // Il plugin sceglie da solo la prima voce della lingua, anche se è una voce "network"
+  // che offline dà errore. Qui scelgo io una voce locale (se c'è) per ogni lingua.
+  let voicesP = null;
+  const voiceCache = {};
+  function pickVoice(loc) {
+    if (voiceCache[loc] !== undefined) return Promise.resolve(voiceCache[loc]);
+    if (!voicesP) voicesP = window.TTS && window.TTS.getVoices ? window.TTS.getVoices().catch(() => []) : Promise.resolve([]);
+    return voicesP.then(list => {
+      const key = loc.toLowerCase();
+      const names = (list || []).map(v => String(v && (v.identifier || v.name) || "")).filter(n => n.toLowerCase().includes(key));
+      const best = names.find(n => /local/i.test(n)) || names.find(n => !/network/i.test(n)) || "";
+      voiceCache[loc] = best;
+      return best;
+    });
+  }
+
   function toSegments(input) {
     const raw = Array.isArray(input) ? input : [{ t: String(input) }];
     const out = [];
@@ -124,12 +140,33 @@ const Voice = (() => {
       if (!segs.length) { done(); return; }
       try {
         if (window.TTS) {
-          let chain = Promise.resolve();
-          segs.forEach(s => {
-            chain = chain.then(() => my !== token ? undefined :
-              window.TTS.speak({ text: s.t, locale: s.l === "en" ? LANG_EN : LANG, rate: s.l === "en" ? 1.15 : 0.95 }));
-          });
-          chain.then(done, err => { fail(err); done(); });
+          // Ogni pezzo parte con la sua voce. Se un pezzo dà errore (succede quando si
+          // cambia lingua di colpo) riprovo dopo una breve pausa, senza fermare tutto.
+          const wait = ms => new Promise(r => setTimeout(r, ms));
+          let failed = null;
+          const say = async (s, i) => {
+            const en = s.l === "en", loc = en ? LANG_EN : LANG;
+            const vid = await pickVoice(loc);
+            const opts = { text: s.t, locale: loc, rate: en ? 1.15 : 0.95 };
+            if (vid) opts.identifier = vid;
+            for (let k = 0; k < 3; k++) {
+              if (my !== token) return;
+              try { await window.TTS.speak(opts); return; }
+              catch (err) {
+                failed = err;
+                if (k === 1) { delete opts.identifier; }   // seconda volta senza voce scelta da me
+                await wait(250 + k * 250);
+              }
+            }
+          };
+          (async () => {
+            for (let i = 0; i < segs.length && my === token; i++) {
+              if (i > 0) await wait(150);
+              await say(segs[i], i);
+            }
+            if (failed && my === token) fail(failed);
+            done();
+          })();
           return;
         }
         if (window.speechSynthesis) {
