@@ -610,7 +610,19 @@
     if (profile.narrAsked) showHome();
     else askNarration(yes => { profile.autoRead = yes; profile.narrAsked = true; Storage.saveProfile(profile); showHome(); });
   }
+  // Tasto indietro di Android: torna alla pagina precedente invece di chiudere l'app.
+  // Si esce dall'app solo dalla schermata principale (non c'è niente prima).
+  function onBack() {
+    if (!$modal.hidden) { closeModal(); return; }
+    if (wiz) {
+      if (wiz.step > 0) { wiz.step--; renderWizard(); window.scrollTo(0, 0); return; }
+      if (profile) { wiz = null; showHome(); return; }
+    } else if (game) { Voice.stopSpeaking(); showHome(); return; }
+    if (navigator.app && navigator.app.exitApp) navigator.app.exitApp();
+  }
+
   // Nell'app Android si aspetta che i plugin (voce, microfono) siano pronti
-  if (window.cordova) document.addEventListener("deviceready", boot, false);
-  else boot();
+  if (window.cordova) {
+    document.addEventListener("deviceready", () => { document.addEventListener("backbutton", onBack, false); boot(); }, false);
+  } else boot();
 })();
