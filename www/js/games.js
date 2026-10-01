@@ -530,14 +530,6 @@ const Games = (() => {
       { prompt: "Collega ogni data a ciò che è successo.", pairs: [["2 giugno 1946", "nasce la Repubblica"], ["1° gennaio 1948", "Costituzione in vigore"], ["1957", "Trattati di Roma"], ["2002", "entra l'euro"]] }
     ]
   };
-  const L2_PAIRS = (() => {
-    const C = [
-      { prompt: "Collega ogni parola francese al suo significato.", pairs: [["bonjour", "buongiorno"], ["merci", "grazie"], ["maison", "casa"], ["chat", "gatto"], ["école", "scuola"], ["pain", "pane"]] },
-      { prompt: "Collega ogni parola spagnola al suo significato.", pairs: [["hola", "ciao"], ["gracias", "grazie"], ["perro", "cane"], ["agua", "acqua"], ["escuela", "scuola"], ["amigo", "amico"]] },
-      { prompt: "Collega ogni parola tedesca al suo significato.", pairs: [["Danke", "grazie"], ["Haus", "casa"], ["Hund", "cane"], ["Wasser", "acqua"], ["Schule", "scuola"], ["Buch", "libro"]] }
-    ];
-    return { A: C, B: C, C };
-  })();
   const LAT_PAIRS = (() => {
     const C = [
       { prompt: "Collega ogni parola latina al suo significato.", pairs: [["puer", "ragazzo"], ["puella", "ragazza"], ["agricola", "contadino"], ["domus", "casa"], ["via", "strada"], ["nox", "notte"], ["rex", "re"], ["equus", "cavallo"]] },
@@ -546,7 +538,7 @@ const Games = (() => {
     ];
     return { A: C, B: C, C };
   })();
-  const OTHER_PAIRS = { storia: STO_PAIRS, geografia: GEO_PAIRS, scienze: SCI_PAIRS, tecnologia: TEC_PAIRS, arte: ART_PAIRS, musica: MUS_PAIRS, civica: CIV_PAIRS, lingua2: L2_PAIRS, latino: LAT_PAIRS };
+  const OTHER_PAIRS = { storia: STO_PAIRS, geografia: GEO_PAIRS, scienze: SCI_PAIRS, tecnologia: TEC_PAIRS, arte: ART_PAIRS, musica: MUS_PAIRS, civica: CIV_PAIRS, get lingua2() { return L2.pairs(); }, latino: LAT_PAIRS };
 
   // ====================================================================
   // SCENE DEL PUZZLE COMPLETATO (emoji, funzionano anche offline)
@@ -675,6 +667,7 @@ const Games = (() => {
       const theme = pick(OTHER_PAIRS[subjectId][classId <= 1 ? "A" : classId <= 4 ? "B" : "C"]);
       pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
       prompt = theme.prompt;
+      if (subjectId === "lingua2") eng = true;   // le parole a sinistra sono straniere: la voce le legge nella lingua scelta
     } else {
       const theme = pick(ITA_PAIRS[classId <= 1 ? "A" : classId <= 4 ? "B" : "C"]);
       pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
@@ -1194,8 +1187,8 @@ const Games = (() => {
   function makeIntruso(classId, subjectId) {
     if (subjectId === "matematica" || subjectId === "italiano") return null;
     const band = classId <= 1 ? "A" : classId <= 4 ? "B" : "C";
-    const eng = subjectId === "inglese";
-    const themes = (eng ? ENG_PAIRS : OTHER_PAIRS[subjectId] || {})[band];
+    const eng = subjectId === "inglese" || subjectId === "lingua2";
+    const themes = (subjectId === "inglese" ? ENG_PAIRS : OTHER_PAIRS[subjectId] || {})[band];
     if (!themes || themes.length < 2) return null;
     const low = t => String(t).toLowerCase();
     const rounds = [];

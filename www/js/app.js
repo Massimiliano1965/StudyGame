@@ -185,7 +185,7 @@
     const d = wiz.d;
     profile = { nick: d.nick.trim(), classId: d.classId, family: d.family, color: d.color, photo: d.photo || null,
       autoRead: !!d.autoRead, narrAsked: true,
-      sound: d.sound !== false };
+      sound: d.sound !== false, l2: d.l2 || undefined };
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
     wiz = null;
     Credit.refresh();
@@ -257,6 +257,9 @@
   function nextQuestion() {
     Games.stop();
     game.sid = pick(game.subjects);
+    // lingua straniera della voce: inglese, oppure quella scelta nelle Impostazioni per la seconda lingua
+    if (game.sid === "lingua2") { L2.use(profile.l2); Voice.setForeign(L2.loc()); }
+    else Voice.setForeign("en-US");
     game.round = Games.pick(game.sid, profile.classId, game.lastKind, themeFor(profile.classId) === "piccoli" ? CONFIG.GAME_SHARE_SMALL : CONFIG.GAME_SHARE);
     game.lastKind = game.round ? game.round.kind : "quiz";
     game.q = game.round ? null : Questions.next(game.sid, profile.classId);
@@ -548,6 +551,7 @@
       <button class="btn alt" data-act="edit">✏️ Cambia nome, classe o compagno</button>
       <button class="btn alt" data-act="editphoto">📷 Cambia foto</button>
       <div class="row-set"><span>Leggi le domande ad alta voce</span><button class="switch ${p.autoRead ? "on" : ""}" data-act="toggle-read" aria-pressed="${!!p.autoRead}">${p.autoRead ? "Sì" : "No"}</button></div>
+      <div class="row-set l2-set"><span>Seconda lingua</span><div class="l2-pick">${L2.codes().map(c => `<button class="switch ${(p.l2 || L2.DEFAULT) === c ? "on" : ""}" data-act="set-l2" data-id="${c}" aria-pressed="${(p.l2 || L2.DEFAULT) === c}">${L2.LANGS[c].flag} ${L2.LANGS[c].name}</button>`).join("")}</div></div>
       <div class="row-set"><span>Suoni</span><button class="switch ${p.sound !== false ? "on" : ""}" data-act="toggle-sound" aria-pressed="${p.sound !== false}">${p.sound !== false ? "Sì" : "No"}</button></div>
       <button class="btn ghost" data-act="reset">🗑 Ricomincia da zero</button>
       <button class="btn" data-act="close">Chiudi</button>`);
@@ -606,6 +610,7 @@
     edit: () => { closeModal(); startWizard(true, 0); },
     editphoto: () => { closeModal(); startWizard(true, 3); },
     "toggle-read": () => { profile.autoRead = !profile.autoRead; Storage.saveProfile(profile); openSettings(); },
+    "set-l2": el => { profile.l2 = L2.use(el.dataset.id); Storage.saveProfile(profile); openSettings(); },
     "toggle-sound": () => { profile.sound = profile.sound === false; Storage.saveProfile(profile); openSettings(); renderHome(); },
     reset: () => confirmReset(),
     "reset-yes": () => { Storage.resetAll(); profile = null; closeModal(); Credit.refresh(); askNarration(yes => { pendingAuto = yes; startWizard(false); }); }

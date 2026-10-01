@@ -226,6 +226,8 @@ body[data-theme="teen"] .ans.right .shape::before, body[data-theme="teen"] .ans.
 .row-set { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; font-weight: 600; }
 .switch { min-width: 76px; min-height: 44px; padding: 4px 12px; font-weight: 700; background: var(--card-soft); border: 3px solid var(--edge); border-radius: 999px; }
 .switch.on { background: var(--good); color: #fff; }
+.l2-set { flex-wrap: wrap; }
+.l2-pick { display: flex; flex-wrap: wrap; gap: 8px; }
 .toast {
   position: fixed; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom)); z-index: 30; transform: translateX(-50%);
   max-width: 88vw; padding: 12px 20px; text-align: center; font-weight: 700;

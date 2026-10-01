@@ -323,49 +323,6 @@
     S("Quale articolo tutela il paesaggio e il patrimonio artistico?", ["L'articolo 9", "L'articolo 1", "L'articolo 3", "L'articolo 21"], "La Repubblica tutela paesaggio e patrimonio storico e artistico.")
   ];
 
-  // ===================== SECONDA LINGUA (francese, spagnolo, tedesco) =====================
-  const L2_C = [
-    S("Come si dice «buongiorno» in francese?", ["Bonjour", "Buenos días", "Guten Tag", "Hello"], "Bonjour = buongiorno."),
-    S("Come si dice «grazie» in francese?", ["Merci", "Gracias", "Danke", "Thanks"], "Merci = grazie."),
-    S("Come si dice «grazie» in spagnolo?", ["Gracias", "Merci", "Danke", "Obrigado"], "Gracias = grazie."),
-    S("Come si dice «grazie» in tedesco?", ["Danke", "Merci", "Gracias", "Please"], "Danke = grazie."),
-    S("Come si dice «arrivederci» in francese?", ["Au revoir", "Adiós", "Auf Wiedersehen", "Good bye"], "Au revoir = arrivederci."),
-    S("Come si dice «arrivederci» in tedesco?", ["Auf Wiedersehen", "Au revoir", "Adiós", "Hasta mañana"], "Auf Wiedersehen = arrivederci."),
-    S("Come si dice «arrivederci» in spagnolo?", ["Adiós", "Au revoir", "Auf Wiedersehen", "Merci"], "Adiós = arrivederci."),
-    S("Che cosa significa la parola spagnola «hola»?", ["Ciao", "Grazie", "Scusa", "Prego"], "Hola = ciao."),
-    S("Che cosa significa la parola francese «maison»?", ["Casa", "Mare", "Scuola", "Pane"], "Maison = casa."),
-    S("Che cosa significa la parola tedesca «Haus»?", ["Casa", "Gatto", "Pane", "Cane"], "Haus = casa."),
-    S("Che cosa significa la parola spagnola «perro»?", ["Cane", "Gatto", "Pane", "Casa"], "Perro = cane."),
-    S("Che cosa significa la parola francese «chat»?", ["Gatto", "Cane", "Casa", "Pesce"], "Chat = gatto."),
-    S("Che cosa significa la parola tedesca «Hund»?", ["Cane", "Gatto", "Cavallo", "Pesce"], "Hund = cane."),
-    S("Che cosa significa la parola spagnola «agua»?", ["Acqua", "Aria", "Fuoco", "Terra"], "Agua = acqua."),
-    S("Che cosa significa la parola francese «pain»?", ["Pane", "Pesce", "Pioggia", "Penna"], "Pain = pane."),
-    S("Che cosa significa la parola tedesca «Brot»?", ["Pane", "Burro", "Acqua", "Latte"], "Brot = pane."),
-    S("Che cosa significa la parola tedesca «Wasser»?", ["Acqua", "Vino", "Latte", "Birra"], "Wasser = acqua."),
-    S("Come si dice «scuola» in francese?", ["École", "Escuela", "Schule", "School"], "École = scuola."),
-    S("Come si dice «scuola» in spagnolo?", ["Escuela", "École", "Schule", "Scuela"], "Escuela = scuola."),
-    S("Come si dice «scuola» in tedesco?", ["Schule", "École", "Escuela", "Scuola"], "Schule = scuola."),
-    S("Come si dice «sì» in tedesco?", ["Ja", "Oui", "Sí", "Yes"], "Ja = sì."),
-    S("Come si dice «sì» in francese?", ["Oui", "Ja", "Sí", "Si"], "Oui = sì."),
-    S("Come si dice «no» in tedesco?", ["Nein", "Non", "No", "Nej"], "Nein = no."),
-    S("Come si dice «io sono» in francese?", ["Je suis", "Yo soy", "Ich bin", "I am"], "Je suis = io sono."),
-    S("Come si dice «io sono» in spagnolo?", ["Yo soy", "Je suis", "Ich bin", "Io es"], "Yo soy = io sono."),
-    S("Come si dice «io sono» in tedesco?", ["Ich bin", "Je suis", "Yo soy", "Ich ist"], "Ich bin = io sono."),
-    S("Come si dice «buon appetito» in francese?", ["Bon appétit", "Buen provecho", "Guten Appetit", "Buon appetit"], "Bon appétit = buon appetito."),
-    S("In quale lingua si dice «Guten Morgen»?", ["Tedesco", "Francese", "Spagnolo", "Inglese"], "Guten Morgen = buongiorno in tedesco."),
-    S("In quale lingua si dice «Buenas noches»?", ["Spagnolo", "Francese", "Tedesco", "Portoghese"], "Buenas noches = buonanotte."),
-    S("In quale lingua si dice «Bonne nuit»?", ["Francese", "Spagnolo", "Tedesco", "Inglese"], "Bonne nuit = buonanotte."),
-    S("Come si dice «tre» in francese?", ["Trois", "Tres", "Drei", "Three"], "Trois = tre."),
-    S("Come si dice «tre» in tedesco?", ["Drei", "Trois", "Tres", "Tre"], "Drei = tre."),
-    S("Come si dice «uno» in spagnolo?", ["Uno", "Un", "Eins", "One"], "Uno = uno."),
-    S("Come si dice «rosso» in francese?", ["Rouge", "Rojo", "Rot", "Red"], "Rouge = rosso."),
-    S("Come si dice «blu» in spagnolo?", ["Azul", "Bleu", "Blau", "Blue"], "Azul = blu."),
-    S("Come si dice «libro» in tedesco?", ["Buch", "Livre", "Libro", "Book"], "Buch = libro."),
-    S("Come ti chiami? in francese si dice…", ["Comment tu t'appelles ?", "¿Cómo te llamas?", "Wie heißt du?", "What's your name?"], "Comment tu t'appelles ?"),
-    S("Come ti chiami? in spagnolo si dice…", ["¿Cómo te llamas?", "Comment tu t'appelles ?", "Wie heißt du?", "Qué nombre?"], "¿Cómo te llamas?"),
-    S("Come ti chiami? in tedesco si dice…", ["Wie heißt du?", "Comment tu t'appelles ?", "¿Cómo te llamas?", "Wer bist du?"], "Wie heißt du?")
-  ];
-
   // ===================== LATINO =====================
   const LAT_C = [
     S("Che cosa significa «aqua»?", ["Acqua", "Aquila", "Aria", "Anima"], "Aqua = acqua."),
@@ -420,6 +377,5 @@
   QBANK.arte = { A: ART_A, B: ART_B, C: ART_C };
   QBANK.musica = { A: MUS_A, B: MUS_B, C: MUS_C };
   QBANK.civica = { A: CIV_A, B: CIV_B, C: CIV_C };
-  QBANK.lingua2 = { A: L2_C, B: L2_C, C: L2_C };   // compare solo dalla 1ª media
   QBANK.latino = { A: LAT_C, B: LAT_C, C: LAT_C }; // compare solo dalla 2ª media
 })();

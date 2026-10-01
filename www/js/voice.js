@@ -90,8 +90,11 @@ const Voice = (() => {
   const onState = fn => stateFns.push(fn);
 
   // Il testo può essere una stringa (tutta in italiano) oppure una lista di pezzi
-  // { t: "testo", l: "en" } — i pezzi con l:"en" vengono letti con voce inglese.
-  const LANG_EN = "en-US";
+  // { t: "testo", l: "en" } — i pezzi con l:"en" vengono letti nella lingua straniera della
+  // materia (inglese, oppure francese/spagnolo/tedesco per la seconda lingua): vedi setForeign.
+  let LANG_EN = "en-US";
+  const FOREIGN_NAMES = { en: "l'inglese", fr: "il francese", es: "lo spagnolo", de: "il tedesco" };
+  const setForeign = loc => { LANG_EN = loc || "en-US"; };
   const hasWord = s => /[A-Za-z0-9À-ÿ]/.test(s);
 
   // Il plugin sceglie da solo la prima voce della lingua, anche se è una voce "network"
@@ -133,7 +136,7 @@ const Voice = (() => {
       if (!onFail || my !== token) return;
       const detail = why ? " (" + String(why && why.message || why).slice(0, 80) + ")" : "";
       const needEn = segs.some(s => s.l === "en");
-      onFail("La voce non parte: controlla che il telefono abbia la sintesi vocale con l'italiano" + (needEn ? " e l'inglese" : "") + "." + detail);
+      onFail("La voce non parte: controlla che il telefono abbia la sintesi vocale con l'italiano" + (needEn ? " e " + (FOREIGN_NAMES[LANG_EN.slice(0, 2)] || "la lingua straniera") : "") + "." + detail);
     };
     return new Promise(resolve => {
       const done = () => { if (my === token) setSpeaking(false); resolve(); };
@@ -177,7 +180,7 @@ const Voice = (() => {
             const u = new SpeechSynthesisUtterance(s.t);
             u.lang = en ? LANG_EN : LANG; u.rate = en ? 1.1 : 0.92; u.pitch = 1.1;
             const vc = en
-              ? (voices.find(x => /^en[-_]US/i.test(x.lang)) || voices.find(x => /^en/i.test(x.lang)))
+              ? (voices.find(x => x.lang.replace("_", "-").toLowerCase() === LANG_EN.toLowerCase()) || voices.find(x => x.lang.toLowerCase().startsWith(LANG_EN.slice(0, 2).toLowerCase())))
               : voices.find(x => /^it/i.test(x.lang));
             if (vc) u.voice = vc;
             u.onerror = e => { fail(e && e.error); done(); };
@@ -236,5 +239,5 @@ const Voice = (() => {
     });
   }
 
-  return { speak, stopSpeaking, isSpeaking, onState, listen, canSpeak, canListen, matchOption, numerify };
+  return { speak, stopSpeaking, isSpeaking, onState, listen, canSpeak, canListen, matchOption, numerify, setForeign };
 })();
