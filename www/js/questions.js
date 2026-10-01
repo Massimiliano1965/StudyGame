@@ -32,37 +32,9 @@ const QBANK = {
       { q: "Quale figura retorica c'è in «Sei una roccia»?", a: ["Metafora", "Similitudine", "Onomatopea", "Iperbole"], c: 0, e: "Non c'è «come»: è una metafora." },
       { q: "In «Maria è più alta di Luca» l'aggettivo è di grado…", a: ["Comparativo di maggioranza", "Superlativo assoluto", "Positivo", "Superlativo relativo"], c: 0, e: "Si confrontano due persone con «più … di»." }
     ]
-  },
-  inglese: {
-    // 1ª–2ª elementare
-    A: [
-      { q: "Come si dice «gatto» in inglese?", a: ["Cat", "Dog", "Bird", "Fish"], c: 0, e: "Gatto in inglese è cat.", ae: true, en: ["cat"] },
-      { q: "Come si dice «rosso» in inglese?", a: ["Red", "Blue", "Green", "Yellow"], c: 0, e: "Rosso in inglese è red.", ae: true, en: ["red"] },
-      { q: "Come si dice «tre» in inglese?", a: ["Three", "Two", "Four", "Five"], c: 0, e: "Tre in inglese è three.", ae: true, en: ["three"] },
-      { q: "Che cosa significa «apple»?", a: ["Mela", "Pera", "Banana", "Arancia"], c: 0, e: "Apple vuol dire mela.", en: ["apple"] },
-      { q: "Come si dice «ciao» in inglese?", a: ["Hello", "Goodbye", "Thanks", "Please"], c: 0, e: "Per salutare si dice hello.", ae: true, en: ["hello"] },
-      { q: "Che cosa significa «book»?", a: ["Libro", "Penna", "Zaino", "Banco"], c: 0, e: "Book vuol dire libro.", en: ["book"] }
-    ],
-    // 3ª–5ª elementare
-    B: [
-      { q: "Completa: «I ___ a student.»", a: ["am", "is", "are", "be"], c: 0, e: "Con «I» si usa «am»: I am.", ae: true, en: ["I ___ a student", "I am", "I", "am"] },
-      { q: "Che cosa significa «Thank you»?", a: ["Grazie", "Prego", "Scusa", "Ciao"], c: 0, e: "Thank you vuol dire grazie.", en: ["Thank you"] },
-      { q: "Come si dice «Come ti chiami?» in inglese?", a: ["What's your name?", "How old are you?", "Where are you from?", "How are you?"], c: 0, e: "Per chiedere il nome si dice «What's your name?».", ae: true, en: ["What's your name"] },
-      { q: "Completa: «She ___ a cat.»", a: ["has", "have", "haves", "having"], c: 0, e: "Con «she» (lei) si usa «has».", ae: true, en: ["She ___ a cat", "she", "has"] },
-      { q: "Quale parola è un giorno della settimana?", a: ["Monday", "Winter", "Green", "Apple"], c: 0, e: "Monday è lunedì.", ae: true, en: ["Monday"] },
-      { q: "Che cosa significa «brother»?", a: ["Fratello", "Sorella", "Padre", "Nonno"], c: 0, e: "Brother vuol dire fratello.", en: ["brother"] }
-    ],
-    // medie
-    C: [
-      { q: "Completa: «Yesterday I ___ to school.»", a: ["went", "go", "goes", "going"], c: 0, e: "«Yesterday» indica il passato: il passato di go è went.", ae: true, en: ["Yesterday I ___ to school", "Yesterday", "go", "went"] },
-      { q: "Qual è il plurale di «child»?", a: ["Children", "Childs", "Childes", "Childrens"], c: 0, e: "Child ha un plurale irregolare: children.", ae: true, en: ["child", "children"] },
-      { q: "Completa: «He ___ football every Sunday.»", a: ["plays", "play", "playing", "played"], c: 0, e: "Con he/she/it, al presente, il verbo prende la -s: plays.", ae: true, en: ["He ___ football every Sunday", "he/she/it", "plays"] },
-      { q: "Quale frase è corretta?", a: ["There are three books on the table.", "There is three books on the table.", "There am three books on the table.", "There be three books on the table."], c: 0, e: "Con un plurale si usa «there are».", ae: true, en: ["there are"] },
-      { q: "Che cosa significa «although»?", a: ["Anche se", "Perché", "Quando", "Dopo"], c: 0, e: "Although vuol dire «anche se».", en: ["although"] },
-      { q: "Completa: «If it rains, we ___ at home.»", a: ["will stay", "stayed", "staying", "stays"], c: 0, e: "Dopo «if» + presente si usa will + verbo: will stay.", ae: true, en: ["If it rains, we ___ at home", "if", "will stay", "will"] }
-    ]
   }
 };
+// Le domande di inglese, storia e geografia stanno in q_inglese.js, q_storia.js, q_geografia.js
 
 const Questions = (() => {
   const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
@@ -233,16 +205,17 @@ const Questions = (() => {
     return shuffleWithAnswer(pick(QBANK.italiano[band]));
   }
 
-  function english(classId) {
+  // domande a risposta multipla prese dal banco della materia (A = 1ª–2ª el., B = 3ª–5ª el., C = medie)
+  function fromBank(subjectId, classId) {
     const band = classId <= 1 ? "A" : classId <= 4 ? "B" : "C";
-    return shuffleWithAnswer(pick(QBANK.inglese[band]));
+    return shuffleWithAnswer(pick(QBANK[subjectId][band]));
   }
 
   // Una domanda per la materia e la classe scelte
   function next(subjectId, classId) {
     if (subjectId === "matematica") return math(classId);
     if (subjectId === "italiano") return italian(classId);
-    if (subjectId === "inglese") return english(classId);
+    if (QBANK[subjectId]) return fromBank(subjectId, classId);
     return null;
   }
 

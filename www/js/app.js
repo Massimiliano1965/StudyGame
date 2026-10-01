@@ -49,6 +49,7 @@
   Games.setTap(() => Sfx.tap());
   Games.setBoom(() => Sfx.no());
   Games.setAvatar(() => charSvg(profile, "happy"));
+  Games.setSpeak(card => Voice.speak(fin(vfSegs(card)), msg => toast(msg, 6000)), () => !!(profile && profile.autoRead), () => Voice.canSpeak());
 
   // ---------- utilità interfaccia ----------
   function toast(msg, ms) {
@@ -248,7 +249,7 @@
 
   function startGame(ids) {
     const ok = ids.filter(isReady);
-    if (!ok.length) { toast("Scegli almeno una sfida con il bollino verde: Matematica, Italiano o Inglese."); return; }
+    if (!ok.length) { toast("Scegli almeno una sfida con il bollino verde."); return; }
     game = { subjects: ok, streak: 0, right: 0, listening: false, lastKind: "", round: null };
     nextQuestion();
   }
@@ -294,6 +295,11 @@
     return out.length === 1 && !out[0].l ? out[0].t : out;
   }
 
+  // una frase di "Vero o falso": domanda + risposta proposta
+  function vfSegs(card) {
+    return [...langSegs(card.q.q, card.q.en), { t: /[?!.:…]$/.test(card.q.q) ? " Risposta proposta: " : ". Risposta proposta: " }, ...ansSegs(card.q, card.cand), { t: "." }];
+  }
+
   const OPS = { "+": "più", "−": "meno", "×": "per", ":": "diviso", "=": "uguale a", "(": "apri parentesi", ")": "chiudi parentesi" };
   function roundSpeech(r) {
     if (r.kind === "frase") return "Metti le parole in ordine per fare una frase. Le parole sono: " + r.items.map(w => w.replace(/[.,;:!?]/g, "")).join(", ") + ".";
@@ -304,6 +310,8 @@
       r.opts.forEach((o, i) => segs.push({ t: " " + pos[i] }, ...ansSegs(q, o), { t: "." }));
       return fin(segs);
     }
+    if (r.kind === "vf") return fin([{ t: "Vero o falso. Per ogni frase tocca vero se la risposta è giusta, falso se è sbagliata. Prima frase: " }, ...vfSegs(r.cards[0])]);
+    if (r.kind === "lettere") return fin([{ t: "Rimetti in ordine le lettere per formare la parola. La parola da trovare corrisponde a: " }, { t: toSpeech(r.clue.l), l: r.eng ? "en" : "" }, { t: ". " + toSpeech(r.hint) }]);
     if (r.kind === "memory") {
       const segs = [{ t: toSpeech(r.prompt) + " Le coppie sono: " }];
       r.pairs.forEach((p, i) => segs.push({ t: toSpeech(p.l), l: r.eng ? "en" : "" }, { t: " con " }, { t: toSpeech(p.r) + (i < r.pairs.length - 1 ? ", " : "."), l: r.rEn ? "en" : "" }));
@@ -323,7 +331,7 @@
       return fin(segs);
     }
     if (r.kind === "incastro") return toSpeech(r.prompt) + " Da collegare: " + r.pairs.map(p => toSpeech(p.l)).join(", ") + ". I pezzi sono: " + r.order.map(i => toSpeech(r.pairs[i].r)).join(", ") + ".";
-    const q = r.q, segs = [{ t: r.kind === "pesca" ? "Pesca il pesce con la risposta giusta. " : "Colpisci il bersaglio con la risposta giusta. " }, ...langSegs(r.prompt, q && q.en), { t: " Le risposte sono: " }];
+    const q = r.q, segs = [{ t: r.kind === "pesca" ? "Pesca il pesce con la risposta giusta. " : r.kind === "talpa" ? "Colpisci la talpa con la risposta giusta. " : "Colpisci il bersaglio con la risposta giusta. " }, ...langSegs(r.prompt, q && q.en), { t: " Le risposte sono: " }];
     q.a.forEach((a, i) => segs.push(...ansSegs(q, a), { t: i < q.a.length - 1 ? ", " : "." }));
     return fin(segs);
   }
@@ -342,7 +350,9 @@
     const segs = [{ t: fb.title + "." }];
     if (fb.correct) {
       segs.push({ t: " La risposta giusta era: " });
-      if (r && r.pairs && r.eng) {
+      if (r && r.kind === "lettere" && r.eng) {
+        segs.push({ t: toSpeech(r.clue.l), l: "en" }, { t: ", " }, { t: toSpeech(r.clue.r) + ".", l: r.rEn ? "en" : "" });
+      } else if (r && r.pairs && r.eng) {
         r.pairs.forEach((p, i) => {
           segs.push({ t: toSpeech(p.l), l: "en" }, { t: ", " }, { t: toSpeech(p.r) + ". ", l: r.rEn ? "en" : "" });
         });

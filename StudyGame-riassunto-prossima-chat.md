@@ -5,25 +5,30 @@ Progetto: Studia e Gioca, app Android (Cordova) per ragazzi 6–12 anni: si risp
 ## Dove sta il codice
 - Repo GitHub: Massimiliano1965/StudyGame (clone: https://github.com/Massimiliano1965/studygame). Branch unico: main.
 - Build: solo da GitHub Actions, workflow "Build APK" (.github/workflows/build.yml). Artefatto: StudyGame-apk. Plugin: cordova-plugin-tts-advanced@0.5.3 e plugins-local/speechrecognition.
-- Ultimo commit su main e ultima build verde: da controllare con `gh run list -R Massimiliano1965/StudyGame -L 3` (all'ultimo controllo: run #25 verde, commit 5cdf256, più il commit dell'intestazione pulita).
+- Ultimo commit su main e ultima build verde (prima di questa fase): da controllare con `gh run list -R Massimiliano1965/StudyGame -L 3` (all'ultimo controllo: run #25 verde, commit 5cdf256, più il commit dell'intestazione pulita).
 - Dalla sessione cloud: `gh` e `git` funzionano; il repo va aggiunto con add_repo (push) e clonato in /home/claude/studygame.
 
 ## File principali (www/)
 - js/config.js: regole (minuti, GAME_SHARE 0.7, GAME_SHARE_SMALL 0.95 per 1ª–3ª elementare).
-- js/subjects.js: 12 materie in elenco; READY_SUBJECTS = matematica, italiano, inglese (le altre 9 non hanno domande: "arriva presto").
-- js/questions.js: banco domande (inglese ha circa 20 domande: poco, va allargato). Ogni domanda inglese ha `en` (parole inglesi per la voce) e `ae` se le risposte sono tutte inglesi.
-- js/games.js: tutti i giochi. Funzioni: pairsFor (coppie condivise), SCENES/SCENE_RULES/sceneKey/sceneHtml/EMO (scene a puzzle completo), makeX/mountX per ogni gioco, GAMES (registro), pickRound.
+- js/subjects.js: 12 materie in elenco; READY_SUBJECTS = matematica, italiano, inglese, storia, geografia (le altre 7 non hanno domande: "arriva presto": scienze, tecnologia, arte, musica, educazione civica, seconda lingua, latino).
+- js/questions.js: italiano (poche domande, 6 per fascia: da allargare) e matematica (generata dal programma). Dispatcher `Questions.next`: se la materia ha un banco in QBANK lo usa.
+- js/q_inglese.js: 298 domande di inglese (fasce A 1ª–2ª el., B 3ª–5ª el., C medie); vocabolario generato da liste di coppie [inglese, italiano] (2 domande a parola) + frasi di grammatica scritte a mano. Ogni domanda ha `en` (parole inglesi per la voce) e `ae` se le risposte sono tutte inglesi.
+- js/q_storia.js (69 domande) e js/q_geografia.js (72 domande): stesse tre fasce, risposta giusta sempre per prima (poi mescolate). Per aggiungere una materia nuova basta un file così + READY_SUBJECTS + coppie in games.js (OTHER_PAIRS) + scena.
+- js/games.js: tutti i giochi. Funzioni: pairsFor (coppie condivise; STO_PAIRS e GEO_PAIRS per storia e geografia), SCENES/SCENE_RULES/sceneKey/sceneHtml/EMO (scene a puzzle completo), makeX/mountX per ogni gioco, GAMES (registro), pickRound (se un gioco non può partire ne prova un altro).
 - js/app.js: schermate, voce (roundSpeech, feedbackSpeech, langSegs), tasto indietro (onBack), home.
 - js/voice.js: lettura (TTS) e microfono; speak accetta stringa o lista di pezzi `{t, l:"en"}`.
 - css/style.css, js/characters.js, js/credit.js, js/storage.js (chiavi localStorage sg2_profile e sg2_day), js/lock.js.
 
-## Giochi (8 + domanda normale a 4 risposte)
+## Giochi (11 + domanda normale a 4 risposte)
 - Ricostruisci la frase (solo italiano), Operazione (solo matematica).
-- Tiro a segno, Corsa, Incastro, Memory, Palloncini, Pesca: tutti attivi per italiano, matematica e inglese.
-- Incastro: un errore si perdona, al secondo il puzzle esplode (BOOM) e ricomincia con pezzi rimescolati, senza perdere minuti. A puzzle completo appare una scena a tema: figurine delle parole giocate (EMO) + sfondo, colori e posizioni casuali; matematica ed equazioni hanno più varianti.
+- Tiro a segno, Corsa, Incastro, Memory, Palloncini, Pesca, Talpe, Vero o falso, Lettere mescolate: attivi per italiano, matematica, inglese, storia e geografia.
+- Incastro: un errore si perdona, al secondo il puzzle esplode (BOOM) e ricomincia con pezzi rimescolati, senza perdere minuti. A puzzle completo appare una scena a tema: figurine delle parole giocate (EMO) + sfondo, colori e posizioni casuali; matematica, equazioni, storia e geografia hanno più varianti.
 - Memory: 2 colonne × 4 righe, carte da girare; riuscito se al massimo 5 errori; a fine partita appare la stessa scena dell'Incastro.
 - Palloncini: in alto una parola (3 parole una dopo l'altra), salgono palloncini con le risposte, scoppia solo quello giusto; un errore si perdona, al secondo i palloncini scappano (risposta sbagliata).
 - Pesca: pesci con le risposte, tocca quello giusto; un errore si perdona.
+- NUOVO Talpe: 6 buchi, le talpe spuntano con le risposte (max 3 insieme, ogni risposta compare a turno), tocca quella giusta; un errore si perdona, al secondo si perde e compare la talpa giusta.
+- NUOVO Vero o falso lampo: 5 frasi (domanda + risposta proposta), tocca ✅ o ❌; un errore si perdona, al secondo si perde. Pulsante 🔊 Leggi su ogni frase; con la lettura automatica attiva ogni frase nuova viene letta.
+- NUOVO Lettere mescolate: indizio (es. «gatto → ?»), si rimettono in ordine le lettere della risposta (parole da 2 a 9 caratteri senza spazi, anche cifre); un errore si perdona. Se non ci sono parole adatte parte un altro gioco.
 - Tiro a segno e Corsa: un solo tentativo.
 - Classi piccole (1ª–3ª elementare): 95% giochi e 5% domande; dalla 4ª in su 70% giochi.
 
@@ -38,12 +43,14 @@ Torna alla pagina prima: chiude le impostazioni, dalla sfida va alla home, nella
 Intestazione con avatar, nome, classe, ⚙️ e il pulsante grande che legge la pagina. Tolto il pulsante 🔊 dei suoni (resta in Impostazioni).
 
 ## Stato delle prove
-- Provato da Massi sul telefono: voce inglese, scene e tutto il resto ("il resto ok").
-- Provato da Claude in un browser headless (Playwright, schermo 390×800): 54 partite simulate (Memory, Palloncini, Pesca; vinte e perse; tre materie; classi 1/4/7), lettura vocale dei nuovi giochi, screenshot. Come rifarlo: pagina file:///.../www/index.html, bloccare cordova.js con route, localStorage `sg2_profile` = {nick, classId, family:"creatura", color:"#FF8FB1", photo:null, autoRead, narrAsked:true, sound}.
+- Provato da Massi sul telefono (prima di questa fase): voce inglese, scene e tutto il resto ("il resto ok"). Storia, Geografia, i 3 nuovi giochi e le nuove domande di inglese NON sono ancora stati provati da lui sul telefono.
+- Provato da Claude in un browser headless (Playwright, schermo 390×800): banchi di domande controllati (4 risposte diverse, niente duplicati), 3 nuovi giochi simulati in vittoria e sconfitta su 5 materie × classi 1/4/7 (tutti ok), scene di Incastro e Memory per storia e geografia, 45 avvii per materia/classe dall'app vera senza errori JS, screenshot, frasi lette dalla voce. Come rifarlo: pagina file:///.../www/index.html, bloccare cordova.js con route, localStorage `sg2_profile` = {nick, classId, family:"creatura", color:"#FF8FB1", photo:null, autoRead, narrAsked:true, sound}.
+- STATO DEL CODICE: modifiche pronte in locale (commit locale), NON ancora pubblicate su main e NESSUNA build fatta: serve il SÌ di Massi.
 
 ## Da fare (decide Massi)
-- Nuova materia con domande (Storia, Geografia, Scienze, ecc.): tutti gli 8 giochi la useranno subito.
-- Allargare il banco domande di inglese (ora circa 20).
+- Dopo il SÌ: push su main, build "Build APK" da GitHub Actions, controllo della run da parte di Claude.
+- Altre materie con domande (Scienze, Tecnologia, Arte, Musica, Educazione civica, Seconda lingua, Latino).
+- Allargare il banco di italiano (6 domande per fascia) e storia/geografia (circa 20-30 per fascia).
 - Eventualmente nuovi giochi (Massi vuole varietà continua, niente "sempre i soliti due esercizi").
 
 ## Regole di Massi (da rispettare sempre)

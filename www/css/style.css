@@ -383,3 +383,48 @@ body[data-theme="teen"] .mcard.match { color: #0D0C33; }
 .fish.bad { background: var(--bad); color: #fff; opacity: .7; }
 .fish.dim { opacity: .5; }
 body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D0C33; }
+
+/* ---------- Talpe ---------- */
+.whack { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px; background: linear-gradient(#BEE9FF 0 18%, #9EE493 18%); border: 3px solid var(--edge); border-radius: 22px; }
+.hole { position: relative; height: 124px; padding: 0; overflow: hidden; background: transparent; border: 0; font-family: inherit; touch-action: manipulation; }
+.hole .mound { position: absolute; left: 4%; right: 4%; bottom: 0; height: 46px; background: radial-gradient(ellipse at 50% 30%, #8A5A2B, #5E3A18); border: 3px solid var(--edge); border-radius: 50% 50% 18px 18px / 70% 70% 18px 18px; z-index: 2; }
+.hole .mole { position: absolute; left: 8%; right: 8%; bottom: 16px; height: 102px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 0;
+  transform: translateY(110%); transition: transform .22s ease-out; z-index: 1; }
+.hole .mole.up { transform: translateY(0); }
+.hole .mface { font-size: 38px; line-height: 1; }
+.hole .mtxt { display: block; max-width: 100%; margin-bottom: 2px; padding: 3px 9px; font-weight: 800; line-height: 1.1; text-align: center; color: #2B2D52; background: #FFE066; border: 3px solid var(--edge); border-radius: 14px; box-shadow: 0 3px 0 var(--edge); overflow-wrap: anywhere; }
+.hole .mole.ok .mtxt { background: var(--good); color: #fff; }
+.hole .mole.bad .mtxt { background: var(--bad); color: #fff; }
+
+/* ---------- Vero o falso ---------- */
+.vf { display: flex; flex-direction: column; gap: 14px; }
+.vf-dots { display: flex; justify-content: center; gap: 10px; }
+.vf-dots i { width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--edge); background: var(--card); }
+.vf-dots i.done { background: var(--accent2); }
+.vf-dots i.now { background: var(--accent); width: 36px; border-radius: 10px; }
+.vf-card { display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--card-soft); border: 3px solid var(--edge); border-radius: 22px; text-align: center; }
+.vf-q { font-weight: 700; font-size: 20px; line-height: 1.25; }
+.vf-a { font-weight: 800; font-size: 26px; line-height: 1.15; padding: 12px; background: #FFE066; color: #2B2D52; border: 3px solid var(--edge); border-radius: 16px; overflow-wrap: anywhere; }
+.vf-a small { display: block; margin-bottom: 4px; font-size: 13px; font-weight: 700; opacity: .75; }
+.vf-fix { font-size: 18px; color: var(--bad); }
+.vf-end { font-weight: 800; font-size: 26px; padding: 12px 0; }
+.vf-say { align-self: center; min-height: 48px; font-size: 18px; }
+.vf-btns { display: flex; gap: 12px; }
+.vf-btns .btn { flex: 1; min-height: 72px; font-size: 24px; background: var(--card); color: var(--ink); }
+.vf-btns .btn.good { background: var(--good); color: #fff; opacity: 1; }
+.vf-btns .btn.bad { background: var(--bad); color: #fff; opacity: 1; }
+.vf-btns .btn[disabled] { opacity: .6; }
+
+/* ---------- Lettere mescolate ---------- */
+.lett { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+.lt-clue { font-weight: 800; font-size: 28px; text-align: center; }
+.lt-clue span { color: var(--accent); }
+.lt-slots, .lt-pool { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
+.lt-slots { padding: 12px; background: var(--card-soft); border: 3px dashed var(--edge); border-radius: 20px; min-height: 76px; }
+.lt-slot { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 54px; padding: 0; font-family: inherit; font-weight: 800; font-size: 26px; text-transform: uppercase; color: #2B2D52; background: #fff; border: 3px solid var(--edge); border-radius: 12px; }
+.lt-slot.on { background: #FFE066; box-shadow: 0 4px 0 var(--edge); }
+.lt-slots.ok .lt-slot.on { background: var(--good); color: #fff; }
+.lt-slots.bad .lt-slot.on { background: var(--bad); color: #fff; animation: ltshake .4s; }
+.lt-tile { width: 54px; height: 60px; padding: 0; font-family: inherit; font-weight: 800; font-size: 28px; text-transform: uppercase; color: #2B2D52; background: #7ED9FF; border: 3px solid var(--edge); border-radius: 14px; box-shadow: 0 5px 0 var(--edge); touch-action: manipulation; }
+.lt-tile:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--edge); }
+@keyframes ltshake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }

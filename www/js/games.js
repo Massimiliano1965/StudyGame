@@ -409,6 +409,45 @@ const Games = (() => {
     ]
   };
 
+
+  // ---- Storia e Geografia: temi per i giochi di collegamento ----
+  const STO_PAIRS = {
+    A: [
+      { prompt: "Collega ogni giorno della settimana al giorno che viene dopo.", pairs: [["lunedì", "martedì"], ["martedì", "mercoledì"], ["mercoledì", "giovedì"], ["giovedì", "venerdì"], ["venerdì", "sabato"], ["sabato", "domenica"]] },
+      { prompt: "Collega ogni stagione a un suo mese.", pairs: [["inverno", "gennaio"], ["primavera", "aprile"], ["estate", "luglio"], ["autunno", "ottobre"]] },
+      { prompt: "Collega ogni cosa di una volta a quella di oggi.", pairs: [["candela", "lampadina"], ["lettera", "messaggio"], ["carrozza", "automobile"], ["telegrafo", "telefono"], ["macchina da scrivere", "computer"]] }
+    ],
+    B: [
+      { prompt: "Collega ogni popolo antico al suo luogo.", pairs: [["Egizi", "Nilo"], ["Sumeri", "Mesopotamia"], ["Greci", "Atene"], ["Romani", "Roma"], ["Etruschi", "Etruria"]] },
+      { prompt: "Collega ogni personaggio alla sua storia.", pairs: [["Romolo", "fondò Roma"], ["Giulio Cesare", "generale romano"], ["Augusto", "primo imperatore"], ["Annibale", "elefanti e Alpi"], ["Colombo", "scoprì l'America"], ["Leonardo", "la Gioconda"]] },
+      { prompt: "Collega ogni monumento al suo popolo.", pairs: [["Piramidi", "Egizi"], ["Colosseo", "Romani"], ["Partenone", "Greci"], ["Tombe dipinte", "Etruschi"], ["Tavolette d'argilla", "Sumeri"]] },
+      { prompt: "Collega ogni evento alla sua data.", pairs: [["Nascita di Roma", "753 a.C."], ["Caduta di Roma", "476 d.C."], ["Scoperta dell'America", "1492"], ["Rivoluzione francese", "1789"]] }
+    ],
+    C: [
+      { prompt: "Collega ogni evento alla sua data.", pairs: [["Scoperta dell'America", "1492"], ["Rivoluzione francese", "1789"], ["Unità d'Italia", "1861"], ["Prima guerra mondiale", "1914"], ["Repubblica italiana", "1946"], ["Caduta del Muro", "1989"]] },
+      { prompt: "Collega ogni personaggio al suo ruolo.", pairs: [["Napoleone", "imperatore francese"], ["Garibaldi", "spedizione dei Mille"], ["Cavour", "primo ministro"], ["Gutenberg", "stampa"], ["Lutero", "Riforma"], ["Colombo", "America"]] },
+      { prompt: "Collega ogni periodo alla sua caratteristica.", pairs: [["Feudalesimo", "signori e vassalli"], ["Rinascimento", "arte e cultura classica"], ["Rivoluzione industriale", "macchine e fabbriche"], ["Crociate", "Terra Santa"], ["Illuminismo", "la ragione"]] }
+    ]
+  };
+
+  const GEO_PAIRS = {
+    A: [
+      { prompt: "Collega ogni parte del paesaggio alla sua descrizione.", pairs: [["mare", "acqua salata"], ["lago", "acqua tra le terre"], ["montagna", "cima alta"], ["fiume", "acqua che scorre"], ["pianura", "terra piatta"], ["isola", "terra nel mare"]] },
+      { prompt: "Collega ogni città italiana a ciò per cui è famosa.", pairs: [["Venezia", "canali"], ["Roma", "Colosseo"], ["Napoli", "Vesuvio"], ["Pisa", "torre pendente"], ["Milano", "Duomo"], ["Firenze", "Cupola"]] }
+    ],
+    B: [
+      { prompt: "Collega ogni regione al suo capoluogo.", pairs: [["Lombardia", "Milano"], ["Piemonte", "Torino"], ["Toscana", "Firenze"], ["Sicilia", "Palermo"], ["Campania", "Napoli"], ["Veneto", "Venezia"], ["Sardegna", "Cagliari"], ["Lazio", "Roma"], ["Liguria", "Genova"], ["Emilia-Romagna", "Bologna"]] },
+      { prompt: "Collega ogni stato alla sua capitale.", pairs: [["Francia", "Parigi"], ["Spagna", "Madrid"], ["Germania", "Berlino"], ["Regno Unito", "Londra"], ["Portogallo", "Lisbona"], ["Grecia", "Atene"]] },
+      { prompt: "Collega ogni parola alla sua definizione.", pairs: [["isola", "terra nel mare"], ["penisola", "quasi tutta nel mare"], ["golfo", "mare dentro la costa"], ["delta", "foce a più rami"], ["altopiano", "pianura in alto"]] }
+    ],
+    C: [
+      { prompt: "Collega ogni stato alla sua capitale.", pairs: [["Canada", "Ottawa"], ["Australia", "Canberra"], ["Brasile", "Brasilia"], ["Turchia", "Ankara"], ["Svizzera", "Berna"], ["Egitto", "Il Cairo"], ["Giappone", "Tokyo"], ["Polonia", "Varsavia"]] },
+      { prompt: "Collega ogni montagna al suo continente.", pairs: [["Everest", "Asia"], ["Kilimangiaro", "Africa"], ["Monte Bianco", "Europa"], ["Aconcagua", "America"]] },
+      { prompt: "Collega ogni fiume alla città che attraversa.", pairs: [["Senna", "Parigi"], ["Tamigi", "Londra"], ["Tevere", "Roma"], ["Arno", "Firenze"], ["Nilo", "Il Cairo"]] }
+    ]
+  };
+  const OTHER_PAIRS = { storia: STO_PAIRS, geografia: GEO_PAIRS };
+
   // ====================================================================
   // SCENE DEL PUZZLE COMPLETATO (emoji, funzionano anche offline)
   // [sfondo, [[emoji, x%, y%, grandezza px], ...], didascalia]
@@ -432,6 +471,16 @@ const Games = (() => {
     retorica: ["linear-gradient(#EAD9FF, #FFF)", [["🎭", 50, 50, 90], ["✨", 20, 24, 44], ["🖋️", 82, 26, 48], ["🌬️", 20, 78, 44], ["💭", 80, 78, 44]], "Che bei giri di parole!"],
     autori: ["linear-gradient(#FFEFD0, #E8D2A8)", [["🏛️", 50, 48, 84], ["📚", 20, 76, 56], ["🖋️", 80, 76, 48], ["👓", 28, 22, 42], ["📜", 74, 24, 46]], "Grandi autori, grandi libri!"],
     categorie: ["linear-gradient(#D9F2FF, #FFF)", [["🔤", 50, 46, 84], ["📖", 22, 76, 52], ["✏️", 78, 76, 48], ["🧠", 20, 24, 44], ["🎓", 80, 24, 50]], "Ogni parola ha la sua casa!"],
+    calendario: ["linear-gradient(#FFF3C9, #FFE0F0)", [["📅", 50, 44, 90], ["☀️", 16, 24, 50], ["🍂", 84, 24, 46], ["❄️", 18, 78, 46], ["🌸", 82, 78, 46]], "Il tempo passa: giorni e stagioni a posto!"],
+    storia: [
+      ["linear-gradient(#FFE9B8 0 58%, #E8C98A 58%)", [["🔺", 40, 56, 80], ["🐪", 70, 74, 54], ["☀️", 86, 16, 44], ["🏺", 14, 78, 46], ["📜", 20, 30, 44]], "Un tuffo nell'antico Egitto!"],
+      ["linear-gradient(#EAD9FF 0 58%, #C9B58A 58%)", [["🏛️", 50, 46, 90], ["🏺", 18, 76, 48], ["🏟️", 82, 70, 56], ["⚔️", 20, 28, 42], ["🏆", 80, 28, 44]], "Grecia e Roma: la storia è a posto!"],
+      ["linear-gradient(#CDEBFF 0 58%, #9EE493 58%)", [["🏰", 50, 46, 92], ["🛡️", 20, 74, 48], ["⚔️", 80, 74, 44], ["🐎", 16, 36, 50], ["🚩", 82, 30, 44]], "Cavalieri e castelli: tutto al suo posto!"]
+    ],
+    mondo: [
+      ["linear-gradient(#CDEBFF, #E8FFE3)", [["🌍", 50, 50, 110], ["🧭", 18, 24, 48], ["🗺️", 82, 24, 48], ["✈️", 22, 80, 46], ["⛰️", 80, 80, 46]], "Il mondo è nelle tue mani!"],
+      ["linear-gradient(#BEE9FF 0 55%, #9EE493 55%)", [["🏔️", 24, 44, 76], ["🌋", 74, 46, 66], ["🏝️", 50, 80, 54], ["🌊", 16, 84, 44], ["🧭", 86, 16, 40]], "Montagne, vulcani e isole: che viaggio!"]
+    ],
     mat: [
       ["linear-gradient(#D9F2FF, #FFF3C9)", [["🧮", 50, 54, 88], ["➕", 18, 24, 46], ["✖️", 82, 24, 46], ["➗", 22, 82, 44], ["➖", 78, 82, 44], ["🔢", 50, 16, 36]], "I numeri tornano: che bravo matematico!"],
       ["linear-gradient(#1B1F4B, #4B3A8F)", [["🚀", 50, 48, 84], ["🪐", 18, 26, 60], ["⭐", 82, 22, 36], ["🌙", 84, 70, 48], ["✨", 24, 74, 34], ["🛸", 62, 20, 40]], "Conti perfetti: si parte per lo spazio!"],
@@ -446,6 +495,7 @@ const Games = (() => {
   };
   const SCENE_RULES = [
     [/^matematica: .*equazion/, "eq"], [/^matematica/, "mat"],
+    [/^storia: .*(giorno della settimana|stagione|cosa di una volta)/, "calendario"], [/^storia/, "storia"], [/^geografia/, "mondo"],
     [/^inglese: .*colore/, "colori"], [/^inglese: .*animale/, "animali"], [/^inglese: .*numero/, "numeri"],
     [/^inglese: .*scuola/, "scuola"], [/^inglese: .*famiglia/, "famiglia"], [/^inglese: .*verbo inglese/, "verbi"],
     [/^inglese: .*tavola/, "tavola"], [/^inglese: .*contrario/, "contrariEn"], [/^inglese: .*irregolare/, "tempo"], [/^inglese/, "parole"],
@@ -471,6 +521,8 @@ const Games = (() => {
     gatto: "🐱", fiore: "🌸", penna: "🖊️", libro: "📖", casa: "🏠", albero: "🌳", bambino: "🧒", sedia: "🪑", mela: "🍎",
     cane: "🐶", mucca: "🐄", pecora: "🐑", asino: "🐴", leone: "🦁", rana: "🐸", cavallo: "🐴", maiale: "🐷",
     alto: "🦒", basso: "🐭", caldo: "🔥", freddo: "❄️", grande: "🐘", piccolo: "🐭", giorno: "☀️", notte: "🌙",
+    mare: "🌊", lago: "🏞️", montagna: "⛰️", fiume: "🏞️", pianura: "🌾", isola: "🏝️", Colosseo: "🏟️", colosseo: "🏟️", vesuvio: "🌋", piramidi: "🔺", partenone: "🏛️",
+    inverno: "❄️", primavera: "🌸", estate: "☀️", autunno: "🍂", candela: "🕯️", lampadina: "💡", lettera: "✉️", telefono: "☎️", computer: "💻", automobile: "🚗", carrozza: "🐎",
     aperto: "🔓", chiuso: "🔒", veloce: "⚡", lento: "🐌", felice: "😀", triste: "😢", dolce: "🍬", amaro: "🍋", nuovo: "✨", vecchio: "👴"
   };
   const emojiFor = p => EMO[String(p.l).toLowerCase()] || EMO[String(p.r).toLowerCase()] || "";
@@ -504,6 +556,10 @@ const Games = (() => {
       pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
       prompt = theme.prompt;
       eng = true; rEn = !!theme.rEn;   // per la voce: parole a sinistra in inglese; a destra inglese solo se rEn
+    } else if (OTHER_PAIRS[subjectId]) {
+      const theme = pick(OTHER_PAIRS[subjectId][classId <= 1 ? "A" : classId <= 4 ? "B" : "C"]);
+      pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
+      prompt = theme.prompt;
     } else {
       const theme = pick(ITA_PAIRS[classId <= 1 ? "A" : classId <= 4 ? "B" : "C"]);
       pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
@@ -820,26 +876,232 @@ const Games = (() => {
   }
 
   // ====================================================================
+  // TALPE: spuntano dai buchi con le risposte, colpisci quella giusta
+  // ====================================================================
+  function makeTalpe(classId, subjectId) {
+    if (typeof Questions === "undefined") return null;
+    const q = Questions.next(subjectId, classId);
+    if (!q || q.a.length < 3) return null;
+    return { kind: "talpa", title: "Talpe", prompt: q.q, hint: "Le talpe spuntano dai buchi: tocca quella con la risposta giusta! Un errore si perdona.", q,
+      stay: classId <= 2 ? 2.8 : classId <= 4 ? 2.3 : 1.9 };
+  }
+
+  function mountTalpe(el, r, onDone) {
+    const q = r.q, HOLES = 6, MAXLIVE = 3;
+    el.innerHTML = `<div class="whack">${Array.from({ length: HOLES }, (_, i) =>
+      `<button class="hole" data-h="${i}"><span class="mole"><span class="mtxt"></span><span class="mface">🐹</span></span><span class="mound"></span></button>`).join("")}</div>`;
+    const H = [...el.querySelectorAll(".hole")].map(h => ({ el: h, mole: h.querySelector(".mole"), face: h.querySelector(".mface"), txt: h.querySelector(".mtxt"), ans: -1, t: 0 }));
+    let done = false, mistakes = 0, last = 0, spawnIn = 0.25, queue = [];
+
+    function hide(h) { h.ans = -1; h.mole.classList.remove("up", "bad", "ok"); h.face.textContent = "🐹"; }
+    function show(h, i, life, cls) {
+      h.ans = i; h.t = life;
+      h.txt.textContent = q.a[i];
+      const L = q.a[i].length;
+      h.txt.style.fontSize = (L > 18 ? 12 : L > 11 ? 14 : L > 7 ? 17 : 20) + "px";
+      h.mole.classList.remove("bad", "ok");
+      if (cls) h.mole.classList.add(cls);
+      h.mole.classList.add("up");
+    }
+    function spawn() {
+      const live = H.filter(h => h.ans >= 0), free = H.filter(h => h.ans < 0);
+      if (live.length >= MAXLIVE || !free.length) return;
+      if (!queue.length) queue = shuffle(q.a.map((_, i) => i));
+      const k = queue.findIndex(i => !live.some(h => h.ans === i));
+      if (k < 0) return;
+      const i = queue.splice(k, 1)[0];
+      show(pick(free), i, r.stay * (0.85 + Math.random() * 0.4));
+    }
+    function frame(now) {
+      if (done) return;
+      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+      last = now; spawnIn -= dt;
+      for (const h of H) if (h.ans >= 0 && !h.mole.classList.contains("bad")) { h.t -= dt; if (h.t <= 0) hide(h); }
+      if (spawnIn <= 0) { spawn(); spawnIn = 0.5 + Math.random() * 0.35; }
+      raf = requestAnimationFrame(frame);
+    }
+    function hit(h) {
+      if (done || h.ans < 0 || h.mole.classList.contains("bad")) return;
+      tapFn();
+      if (h.ans === q.c) {
+        done = true; stop();
+        H.forEach(x => { x.el.disabled = true; if (x !== h) x.mole.classList.remove("up"); });
+        h.mole.classList.add("ok"); h.face.textContent = "🤩";
+        onDone(true, q.a[q.c], q.e || "");
+      } else {
+        mistakes++; boomFn();
+        h.mole.classList.add("bad"); h.face.textContent = "✖";
+        if (mistakes > 1) {
+          done = true; stop();
+          H.forEach(x => { x.el.disabled = true; if (x !== h) hide(x); });
+          const free = H.find(x => x !== h);
+          show(free, q.c, 99, "ok");
+          onDone(false, q.a[q.c], q.e || "");
+        } else {
+          setTimeout(() => { if (!done) hide(h); }, 450);
+        }
+      }
+    }
+    H.forEach(h => h.el.addEventListener("pointerdown", e => { e.preventDefault(); hit(h); }));
+    raf = requestAnimationFrame(frame);
+  }
+
+  // ====================================================================
+  // VERO O FALSO LAMPO: cinque frasi, tocca ✅ o ❌
+  // ====================================================================
+  let speakFn = null, autoSpeakFn = () => false, canSpeakFn = () => false;
+  const setSpeak = (fn, auto, can) => { speakFn = fn; autoSpeakFn = auto || (() => false); canSpeakFn = can || (() => false); };
+
+  function makeVF(classId, subjectId) {
+    if (typeof Questions === "undefined") return null;
+    const cards = []; let guard = 0;
+    while (cards.length < 5 && guard++ < 80) {
+      const q = Questions.next(subjectId, classId);
+      if (!q || q.a.length < 3) return null;
+      if (cards.some(c => c.q.q === q.q)) continue;
+      const truth = cards.length === 0 ? Math.random() < 0.5 : Math.random() < 0.5;
+      const wrongs = q.a.map((t, i) => i).filter(i => i !== q.c);
+      cards.push({ q, truth, cand: q.a[truth ? q.c : pick(wrongs)], right: q.a[q.c] });
+    }
+    if (cards.length < 5) return null;
+    return { kind: "vf", title: "Vero o falso", prompt: "Cinque frasi lampo: vero o falso?",
+      hint: "Leggi la domanda e la risposta proposta. Tocca ✅ se è giusta, ❌ se è sbagliata. Un errore si perdona, al secondo si perde.", cards };
+  }
+
+  function mountVF(el, r, onDone) {
+    const C = r.cards;
+    let i = 0, mistakes = 0, right = 0, busy = false, done = false;
+    const wrongList = [];
+    function draw() {
+      const c = C[i];
+      el.innerHTML = `<div class="vf">
+        <div class="vf-dots">${C.map((_, k) => `<i class="${k < i ? "done" : k === i ? "now" : ""}"></i>`).join("")}</div>
+        <div class="vf-card">
+          <div class="vf-q">${esc(c.q.q)}</div>
+          <div class="vf-a"><small>Risposta proposta</small>${esc(c.cand)}</div>
+          ${canSpeakFn() ? `<button class="btn ghost vf-say" data-say>🔊 Leggi</button>` : ""}
+        </div>
+        <div class="vf-btns">
+          <button class="btn vf-yes" data-v="1">✅ Vero</button>
+          <button class="btn vf-no" data-v="0">❌ Falso</button>
+        </div>
+      </div>`;
+      if (i > 0 && autoSpeakFn() && speakFn) speakFn(c);
+    }
+    function finish() {
+      done = true;
+      const ok = mistakes <= 1;
+      el.innerHTML = `<div class="vf"><div class="vf-dots">${C.map(() => `<i class="done"></i>`).join("")}</div>
+        <div class="vf-card"><div class="vf-end">${ok ? "🎉" : "😅"} ${right} su ${C.length} giuste</div></div></div>`;
+      onDone(ok, wrongList.join(" · "), ok ? (mistakes === 0 ? "Cinque su cinque: lampo perfetto!" : "Bravo, hai superato il lampo!") : "");
+    }
+    el.onclick = e => {
+      const say = e.target.closest("[data-say]");
+      if (say && speakFn) { speakFn(C[i]); return; }
+      const b = e.target.closest("[data-v]");
+      if (!b || busy || done) return;
+      busy = true; tapFn();
+      const c = C[i], said = b.dataset.v === "1", ok = said === c.truth;
+      el.querySelectorAll("[data-v]").forEach(x => { x.disabled = true; });
+      const good = el.querySelector(`[data-v="${c.truth ? 1 : 0}"]`);
+      if (good) good.classList.add("good");
+      if (ok) right++; else {
+        mistakes++; boomFn(); b.classList.add("bad");
+        wrongList.push(`${c.q.q} → ${c.right}`);
+        const card = el.querySelector(".vf-card");
+        if (card) card.insertAdjacentHTML("beforeend", `<div class="vf-fix">Giusto: <b>${esc(c.right)}</b></div>`);
+      }
+      setTimeout(() => {
+        if (!el.isConnected) return;
+        busy = false;
+        if (mistakes > 1 || i >= C.length - 1) { finish(); return; }
+        i++; draw();
+      }, ok ? 650 : 1500);
+    };
+    draw();
+  }
+
+  // ====================================================================
+  // LETTERE MESCOLATE: rimetti in ordine le lettere della parola
+  // ====================================================================
+  function makeLettere(classId, subjectId) {
+    for (let k = 0; k < 8; k++) {
+      const g = pairsFor(classId, subjectId);
+      const cands = shuffle(g.pairs).filter(p => { const w = String(p.r); return !/\s/.test(w) && w.length >= 2 && w.length <= 9; });
+      if (!cands.length) continue;
+      const p = cands[0];
+      return { kind: "lettere", title: "Lettere mescolate", eng: g.eng, rEn: g.rEn, clue: { l: p.l, r: String(p.r) },
+        prompt: `Rimetti in ordine le lettere: ${p.l} → ?`, hint: "Regola: " + g.prompt.replace(/^Collega/, "collega") + " Tocca le lettere nell'ordine giusto: un errore si perdona.", scene: g.scene };
+    }
+    return null;
+  }
+
+  function mountLettere(el, r, onDone) {
+    const word = r.clue.r, letters = word.split("");
+    let order = shuffle(letters.map((_, i) => i)), g = 0;
+    while (order.every((v, i) => letters[v] === letters[i]) && g++ < 40) order = shuffle(order);
+    let placed = [], mistakes = 0, done = false, busy = false;
+
+    function draw(state) {
+      const pool = order.filter(i => !placed.includes(i));
+      el.innerHTML = `<div class="lett">
+        <div class="lt-clue">${esc(r.clue.l)} <span>→</span> ?</div>
+        <div class="lt-slots ${state || ""}">${letters.map((_, k) => placed[k] !== undefined
+          ? `<button class="lt-slot on" data-pos="${k}">${esc(letters[placed[k]])}</button>` : `<span class="lt-slot"></span>`).join("")}</div>
+        <div class="lt-pool">${pool.map(i => `<button class="lt-tile" data-id="${i}">${esc(letters[i])}</button>`).join("")}</div>
+      </div>`;
+    }
+    el.onclick = e => {
+      if (done || busy) return;
+      const t = e.target.closest("button");
+      if (!t || !el.contains(t)) return;
+      if (t.dataset.pos !== undefined) { placed.splice(+t.dataset.pos, 1); tapFn(); draw(); return; }
+      if (t.dataset.id === undefined) return;
+      placed.push(+t.dataset.id); tapFn();
+      if (placed.length < letters.length) { draw(); return; }
+      const ok = placed.map(i => letters[i]).join("").toLowerCase() === word.toLowerCase();
+      if (ok) {
+        done = true; draw("ok");
+        onDone(true, `${r.clue.l} → ${word}`, mistakes === 0 ? "Parola ricostruita al primo colpo!" : "Parola ricostruita!");
+        return;
+      }
+      mistakes++; boomFn();
+      if (mistakes > 1) { done = true; draw("bad"); onDone(false, `${r.clue.l} → ${word}`, ""); return; }
+      busy = true; draw("bad");
+      setTimeout(() => { if (!el.isConnected) return; busy = false; placed = []; draw(); }, 800);
+    };
+    draw();
+  }
+
+  // ====================================================================
   // SCELTA E COLLEGAMENTO CON L'APP
   // ====================================================================
+  const ALL = ["italiano", "matematica", "inglese", "storia", "geografia"];
   const GAMES = {
     frase:      { subjects: ["italiano"], make: c => makeFrase(c) },
     operazione: { subjects: ["matematica"], make: c => makeOperazione(c) },
-    bersaglio:  { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makeBersaglio(c, s) },
-    corsa:      { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makeCorsa(c, s) },
-    incastro:   { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makeIncastro(c, s) },
-    memory:     { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makeMemory(c, s) },
-    palloncino: { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makePalloncini(c, s) },
-    pesca:      { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makePesca(c, s) }
+    bersaglio:  { subjects: ALL, make: (c, s) => makeBersaglio(c, s) },
+    corsa:      { subjects: ALL, make: (c, s) => makeCorsa(c, s) },
+    incastro:   { subjects: ALL, make: (c, s) => makeIncastro(c, s) },
+    memory:     { subjects: ALL, make: (c, s) => makeMemory(c, s) },
+    palloncino: { subjects: ALL, make: (c, s) => makePalloncini(c, s) },
+    pesca:      { subjects: ALL, make: (c, s) => makePesca(c, s) },
+    talpa:      { subjects: ALL, make: (c, s) => makeTalpe(c, s) },
+    vf:         { subjects: ALL, make: (c, s) => makeVF(c, s) },
+    lettere:    { subjects: ALL, make: (c, s) => makeLettere(c, s) }
   };
 
   // Un giro di gioco per la materia e la classe, oppure null (allora si fa una domanda normale).
   // share = quota di giri che sono giochi (0..1); lastKind = gioco precedente, per non ripeterlo.
   function pickRound(subjectId, classId, lastKind, share) {
     if (Math.random() >= share) return null;
-    const kinds = Object.keys(GAMES).filter(k => GAMES[k].subjects.includes(subjectId) && k !== lastKind);
-    if (!kinds.length) return null;
-    return GAMES[pick(kinds)].make(classId, subjectId);
+    // se un gioco non può partire (es. Lettere mescolate senza parole adatte) si prova con un altro
+    const kinds = shuffle(Object.keys(GAMES).filter(k => GAMES[k].subjects.includes(subjectId) && k !== lastKind));
+    for (const k of kinds) {
+      const r = GAMES[k].make(classId, subjectId);
+      if (r) return r;
+    }
+    return null;
   }
 
   function mount(el, r, onDone) {
@@ -861,8 +1123,14 @@ const Games = (() => {
       mountPalloncini(el, r, onDone);
     } else if (r.kind === "pesca") {
       mountPesca(el, r, onDone);
+    } else if (r.kind === "talpa") {
+      mountTalpe(el, r, onDone);
+    } else if (r.kind === "vf") {
+      mountVF(el, r, onDone);
+    } else if (r.kind === "lettere") {
+      mountLettere(el, r, onDone);
     }
   }
 
-  return { pick: pickRound, mount, stop, setTap, setBoom, setAvatar, isTrue, calc };
+  return { pick: pickRound, mount, stop, setTap, setBoom, setAvatar, setSpeak, isTrue, calc };
 })();
