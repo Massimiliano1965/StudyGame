@@ -437,3 +437,11 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 .odd-w.good { background: var(--good); color: #fff; opacity: 1; }
 .odd-w.bad { background: var(--bad); color: #fff; opacity: 1; }
 .odd-w[disabled] { opacity: .7; }
+
+/* interruttore voce ON/OFF (sempre visibile) */
+.voicetgl { position: fixed; right: 12px; top: calc(136px + env(safe-area-inset-top)); z-index: 10; min-height: 44px; padding: 0 14px; display: flex; align-items: center; gap: 6px; font: inherit; font-size: 15px; font-weight: 800; border-radius: 22px; border: 3px solid var(--edge); background: #2fbf71; color: #fff; box-shadow: 0 4px 0 var(--edge); cursor: pointer; }
+.voicetgl.off { background: #8d8d99; }
+.voicetgl:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge); }
+.voicetgl[hidden] { display: none; }
+.btn-row { display: flex; gap: 10px; }
+.btn-row .btn { flex: 1; }

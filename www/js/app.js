@@ -141,8 +141,8 @@
       nextLabel = "Ho finito! ✔";
       body = `<div class="center"><h1>Vuoi metterci la tua foto?</h1><p class="muted" style="margin-top:6px">È facoltativa. La foto resta solo su questo telefono e non viene mai inviata.</p></div>
         ${avatarHtml(d, "xl")}
-        <label class="btn alt big" for="photo">📷 Scatta o scegli una foto</label>
-        <input id="photo" type="file" accept="image/*" hidden>
+        ${navigator.camera ? `<div class="btn-row"><button class="btn alt big" data-act="photo-cam">📷 Scatta</button><button class="btn alt big" data-act="photo-gal">🖼️ Galleria</button></div>`
+          : `<label class="btn alt big" for="photo">📷 Scegli una foto</label><input id="photo" type="file" accept="image/*" hidden>`}
         ${d.photo ? `<button class="btn ghost" data-act="nophoto">Togli la foto</button>` : `<p class="muted center">Se non la metti, usi il tuo compagno come avatar.</p>`}`;
     }
 
@@ -163,22 +163,34 @@
     if (photo) photo.addEventListener("change", () => { if (photo.files && photo.files[0]) handlePhoto(photo.files[0]); });
   }
 
+  function takePhoto(camera) {
+    if (!navigator.camera) return;
+    navigator.camera.getPicture(b64 => handleDataUrl("data:image/jpeg;base64," + b64), () => {}, {
+      quality: 80, destinationType: Camera.DestinationType.DATA_URL, encodingType: Camera.EncodingType.JPEG,
+      sourceType: camera ? Camera.PictureSourceType.CAMERA : Camera.PictureSourceType.PHOTOLIBRARY,
+      cameraDirection: Camera.Direction.FRONT, targetWidth: 800, targetHeight: 800, correctOrientation: true, saveToPhotoAlbum: false
+    });
+  }
+
   function handlePhoto(file) {
     const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const S = CONFIG.PHOTO_SIZE, m = Math.min(img.width, img.height);
-        const c = document.createElement("canvas"); c.width = c.height = S;
-        c.getContext("2d").drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, S, S);
-        wiz.d.photo = c.toDataURL("image/jpeg", 0.82);
-        renderWizard();
-      };
-      img.onerror = () => toast("Non riesco ad aprire questa foto. Prova con un'altra.");
-      img.src = reader.result;
-    };
+    reader.onload = () => handleDataUrl(reader.result);
     reader.onerror = () => toast("Non riesco a leggere la foto.");
     reader.readAsDataURL(file);
+  }
+
+  function handleDataUrl(dataUrl) {
+    if (!wiz) return;
+    const img = new Image();
+    img.onload = () => {
+      const S = CONFIG.PHOTO_SIZE, m = Math.min(img.width, img.height);
+      const c = document.createElement("canvas"); c.width = c.height = S;
+      c.getContext("2d").drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, S, S);
+      wiz.d.photo = c.toDataURL("image/jpeg", 0.82);
+      renderWizard();
+    };
+    img.onerror = () => toast("Non riesco ad aprire questa foto. Prova con un'altra.");
+    img.src = dataUrl;
   }
 
   function finishWizard() {
@@ -532,11 +544,26 @@
     if (!$narr) return;
     const on = Voice.isSpeaking();
     $narr.hidden = !Voice.canSpeak();
-    $narr.textContent = on ? "⏹" : "🔊";
+    $narr.textContent = on ? "⏹" : "📖";
     $narr.classList.toggle("on", on);
     $narr.setAttribute("aria-label", on ? "Ferma la lettura" : "Leggi questa pagina");
   }
   Voice.onState(refreshNarrate);
+
+  // interruttore Voce ON / Voce OFF: ricorda la scelta (profile.autoRead) per ogni esercizio e gioco
+  const $vt = document.getElementById("voicetoggle");
+  function refreshVoiceToggle() {
+    if (!$vt) return;
+    const show = !!profile && !askCb && Voice.canSpeak();
+    $vt.hidden = !show;
+    if (!show) return;
+    const on = !!profile.autoRead;
+    $vt.textContent = on ? "🔊 Voce ON" : "🔇 Voce OFF";
+    $vt.classList.toggle("off", !on);
+    $vt.setAttribute("aria-pressed", String(on));
+    $vt.setAttribute("aria-label", on ? "Voce accesa: tocca per spegnerla" : "Voce spenta: tocca per accenderla");
+  }
+  new MutationObserver(() => { refreshVoiceToggle(); refreshNarrate(); }).observe($app, { childList: true });
 
   // ====================================================================
   // IMPOSTAZIONI
@@ -609,7 +636,14 @@
     close: () => closeModal(),
     edit: () => { closeModal(); startWizard(true, 0); },
     editphoto: () => { closeModal(); startWizard(true, 3); },
-    "toggle-read": () => { profile.autoRead = !profile.autoRead; Storage.saveProfile(profile); openSettings(); },
+    "toggle-read": () => { profile.autoRead = !profile.autoRead; Storage.saveProfile(profile); refreshVoiceToggle(); openSettings(); },
+    "voice-toggle": () => {
+      profile.autoRead = !profile.autoRead; Storage.saveProfile(profile);
+      Voice.stopSpeaking(); refreshVoiceToggle();
+      toast(profile.autoRead ? "🔊 Voce accesa" : "🔇 Voce spenta");
+    },
+    "photo-cam": () => takePhoto(true),
+    "photo-gal": () => takePhoto(false),
     "set-l2": el => { profile.l2 = L2.use(el.dataset.id); Storage.saveProfile(profile); openSettings(); },
     "toggle-sound": () => { profile.sound = profile.sound === false; Storage.saveProfile(profile); openSettings(); renderHome(); },
     reset: () => confirmReset(),
@@ -624,6 +658,10 @@
     if (fn) fn(el);
   });
   $modal.addEventListener("click", e => { if (e.target === $modal) closeModal(); });
+  // tap fuori dalla scheda (sullo sfondo) mentre si modifica il profilo: come Annulla
+  $app.addEventListener("click", e => {
+    if (wiz && wiz.editing && profile && (e.target === $app || e.target.classList.contains("screen"))) { wiz = null; showHome(); }
+  });
 
   // nuovo giorno: i minuti ripartono dal minimo garantito
   document.addEventListener("visibilitychange", () => {

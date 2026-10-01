@@ -30,8 +30,8 @@ jobs:
       - name: Aggiungi piattaforma Android
         run: cordova platform add android@13.0.0
 
-      - name: Aggiungi plugin voce e microfono
-        run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 ./plugins-local/speechrecognition
+      - name: Aggiungi plugin voce, microfono e fotocamera
+        run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 cordova-plugin-camera@7.0.0 ./plugins-local/speechrecognition
 
       - name: Numero di versione che cresce a ogni build
         run: sed -i "s/<widget /<widget android-versionCode=\"$((100000 + ${{ github.run_number }}))\" /" config.xml
