@@ -40,7 +40,12 @@
       } catch (e) {}
     }
     return {
-      ok: () => play(() => { tone(660, 0, .12, "triangle", .2); tone(880, .1, .12, "triangle", .2); tone(1320, .2, .22, "triangle", .18); }),
+      // jingle originale "funky" per l'omino che balla (sincopato, basso + melodia)
+      ok: () => play(() => {
+        const s = .13;
+        [[110,0],[110,2],[131,3],[110,4],[147,6],[131,7]].forEach(([f, k]) => tone(f, k * s, .12, "square", .1));
+        [[659,0,.1],[784,1,.1],[659,2,.1],[587,3,.1],[523,4,.1],[587,5,.1],[659,6,.2],[880,8,.35]].forEach(([f, k, d]) => tone(f, k * s, d + .06, "triangle", .2));
+      }),
       no: () => play(() => { tone(220, 0, .18, "sawtooth", .12); tone(165, .14, .26, "sawtooth", .12); }),
       tap: () => play(() => tone(520, 0, .06, "triangle", .12))
     };
