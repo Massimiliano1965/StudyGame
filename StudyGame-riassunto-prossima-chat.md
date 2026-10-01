@@ -5,15 +5,15 @@ Progetto: Studia e Gioca, app Android (Cordova) per ragazzi 6–12 anni: si risp
 ## Dove sta il codice
 - Repo GitHub: Massimiliano1965/StudyGame (clone: https://github.com/Massimiliano1965/studygame). Branch unico: main.
 - Build: solo da GitHub Actions, workflow "Build APK" (.github/workflows/build.yml). Artefatto: StudyGame-apk. Plugin: cordova-plugin-tts-advanced@0.5.3 e plugins-local/speechrecognition.
-- Ultimo commit su main e ultima build verde (prima di questa fase): da controllare con `gh run list -R Massimiliano1965/StudyGame -L 3` (all'ultimo controllo: run #25 verde, commit 5cdf256, più il commit dell'intestazione pulita).
+- Ultimo commit su main: b5d7852 (Scienze + domande allargate). Build #28 verde. Controllo build: `gh` non c'è nella sessione cloud, si usa curl su https://api.github.com/repos/Massimiliano1965/StudyGame/actions/runs.
 - Dalla sessione cloud: `gh` e `git` funzionano; il repo va aggiunto con add_repo (push) e clonato in /home/claude/studygame.
 
 ## File principali (www/)
 - js/config.js: regole (minuti, GAME_SHARE 0.7, GAME_SHARE_SMALL 0.95 per 1ª–3ª elementare).
-- js/subjects.js: 12 materie in elenco; READY_SUBJECTS = matematica, italiano, inglese, storia, geografia (le altre 7 non hanno domande: "arriva presto": scienze, tecnologia, arte, musica, educazione civica, seconda lingua, latino).
+- js/subjects.js: 12 materie in elenco; READY_SUBJECTS = matematica, italiano, inglese, storia, geografia, scienze (le altre 6 non hanno domande: "arriva presto": tecnologia, arte, musica, educazione civica, seconda lingua, latino).
 - js/questions.js: italiano (poche domande, 6 per fascia: da allargare) e matematica (generata dal programma). Dispatcher `Questions.next`: se la materia ha un banco in QBANK lo usa.
 - js/q_inglese.js: 298 domande di inglese (fasce A 1ª–2ª el., B 3ª–5ª el., C medie); vocabolario generato da liste di coppie [inglese, italiano] (2 domande a parola) + frasi di grammatica scritte a mano. Ogni domanda ha `en` (parole inglesi per la voce) e `ae` se le risposte sono tutte inglesi.
-- js/q_storia.js (69 domande) e js/q_geografia.js (72 domande): stesse tre fasce, risposta giusta sempre per prima (poi mescolate). Per aggiungere una materia nuova basta un file così + READY_SUBJECTS + coppie in games.js (OTHER_PAIRS) + scena.
+- js/q_scienze.js (A 27, B 29, C 31 domande), js/q_italiano_extra.js (porta italiano a A 31, B 31, C 35), js/q_storia_extra.js e js/q_geografia_extra.js (storia A 29, B 41, C 42; geografia A 30, B 50, C 50): i file *_extra si aggiungono ai banchi base. Stessa struttura di q_storia.js e q_geografia.js: stesse tre fasce, risposta giusta sempre per prima (poi mescolate). Per aggiungere una materia nuova basta un file così + READY_SUBJECTS + coppie in games.js (OTHER_PAIRS) + scena.
 - js/games.js: tutti i giochi. Funzioni: pairsFor (coppie condivise; STO_PAIRS e GEO_PAIRS per storia e geografia), SCENES/SCENE_RULES/sceneKey/sceneHtml/EMO (scene a puzzle completo), makeX/mountX per ogni gioco, GAMES (registro), pickRound (se un gioco non può partire ne prova un altro).
 - js/app.js: schermate, voce (roundSpeech, feedbackSpeech, langSegs), tasto indietro (onBack), home.
 - js/voice.js: lettura (TTS) e microfono; speak accetta stringa o lista di pezzi `{t, l:"en"}`.
@@ -45,12 +45,12 @@ Intestazione con avatar, nome, classe, ⚙️ e il pulsante grande che legge la 
 ## Stato delle prove
 - Provato da Massi sul telefono (prima di questa fase): voce inglese, scene e tutto il resto ("il resto ok"). Storia, Geografia, i 3 nuovi giochi e le nuove domande di inglese NON sono ancora stati provati da lui sul telefono.
 - Provato da Claude in un browser headless (Playwright, schermo 390×800): banchi di domande controllati (4 risposte diverse, niente duplicati), 3 nuovi giochi simulati in vittoria e sconfitta su 5 materie × classi 1/4/7 (tutti ok), scene di Incastro e Memory per storia e geografia, 45 avvii per materia/classe dall'app vera senza errori JS, screenshot, frasi lette dalla voce. Come rifarlo: pagina file:///.../www/index.html, bloccare cordova.js con route, localStorage `sg2_profile` = {nick, classId, family:"creatura", color:"#FF8FB1", photo:null, autoRead, narrAsked:true, sound}.
-- STATO DEL CODICE: modifiche pronte in locale (commit locale), NON ancora pubblicate su main e NESSUNA build fatta: serve il SÌ di Massi.
+- Provato da Claude in browser headless: 1440 giri di gioco su 6 materie × classi 0/3/4/7 senza errori; Scienze giocata dall'app vera (classi 0, 4, 7).
+- STATO DEL CODICE: tutto pubblicato su main (b5d7852), build #28 verde. Scienze, nuove domande e i 3 nuovi giochi non ancora provati da Massi sul telefono.
 
 ## Da fare (decide Massi)
-- Dopo il SÌ: push su main, build "Build APK" da GitHub Actions, controllo della run da parte di Claude.
-- Altre materie con domande (Scienze, Tecnologia, Arte, Musica, Educazione civica, Seconda lingua, Latino).
-- Allargare il banco di italiano (6 domande per fascia) e storia/geografia (circa 20-30 per fascia).
+- Altre materie con domande (Tecnologia, Arte, Musica, Educazione civica, Seconda lingua, Latino).
+- Banchi ancora piccoli: italiano (31-35 per fascia), scienze (27-31).
 - Eventualmente nuovi giochi (Massi vuole varietà continua, niente "sempre i soliti due esercizi").
 
 ## Regole di Massi (da rispettare sempre)
