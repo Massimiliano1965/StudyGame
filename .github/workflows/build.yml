@@ -34,7 +34,19 @@ jobs:
         run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 ./plugins-local/speechrecognition
 
       - name: Build APK
-        run: cordova build android --debug
+        run: cordova build android --debug > build.log 2>&1
+
+      - name: Riepilogo errori
+        if: failure()
+        run: |
+          {
+            echo '### Errori della build'
+            echo '```'
+            grep -n -i -E "error|failed|went wrong|exception|cannot|not found|invalid" build.log | head -40
+            echo '--- ultime righe ---'
+            tail -n 40 build.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Carica APK
         uses: actions/upload-artifact@v4
