@@ -1,6 +1,6 @@
-# Studia e Gioca: riassunto per la prossima chat
+# Gioca e Impara: riassunto per la prossima chat
 
-Progetto: Studia e Gioca, app Android (Cordova) per ragazzi 6–12 anni: si risponde a quiz e giochi di scuola per guadagnare tempo di telefono (30 min garantiti al giorno, tetto 2h30, +2 min per risposta giusta, −1 per sbagliata). Autore: Massi (non è sviluppatore di mestiere, lavora dal telefono e prova tutto sul suo telefono Android).
+Progetto: Gioca e Impara, app Android (Cordova) per ragazzi 6–12 anni: si risponde a quiz e giochi di scuola per guadagnare tempo di telefono (30 min garantiti al giorno, tetto 2h30, +2 min per risposta giusta, −1 per sbagliata). Autore: Massi (non è sviluppatore di mestiere, lavora dal telefono e prova tutto sul suo telefono Android).
 
 ## Dove sta il codice
 - Repo GitHub: Massimiliano1965/StudyGame (clone: https://github.com/Massimiliano1965/studygame). Branch unico: main.
@@ -21,7 +21,7 @@ Progetto: Studia e Gioca, app Android (Cordova) per ragazzi 6–12 anni: si risp
 - js/voice.js: lettura (TTS) e microfono; speak accetta stringa o lista di pezzi `{t, l:"en"}`.
 - css/style.css, js/characters.js, js/credit.js, js/storage.js (chiavi localStorage sg2_profile e sg2_day), js/lock.js.
 
-## Giochi (12 + domanda normale a 4 risposte)
+## Giochi (16 + domanda normale a 4 risposte). REGOLA: due errori si perdonano, al TERZO si perde (tutti i giochi tranne Tiro a segno/Corsa, un solo tentativo, e Memory, max 5 errori)
 - Ricostruisci la frase (solo italiano), Operazione (solo matematica).
 - Tiro a segno, Corsa, Incastro, Memory, Palloncini, Pesca, Talpe, Vero o falso, Lettere mescolate: attivi per tutte le materie.
 - Incastro: un errore si perdona, al secondo il puzzle esplode (BOOM) e ricomincia con pezzi rimescolati, senza perdere minuti. A puzzle completo appare una scena a tema: figurine delle parole giocate (EMO) + sfondo, colori e posizioni casuali; matematica, equazioni, storia e geografia hanno più varianti.
@@ -33,6 +33,7 @@ Progetto: Studia e Gioca, app Android (Cordova) per ragazzi 6–12 anni: si risp
 - NUOVO Lettere mescolate: indizio (es. «gatto → ?»), si rimettono in ordine le lettere della risposta (parole da 2 a 9 caratteri senza spazi, anche cifre); un errore si perdona. Se non ci sono parole adatte parte un altro gioco.
 - NUOVO Trova l'intruso: 3 giri da 4 parole (da una parola di un altro tema), tocca quella che non c'entra; un errore si perdona, al secondo si perde; pulsante 🔊 Leggi. Non parte per matematica e italiano (i temi di collegamento lì sono relazioni, non categorie).
 - Tiro a segno e Corsa: un solo tentativo.
+- (nuovi del 1 ottobre sera, vedi sotto: Salva l'omino, Taglia al volo, Collega con le linee)
 - Classi piccole (1ª–3ª elementare): 95% giochi e 5% domande; dalla 4ª in su 70% giochi.
 
 ## Voce
@@ -65,6 +66,19 @@ Intestazione con avatar, nome, classe, ⚙️ e il pulsante grande che legge la 
 - NON ancora provato da Massi sul telefono: tutto questo elenco.
 - Aperto: confronto 1ª elementare con le nuove Indicazioni solo di copertura temi (il testo ufficiale non è stato letto riga per riga: la ricerca web non ha dato il testo); banchi fascia A già ampi (40–110 domande per materia).
 
+
+## Novità del 1 ottobre sera (NOME NUOVO: «Gioca e Impara», prima «Gioca» perché è positivo)
+- Rinominata ovunque (config.xml, index.html, config.js, avvertenze, titoli). Restano invariati id pacchetto it.massi.studygame, repo StudyGame e chiavi localStorage sg2_* (così non si perde il profilo).
+- Icona: libro aperto + joystick + stella sorridente, sfondo azzurro-viola-rosa. Sorgente: res/build_icons.py (rigenera res/emblem.svg, www/js/logo.js e res/android/*.png; serve Playwright). In config.xml: icone vecchie + adattive (foreground/background) per ogni densità; verificato in locale con `cordova prepare` (genera mipmap-*-v26).
+- Splash animato HTML/CSS (index.html + css + js/splash.js): logo che rimbalza, lettere «Gioca / e Impara» che cadono, coriandoli, firma «Ideata e creata da Massimiliano Previtali, educatore linguistico, 20 anni di esperienza nell'insegnamento delle lingue». Resta almeno 3,2 s, un tocco la chiude dopo l'avvio, sicurezza a 10 s. Logo e nome anche nella home e nella prima schermata (brandHtml in app.js).
+- Avvertenze (pulsante info) riscritte: chi l'ha pensata, l'idea (ripetizione + divertimento > insegnamento imposto), «contrario all'uso spropositato dei cellulari ma la tecnologia c'è: usiamola bene e impediamo che la usino male», non sostituisce la scuola, fonti ministeriali, genitori.
+- 3 giochi nuovi in games.js: «Salva l'omino» (impiccato: indizio + lettere, ponte con assi che cadono, al terzo errore cade in acqua; parole 3–10 lettere, cifre ≥2; non parte dove le risposte sono frasi lunghe, es. civica), «Taglia al volo» (le risposte volano, si taglia col dito la giusta; area di taglio generosa; una carta tagliata male rientra), «Collega con le linee» (si trascina dal sinistro al destro o viceversa, oppure tocco-tocco; linee colorate). Voce: roundSpeech in app.js (Collega legge sinistra e destra separate, senza svelare le coppie).
+- Errori: tutti i giochi ora perdono al TERZO errore (Massi: «al secondo mai sentito»). Hint e voce aggiornati.
+- Scene di fine gioco corrette: storia e scienze scelgono la variante (Egitto / Grecia e Roma / castelli / neutra «viaggio nel tempo»; laboratorio / universo / natura) solo se almeno 3 coppie su 4 c'entrano, altrimenti neutra; «cose di una volta» non usa più la scena dei giorni e stagioni; matematica con geometria mischiata usa il titolo neutro «Collega ogni quesito alla sua soluzione».
+- Domande nuove (js/q_extra5.js, 14 per fascia): tecnologia A 70, B 81, C 81; arte A 62, B 57, C 59 (con dedup per testo).
+- Provato da Claude in headless: 107 prove sui 3 giochi nuovi (vittoria, sconfitta, tocco-tocco, due errori poi vittoria) su 10 materie; 1920 giri casuali su tutte le materie senza errori JS; lettere e fila perdono solo al terzo errore; audit delle scene per materia. NON ancora provato da Massi sul telefono.
+- Da fare / idee: blocco del telefono (app che sta sopra le altre e le blocca finché ci sono minuti da guadagnare; permessi Android «visualizza sopra altre app» + «accesso all'uso»; lavoro a parte, da decidere con Massi); altre domande; più parole di seconda lingua; il difetto «alla prima apertura devo chiudere e riaprire» solo quando lo decide lui.
+
 ## Da fare (decide Massi)
 - Eventualmente altre domande per tecnologia, arte, musica, civica (ora 37–47 per fascia) e più parole nel vocabolario di seconda lingua.
 - Eventualmente nuovi giochi (Massi vuole varietà continua, niente "sempre i soliti due esercizi").
@@ -79,4 +93,5 @@ Intestazione con avatar, nome, classe, ⚙️ e il pulsante grande che legge la 
 - Prima di caricare su GitHub, aspettare 4 o 5 modifiche importanti: non strumento dopo strumento.
 - A ogni fase chiusa: scrivere "FASE CHIUSA: ti conviene aprire una nuova chat" sia all'INIZIO sia alla FINE del messaggio (Massi a volte non legge la fine), e allegare direttamente il file di riassunto per la nuova chat.
 - Il tasto indietro non deve chiudere l'app: deve tornare alla pagina precedente.
+- Il nome dell'app è «Gioca e Impara» (mai «Studia e Gioca»).
 - Linguaggio: italiano, diretto; Massi si arrabbia se si fa il pigro o si ripete.

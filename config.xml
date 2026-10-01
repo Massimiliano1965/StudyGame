@@ -1,12 +1,17 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="it.massi.studygame" version="2.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
-  <name>Studia e Gioca</name>
-  <description>Studia, gioca e guadagna tempo di telefono.</description>
+  <name>Gioca e Impara</name>
+  <description>Gioca, impara e guadagna tempo di telefono.</description>
   <content src="index.html" />
   <allow-intent href="market:*" />
   <preference name="Orientation" value="portrait" />
   <preference name="android-minSdkVersion" value="24" />
   <platform name="android">
+    <icon density="mdpi" src="res/android/icon-mdpi.png" foreground="res/android/fg-mdpi.png" background="res/android/bg-mdpi.png" />
+    <icon density="hdpi" src="res/android/icon-hdpi.png" foreground="res/android/fg-hdpi.png" background="res/android/bg-hdpi.png" />
+    <icon density="xhdpi" src="res/android/icon-xhdpi.png" foreground="res/android/fg-xhdpi.png" background="res/android/bg-xhdpi.png" />
+    <icon density="xxhdpi" src="res/android/icon-xxhdpi.png" foreground="res/android/fg-xxhdpi.png" background="res/android/bg-xxhdpi.png" />
+    <icon density="xxxhdpi" src="res/android/icon-xxxhdpi.png" foreground="res/android/fg-xxxhdpi.png" background="res/android/bg-xxxhdpi.png" />
     <config-file target="AndroidManifest.xml" parent="/manifest">
       <queries>
         <intent><action android:name="android.speech.RecognitionService" /></intent>

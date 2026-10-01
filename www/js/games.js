@@ -578,7 +578,8 @@ const Games = (() => {
     storia: [
       ["linear-gradient(#FFE9B8 0 58%, #E8C98A 58%)", [["🔺", 40, 56, 80], ["🐪", 70, 74, 54], ["☀️", 86, 16, 44], ["🏺", 14, 78, 46], ["📜", 20, 30, 44]], "Un tuffo nell'antico Egitto!"],
       ["linear-gradient(#EAD9FF 0 58%, #C9B58A 58%)", [["🏛️", 50, 46, 90], ["🏺", 18, 76, 48], ["🏟️", 82, 70, 56], ["⚔️", 20, 28, 42], ["🏆", 80, 28, 44]], "Grecia e Roma: la storia è a posto!"],
-      ["linear-gradient(#CDEBFF 0 58%, #9EE493 58%)", [["🏰", 50, 46, 92], ["🛡️", 20, 74, 48], ["⚔️", 80, 74, 44], ["🐎", 16, 36, 50], ["🚩", 82, 30, 44]], "Cavalieri e castelli: tutto al suo posto!"]
+      ["linear-gradient(#CDEBFF 0 58%, #9EE493 58%)", [["🏰", 50, 46, 92], ["🛡️", 20, 74, 48], ["⚔️", 80, 74, 44], ["🐎", 16, 36, 50], ["🚩", 82, 30, 44]], "Cavalieri e castelli: tutto al suo posto!"],
+      ["linear-gradient(#E4DBFF 0 58%, #F3D9A8 58%)", [["⏳", 50, 46, 84], ["📜", 20, 72, 52], ["🗺️", 80, 72, 52], ["🕰️", 18, 26, 48], ["🏛️", 82, 26, 46], ["🧭", 52, 82, 40]], "Un viaggio nel tempo: la storia è a posto!"]
     ],
     scienze: [
       ["linear-gradient(#E8F7FF, #D9FFE8)", [["🔬", 50, 50, 84], ["🧪", 18, 28, 52], ["⚗️", 82, 26, 52], ["🧬", 20, 78, 48], ["💡", 80, 78, 46], ["🔭", 50, 18, 40]], "Che bel laboratorio: sei uno scienziato!"],
@@ -609,7 +610,7 @@ const Games = (() => {
   };
   const SCENE_RULES = [
     [/^matematica: .*equazion/, "eq"], [/^matematica/, "mat"],
-    [/^storia: .*(giorno della settimana|stagione|cosa di una volta)/, "calendario"], [/^storia/, "storia"], [/^geografia/, "mondo"], [/^scienze/, "scienze"], [/^tecnologia/, "tec"], [/^arte/, "arte"], [/^musica/, "musica"], [/^civica/, "civica"], [/^lingua2/, "lingue"], [/^latino/, "latino"],
+    [/^storia: .*(giorno della settimana|stagione)/, "calendario"], [/^storia/, "storia"], [/^geografia/, "mondo"], [/^scienze/, "scienze"], [/^tecnologia/, "tec"], [/^arte/, "arte"], [/^musica/, "musica"], [/^civica/, "civica"], [/^lingua2/, "lingue"], [/^latino/, "latino"],
     [/^inglese: .*colore/, "colori"], [/^inglese: .*animale/, "animali"], [/^inglese: .*numero/, "numeri"],
     [/^inglese: .*scuola/, "scuola"], [/^inglese: .*famiglia/, "famiglia"], [/^inglese: .*verbo inglese/, "verbi"],
     [/^inglese: .*tavola/, "tavola"], [/^inglese: .*contrario/, "contrariEn"], [/^inglese: .*irregolare/, "tempo"], [/^inglese/, "parole"],
@@ -648,7 +649,19 @@ const Games = (() => {
   // ogni volta una scena diversa: colori, posizioni, specchio e figure a caso
   function sceneHtml(key, pairs) {
     let sc = SCENES[key] || SCENES.parole;
-    if (Array.isArray(sc[0])) sc = pick(sc);                         // più varianti: ne scelgo una
+    if (Array.isArray(sc[0])) {                                      // più varianti: la scena specifica solo se quasi tutte le coppie c'entrano, altrimenti quella neutra
+      const texts = pairs.map(p => (p.l + " " + p.r).toLowerCase()), need = Math.max(2, Math.ceil(texts.length * 0.75));
+      const hits = re => texts.filter(t => re.test(t)).length;
+      if (key === "storia") {
+        const R = [/egizi|egitto|faraon|piramid|nilo|tutankh|cleopatra|geroglif|mummi/, /romani|romano|\broma\b|greci|grecia|gladiat|cesare|colosseo|atene|sparta|olimp|etrusch|impero/, /castell|cavalier|medioev|feud|crociat|carlo magno|vassall/];
+        const i = R.findIndex(re => hits(re) >= need);
+        sc = sc[i >= 0 ? i : 3];
+      } else if (key === "scienze") {
+        const space = /pianet|stell|galass|\bsole\b|luna|mercurio|venere|giove|marte|saturno|nettuno|urano|orbita|cometa|asteroid|universo|terra/;
+        const nature = /pianta|foglia|radice|fiore|seme|animal|insett|mammifer|uccell|rettil|pesc|habitat|erbivor|carnivor|albero|bosco|\bape\b|cucciol|agnell|pulcin|gattin|vitell|puledr|pecora|gatto|\bcane\b|gallina|mucca|frutto|tronco/;
+        sc = sc[hits(space) >= need ? 1 : hits(nature) >= need ? 2 : 0];
+      } else sc = pick(sc);
+    }
     const flip = Math.random() < 0.5, hue = rnd(0, 359), jit = n => n + rnd(-5, 5);
     let decor = shuffle(sc[1].slice());
     if (decor.length > 5) decor = decor.slice(0, rnd(5, decor.length));
@@ -669,6 +682,7 @@ const Games = (() => {
     if (subjectId === "matematica") {
       pairs = mathPairs(classId);
       prompt = classId >= 7 ? "Collega ogni equazione alla sua soluzione." : "Collega ogni operazione al suo risultato.";
+      if (pairs.some(p => /[a-zà-ù]{4,}/i.test(String(p.l)))) prompt = "Collega ogni quesito alla sua soluzione.";   // c'è anche geometria: titolo neutro
     } else if (subjectId === "inglese") {
       const theme = pick(ENG_PAIRS[classId <= 1 ? "A" : classId <= 4 ? "B" : "C"]);
       pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
@@ -692,7 +706,7 @@ const Games = (() => {
     if (pairs.length < 3) return null;
     let order = shuffle(pairs.map((_, i) => i)), g = 0;
     while (order.every((v, i) => v === i) && g++ < 20) order = shuffle(order);
-    return { kind: "incastro", title: "Incastro", eng, rEn, prompt, hint: "Trascina ogni pezzo al suo posto, oppure toccalo e poi tocca il posto. Un errore si perdona, al secondo il puzzle esplode!", pairs, order,
+    return { kind: "incastro", title: "Incastro", eng, rEn, prompt, hint: "Trascina ogni pezzo al suo posto, oppure toccalo e poi tocca il posto. Due errori si perdonano, al terzo il puzzle esplode!", pairs, order,
       scene, solution: pairs.map(p => `${p.l} → ${p.r}`).join(" · ") };
   }
 
@@ -723,7 +737,7 @@ const Games = (() => {
         mistakes++; clearSel();
         const d = drops[s];
         d.classList.add("nope"); pc.classList.add("nope");
-        if (mistakes > 1) { done = true; explode(); return; }
+        if (mistakes > 2) { done = true; explode(); return; }
         setTimeout(() => { d.classList.remove("nope"); pc.classList.remove("nope"); }, 450);
       }
     }
@@ -844,7 +858,7 @@ const Games = (() => {
     if (g.pairs.length < 4) return null;
     const targets = shuffle(g.pairs).slice(0, 3);
     return { kind: "palloncino", title: "Palloncini", eng: g.eng, rEn: g.rEn, prompt: "Scoppia i palloncini giusti!",
-      hint: "In alto c'è una parola: scoppia il palloncino che le corrisponde. Un errore si perdona, al secondo i palloncini scappano!",
+      hint: "In alto c'è una parola: scoppia il palloncino che le corrisponde. Due errori si perdonano, al terzo i palloncini scappano!",
       pairs: targets, pool: g.pairs, speed: classId <= 2 ? 62 : classId <= 4 ? 85 : 110, scene: g.scene,
       solution: targets.map(p => `${p.l} → ${p.r}`).join(" · ") };
   }
@@ -886,7 +900,7 @@ const Games = (() => {
     function finish(ok) {
       done = true; stop();
       B.forEach(b => { b.el.disabled = true; });
-      onDone(ok, r.solution, ok ? (mistakes === 0 ? "Nemmeno un palloncino sbagliato!" : "Palloncini scoppiati!") : "Due palloncini sbagliati: gli altri sono volati via.");
+      onDone(ok, r.solution, ok ? (mistakes === 0 ? "Nemmeno un palloncino sbagliato!" : "Palloncini scoppiati!") : "Tre palloncini sbagliati: gli altri sono volati via.");
     }
     function pop(b) {
       if (done || !B.includes(b)) return;
@@ -897,7 +911,7 @@ const Games = (() => {
         showTarget();
       } else {
         mistakes++; effect(b, "✖", "bad"); drop(b); boomFn();
-        if (mistakes > 1) finish(false);
+        if (mistakes > 2) finish(false);
       }
     }
     function frame(now) {
@@ -925,7 +939,7 @@ const Games = (() => {
     const q = Questions.next(subjectId, classId);
     if (!q || q.a.length < 3) return null;
     const speed = classId <= 2 ? 40 : classId <= 4 ? 65 : 90;
-    return { kind: "pesca", title: "Pesca", prompt: q.q, hint: "Tocca il pesce con la risposta giusta per pescarlo! Un errore si perdona.", q, speed };
+    return { kind: "pesca", title: "Pesca", prompt: q.q, hint: "Tocca il pesce con la risposta giusta per pescarlo! Due errori si perdonano.", q, speed };
   }
 
   function mountPesca(el, r, onDone) {
@@ -982,7 +996,7 @@ const Games = (() => {
       } else {
         mistakes++; s.live = false; boomFn();
         s.el.classList.add("bad"); s.el.disabled = true; s.fe.textContent = "✖";
-        if (mistakes > 1) {
+        if (mistakes > 2) {
           done = true; stop();
           fs.forEach((f, k) => { f.disabled = true; if (k === q.c) f.classList.add("ok"); else if (S[k].live) f.classList.add("dim"); });
           onDone(false, q.a[q.c], q.e || "");
@@ -1001,7 +1015,7 @@ const Games = (() => {
     if (typeof Questions === "undefined") return null;
     const q = Questions.next(subjectId, classId);
     if (!q || q.a.length < 3) return null;
-    return { kind: "talpa", title: "Talpe", prompt: q.q, hint: "Le talpe spuntano dai buchi: tocca quella con la risposta giusta! Un errore si perdona.", q,
+    return { kind: "talpa", title: "Talpe", prompt: q.q, hint: "Le talpe spuntano dai buchi: tocca quella con la risposta giusta! Due errori si perdonano.", q,
       stay: classId <= 2 ? 2.8 : classId <= 4 ? 2.3 : 1.9 };
   }
 
@@ -1050,7 +1064,7 @@ const Games = (() => {
       } else {
         mistakes++; boomFn();
         h.mole.classList.add("bad"); h.face.textContent = "✖";
-        if (mistakes > 1) {
+        if (mistakes > 2) {
           done = true; stop();
           H.forEach(x => { x.el.disabled = true; if (x !== h) hide(x); });
           const free = H.find(x => x !== h);
@@ -1084,7 +1098,7 @@ const Games = (() => {
     }
     if (cards.length < 5) return null;
     return { kind: "vf", title: "Vero o falso", prompt: "Cinque frasi lampo: vero o falso?",
-      hint: "Leggi la domanda e la risposta proposta. Tocca ✅ se è giusta, ❌ se è sbagliata. Un errore si perdona, al secondo si perde.", cards };
+      hint: "Leggi la domanda e la risposta proposta. Tocca ✅ se è giusta, ❌ se è sbagliata. Due errori si perdonano, al terzo si perde.", cards };
   }
 
   function mountVF(el, r, onDone) {
@@ -1109,7 +1123,7 @@ const Games = (() => {
     }
     function finish() {
       done = true;
-      const ok = mistakes <= 1;
+      const ok = mistakes <= 2;
       el.innerHTML = `<div class="vf"><div class="vf-dots">${C.map(() => `<i class="done"></i>`).join("")}</div>
         <div class="vf-card"><div class="vf-end">${ok ? "🎉" : "😅"} ${right} su ${C.length} giuste</div></div></div>`;
       onDone(ok, wrongList.join(" · "), ok ? (mistakes === 0 ? "Cinque su cinque: lampo perfetto!" : "Bravo, hai superato il lampo!") : "");
@@ -1133,7 +1147,7 @@ const Games = (() => {
       setTimeout(() => {
         if (!el.isConnected) return;
         busy = false;
-        if (mistakes > 1 || i >= C.length - 1) { finish(); return; }
+        if (mistakes > 2 || i >= C.length - 1) { finish(); return; }
         i++; draw();
       }, ok ? 650 : 1500);
     };
@@ -1150,7 +1164,7 @@ const Games = (() => {
       if (!cands.length) continue;
       const p = cands[0];
       return { kind: "lettere", title: "Lettere mescolate", eng: g.eng, rEn: g.rEn, clue: { l: p.l, r: String(p.r) },
-        prompt: `Rimetti in ordine le lettere: ${p.l} → ?`, hint: "Regola: " + g.prompt.replace(/^Collega/, "collega") + " Tocca le lettere nell'ordine giusto: un errore si perdona.", scene: g.scene };
+        prompt: `Rimetti in ordine le lettere: ${p.l} → ?`, hint: "Regola: " + g.prompt.replace(/^Collega/, "collega") + " Tocca le lettere nell'ordine giusto: due errori si perdonano.", scene: g.scene };
     }
     return null;
   }
@@ -1185,7 +1199,7 @@ const Games = (() => {
         return;
       }
       mistakes++; boomFn();
-      if (mistakes > 1) { done = true; draw("bad"); onDone(false, `${r.clue.l} → ${word}`, ""); return; }
+      if (mistakes > 2) { done = true; draw("bad"); onDone(false, `${r.clue.l} → ${word}`, ""); return; }
       busy = true; draw("bad");
       setTimeout(() => { if (!el.isConnected) return; busy = false; placed = []; draw(); }, 800);
     };
@@ -1220,7 +1234,7 @@ const Games = (() => {
     }
     if (rounds.length < 3) return null;
     return { kind: "intruso", title: "Trova l'intruso", eng, prompt: "Tre giri: trova l'intruso!",
-      hint: "Tocca la parola che non c'entra con le altre tre. Un errore si perdona, al secondo si perde.", rounds };
+      hint: "Tocca la parola che non c'entra con le altre tre. Due errori si perdonano, al terzo si perde.", rounds };
   }
 
   function mountIntruso(el, r, onDone) {
@@ -1241,7 +1255,7 @@ const Games = (() => {
     }
     function finish() {
       done = true;
-      const ok = mistakes <= 1;
+      const ok = mistakes <= 2;
       el.innerHTML = `<div class="vf"><div class="vf-dots">${R.map(() => `<i class="done"></i>`).join("")}</div>
         <div class="vf-card"><div class="vf-end">${ok ? "🎉" : "😅"} ${right} su ${R.length} giuste</div></div></div>`;
       onDone(ok, wrongList.join(" · "), ok ? (mistakes === 0 ? "Tre su tre: occhio da detective!" : "Bravo, hai trovato gli intrusi!") : "");
@@ -1265,7 +1279,7 @@ const Games = (() => {
       setTimeout(() => {
         if (!el.isConnected) return;
         busy = false;
-        if (mistakes > 1 || i >= R.length - 1) { finish(); return; }
+        if (mistakes > 2 || i >= R.length - 1) { finish(); return; }
         i++; draw();
       }, ok ? 650 : 1900);
     };
@@ -1417,7 +1431,7 @@ const Games = (() => {
     }
     let pool = shuffle(items.slice()), g = 0;
     while (pool.every((v, i) => v === items[i]) && g++ < 30) pool = shuffle(pool);
-    return { kind: "fila", title: "Metti in fila", eng, prompt: src.p, hint: "Tocca gli elementi nell'ordine giusto, uno dopo l'altro. Un errore si perdona.",
+    return { kind: "fila", title: "Metti in fila", eng, prompt: src.p, hint: "Tocca gli elementi nell'ordine giusto, uno dopo l'altro. Due errori si perdonano.",
       items, pool, solution: items.join(" → ") };
   }
 
@@ -1443,9 +1457,308 @@ const Games = (() => {
         draw(); return;
       }
       mistakes++; boomFn(); b.classList.add("bad");
-      if (mistakes > 1) { done = true; busy = true; setTimeout(() => { if (!el.isConnected) return; draw(true); onDone(false, r.solution, ""); }, 500); return; }
+      if (mistakes > 2) { done = true; busy = true; setTimeout(() => { if (!el.isConnected) return; draw(true); onDone(false, r.solution, ""); }, 500); return; }
       busy = true; setTimeout(() => { if (!el.isConnected) return; busy = false; draw(); }, 600);
     };
+    draw();
+  }
+
+  // ====================================================================
+  // SALVA L'OMINO (impiccato): si indovina la parola toccando le lettere
+  // ====================================================================
+  function makeImpiccato(classId, subjectId) {
+    const maxLen = classId <= 2 ? 7 : 10;
+    for (let k = 0; k < 8; k++) {
+      const g = pairsFor(classId, subjectId);
+      const cands = shuffle(g.pairs).filter(p => {
+        if (p.r == null) return false;
+        const w = String(p.r), dig = /^\d+$/.test(w);
+        return /^[\p{L}\d]+$/u.test(w) && w.length >= (dig ? 2 : 3) && w.length <= maxLen;
+      });
+      if (!cands.length) continue;
+      const p = cands[0];
+      return { kind: "impiccato", title: "Salva l'omino", eng: g.eng, rEn: g.rEn, clue: { l: String(p.l), r: String(p.r) },
+        extra: classId <= 2 ? 3 : classId <= 4 ? 4 : 6,
+        prompt: `Salva l'omino! ${p.l} → ?`,
+        hint: "Indovina la parola toccando le lettere. Due errori si perdonano, al terzo l'omino cade in acqua.", scene: g.scene };
+    }
+    return null;
+  }
+
+  function hangSvg(stage, win) {
+    // stage: 0 tutto a posto, 1 e 2 le assi cadono una dopo l'altra, 3 l'omino cade in acqua
+    const fallen = stage === 1 ? [3] : stage === 2 ? [1, 3] : stage >= 3 ? [1, 2, 3] : [];
+    const planks = [0, 1, 2, 3, 4].map(i =>
+      `<rect class="hg-plank${fallen.includes(i) ? " fall" : ""}" x="${90 + i * 24}" y="100" width="24" height="9" rx="2" fill="#C98B4A" stroke="#2B2D52" stroke-width="2.5"/>`).join("");
+    const up = win || stage === 2;
+    const arms = up
+      ? `<path d="M150 77 L136 64 M150 77 L164 64" stroke="#2B2D52" stroke-width="4" stroke-linecap="round" fill="none"/>`
+      : `<path d="M150 77 L138 87 M150 77 L162 87" stroke="#2B2D52" stroke-width="4" stroke-linecap="round" fill="none"/>`;
+    const eyes = stage >= 3
+      ? `<path d="M143 54 l5 5 m0 -5 l-5 5 M152 54 l5 5 m0 -5 l-5 5" stroke="#2B2D52" stroke-width="2" stroke-linecap="round"/>`
+      : `<circle cx="146" cy="57" r="1.9" fill="#2B2D52"/><circle cx="154" cy="57" r="1.9" fill="#2B2D52"/>`;
+    const mouth = win ? `<path d="M143 62 Q150 71 157 62 Z" fill="#fff" stroke="#2B2D52" stroke-width="2" stroke-linejoin="round"/>`
+      : stage >= 3 ? `<path d="M145 66 Q150 61 155 66" stroke="#2B2D52" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
+      : stage >= 1 ? `<ellipse cx="150" cy="65" rx="2.6" ry="3.2" fill="#2B2D52"/>`
+      : `<path d="M145 63 Q150 68 155 63" stroke="#2B2D52" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+    const man = `<g class="hg-man ${stage >= 3 ? "drop" : stage >= 1 ? "wobble" : win ? "hop" : ""}">
+        <path d="M150 71 L150 90 M150 90 L142 100 M150 90 L158 100" stroke="#2B2D52" stroke-width="4" stroke-linecap="round" fill="none"/>
+        ${arms}
+        <circle cx="150" cy="58" r="13" fill="#FFD9A8" stroke="#2B2D52" stroke-width="3"/>
+        <path d="M137 55 Q150 38 163 55 Z" fill="#FF5C8A" stroke="#2B2D52" stroke-width="2.5" stroke-linejoin="round"/>
+        ${eyes}${mouth}</g>`;
+    const splash = stage >= 3 ? `<g class="hg-splash"><circle cx="140" cy="132" r="4" fill="#fff"/><circle cx="160" cy="130" r="5" fill="#fff"/><circle cx="150" cy="124" r="3.5" fill="#fff"/><circle cx="130" cy="136" r="3" fill="#fff"/><circle cx="170" cy="136" r="3" fill="#fff"/></g>` : "";
+    const stars = win ? `<g class="hg-stars"><text x="104" y="52" font-size="18">⭐</text><text x="182" y="46" font-size="20">✨</text><text x="196" y="74" font-size="16">⭐</text></g>` : "";
+    return `<svg class="hg-svg" viewBox="0 0 300 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L'omino sul ponte">
+      <rect width="300" height="170" fill="#BFE8FF"/>
+      <circle cx="42" cy="32" r="15" fill="#FFD23F" stroke="#2B2D52" stroke-width="3"/>
+      <ellipse cx="236" cy="34" rx="26" ry="10" fill="#fff"/><ellipse cx="256" cy="40" rx="18" ry="8" fill="#fff"/>
+      <rect x="0" y="100" width="90" height="70" fill="#8A5A2B" stroke="#2B2D52" stroke-width="3"/>
+      <rect x="210" y="100" width="90" height="70" fill="#8A5A2B" stroke="#2B2D52" stroke-width="3"/>
+      <rect x="0" y="96" width="90" height="10" fill="#7BD35B" stroke="#2B2D52" stroke-width="3"/>
+      <rect x="210" y="96" width="90" height="10" fill="#7BD35B" stroke="#2B2D52" stroke-width="3"/>
+      <rect x="90" y="138" width="120" height="32" fill="#4DB8FF"/>
+      <path d="M90 140 q10 -7 20 0 t20 0 t20 0 t20 0 t20 0 t10 0" stroke="#fff" stroke-width="3" fill="none"/>
+      ${planks}${man}${splash}${stars}</svg>`;
+  }
+
+  function mountImpiccato(el, r, onDone) {
+    const word = r.clue.r, chars = word.split(""), low = chars.map(c => c.toLowerCase());
+    const uniq = [...new Set(low)], dig = /^\d+$/.test(word);
+    const source = dig ? "0123456789".split("") : "abcdefghijklmnopqrstuvwxyz".split("");
+    const decoys = shuffle(source.filter(c => !uniq.includes(c))).slice(0, r.extra || 3);
+    const keys = uniq.concat(decoys).sort((a, b) => a.localeCompare(b, "it"));
+    const used = new Map();   // lettera -> "ok" | "bad"
+    let mistakes = 0, done = false, win = false;
+
+    function draw() {
+      const lost = done && !win;
+      el.innerHTML = `<div class="hang">
+        <div class="hg-scene">${hangSvg(Math.min(mistakes, 3), win)}</div>
+        <div class="hg-word ${win ? "ok" : lost ? "bad" : ""}">${chars.map((c, i) => {
+          const shown = used.get(low[i]) === "ok" || lost;
+          return `<span class="hg-slot ${shown ? "on" : ""} ${lost && used.get(low[i]) !== "ok" ? "miss" : ""}">${shown ? esc(c) : ""}</span>`;
+        }).join("")}</div>
+        <div class="hg-keys">${keys.map(k => `<button class="hg-key ${used.get(k) || ""}" data-k="${esc(k)}" ${used.has(k) || done ? "disabled" : ""}>${esc(k)}</button>`).join("")}</div>
+      </div>`;
+    }
+    el.onclick = e => {
+      if (done) return;
+      const b = e.target.closest(".hg-key");
+      if (!b || !el.contains(b) || b.disabled) return;
+      const k = b.dataset.k;
+      tapFn();
+      if (low.includes(k)) {
+        used.set(k, "ok");
+        if (uniq.every(u => used.get(u) === "ok")) {
+          done = true; win = true; draw();
+          onDone(true, `${r.clue.l} → ${word}`, mistakes === 0 ? "Omino salvato senza errori!" : "Omino salvato!");
+          return;
+        }
+      } else {
+        used.set(k, "bad"); mistakes++; boomFn();
+        if (mistakes > 2) { done = true; draw(); onDone(false, `${r.clue.l} → ${word}`, ""); return; }
+      }
+      draw();
+    };
+    draw();
+  }
+
+  // ====================================================================
+  // TAGLIA AL VOLO: le risposte volano, si taglia col dito quella giusta
+  // ====================================================================
+  function makeTaglia(classId, subjectId) {
+    if (typeof Questions === "undefined") return null;
+    const q = Questions.next(subjectId, classId);
+    if (!q || q.a.length < 3) return null;
+    return { kind: "taglia", title: "Taglia al volo", prompt: q.q, q,
+      hint: "Le risposte volano: passa il dito sopra quella giusta per tagliarla! Due errori si perdonano, al terzo si perde.",
+      T: classId <= 2 ? 3.1 : classId <= 4 ? 2.6 : 2.2 };
+  }
+
+  function mountTaglia(el, r, onDone) {
+    const q = r.q, n = q.a.length;
+    el.innerHTML = `<div class="slice"><svg class="sl-trail" xmlns="http://www.w3.org/2000/svg"><polyline points="" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>${q.a.map(a => {
+      const L = a.length;
+      return `<div class="sl-card"><span class="sl-in" style="font-size:${L > 18 ? 12 : L > 11 ? 14 : L > 7 ? 17 : 20}px">${esc(a)}</span></div>`;
+    }).join("")}</div>`;
+    const field = el.querySelector(".slice"), line = el.querySelector("polyline");
+    const FW = field.clientWidth || 320, FH = field.clientHeight || 340;
+    const C = [...field.querySelectorAll(".sl-card")].map((c, i) => ({
+      el: c, in: c.firstChild, i, w: c.offsetWidth || 90, h: c.offsetHeight || 40, live: false, wait: 0.25 + i * 0.55 + Math.random() * 0.3,
+      t: 0, T: 1, x0: 0, vx: 0, y0: 0, vy: 0, g: 0, x: 0, y: FH + 80 }));
+    C.forEach(c => { c.el.style.visibility = "hidden"; });
+    const pts = [];
+    let done = false, mistakes = 0, last = 0, pressing = false, px = 0, py = 0;
+
+    const place = c => { c.el.style.transform = `translate3d(${Math.round(c.x)}px,${Math.round(c.y)}px,0)`; };
+    function launch(c) {
+      const T = r.T * (0.9 + Math.random() * 0.25), h = FH * (0.6 + Math.random() * 0.22), span = Math.max(0, FW - c.w);
+      c.T = T; c.t = 0; c.g = 8 * h / (T * T); c.vy = -4 * h / T; c.y0 = FH + 6;
+      c.x0 = Math.min(span, Math.max(0, (c.i / Math.max(1, n - 1)) * span + (Math.random() - 0.5) * span * 0.3));
+      c.vx = (Math.random() * span - c.x0) / T;
+      c.live = true; c.in.className = "sl-in";
+      c.x = c.x0; c.y = c.y0; place(c); c.el.style.visibility = "visible";
+    }
+    function center(c) { c.x = (FW - c.w) / 2; c.y = (FH - c.h) / 2; place(c); c.el.style.visibility = "visible"; c.in.className = "sl-in won"; }
+
+    function cut(c) {
+      if (done || !c.live) return;
+      c.live = false; c.wait = 1.1; tapFn();
+      if (c.i === q.c) {
+        done = true; stop();
+        C.forEach(x => { if (x !== c) x.el.style.visibility = "hidden"; });
+        center(c); line.setAttribute("points", "");
+        onDone(true, q.a[q.c], q.e || "");
+        return;
+      }
+      mistakes++; boomFn(); c.in.className = "sl-in badc";
+      if (mistakes > 2) {
+        done = true; stop();
+        C.forEach(x => { x.el.style.visibility = "hidden"; });
+        center(C[q.c]); line.setAttribute("points", "");
+        onDone(false, q.a[q.c], q.e || "");
+      }
+    }
+    function hitSeg(x1, y1, x2, y2) {
+      const steps = Math.max(1, Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 6));
+      for (let s = 0; s <= steps; s++) {
+        const x = x1 + (x2 - x1) * s / steps, y = y1 + (y2 - y1) * s / steps;
+        for (const c of C) {
+          if (done) return;
+          if (c.live && x >= c.x - 10 && x <= c.x + c.w + 10 && y >= c.y - 10 && y <= c.y + c.h + 10) cut(c);
+        }
+      }
+    }
+    function frame(now) {
+      if (done) return;
+      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+      last = now;
+      for (const c of C) {
+        if (c.live) {
+          c.t += dt; c.x = c.x0 + c.vx * c.t; c.y = c.y0 + c.vy * c.t + 0.5 * c.g * c.t * c.t; place(c);
+          if (c.t >= c.T) { c.live = false; c.el.style.visibility = "hidden"; c.wait = 0.3 + Math.random() * 0.7; }
+        } else {
+          c.wait -= dt;
+          if (c.wait <= 0) launch(c);
+        }
+      }
+      while (pts.length && now - pts[0].t > 170) pts.shift();
+      line.setAttribute("points", pts.map(p => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" "));
+      raf = requestAnimationFrame(frame);
+    }
+    const pos = e => { const b = field.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+    field.addEventListener("pointerdown", e => {
+      if (done) return;
+      e.preventDefault();
+      try { field.setPointerCapture(e.pointerId); } catch (_) {}
+      pressing = true; [px, py] = pos(e); pts.length = 0; pts.push({ x: px, y: py, t: performance.now() });
+      hitSeg(px, py, px, py);
+    });
+    field.addEventListener("pointermove", e => {
+      if (!pressing || done) return;
+      const [x, y] = pos(e);
+      hitSeg(px, py, x, y); px = x; py = y; pts.push({ x, y, t: performance.now() });
+    });
+    const up = () => { pressing = false; };
+    field.addEventListener("pointerup", up); field.addEventListener("pointercancel", up);
+    raf = requestAnimationFrame(frame);
+  }
+
+  // ====================================================================
+  // COLLEGA CON LE LINEE: si trascina il dito da una parola alla sua coppia
+  // ====================================================================
+  function makeLinee(classId, subjectId) {
+    const g = pairsFor(classId, subjectId);
+    const pairs = g.pairs.filter(p => p.r != null).slice(0, 4).map(p => ({ l: String(p.l), r: String(p.r) }));
+    if (pairs.length < 3) return null;
+    const uniq = k => new Set(pairs.map(p => p[k].toLowerCase())).size === pairs.length;
+    if (!uniq("l") || !uniq("r")) return null;
+    let order = shuffle(pairs.map((_, i) => i)), guard = 0;
+    while (order.every((v, i) => v === i) && guard++ < 30) order = shuffle(order);
+    return { kind: "linee", title: "Collega con le linee", eng: g.eng, rEn: g.rEn, prompt: g.prompt,
+      hint: "Trascina il dito da una parola alla sua coppia (oppure tocca una parola e poi la sua coppia). Due errori si perdonano, al terzo si perde.",
+      pairs, order, scene: g.scene };
+  }
+
+  function mountLinee(el, r, onDone) {
+    const P = r.pairs, n = P.length, COL = ["#FF9EC0", "#7ED9FF", "#B9F27A", "#FFD23F"];
+    el.innerHTML = `<div class="lk">
+      <div class="lk-col">${P.map((p, i) => `<button class="lk-item" data-s="l" data-p="${i}"><span>${esc(p.l)}</span><i class="lk-dot"></i></button>`).join("")}</div>
+      <div class="lk-col">${r.order.map(i => `<button class="lk-item" data-s="r" data-p="${i}"><span>${esc(P[i].r)}</span><i class="lk-dot"></i></button>`).join("")}</div>
+      <svg class="lk-svg" xmlns="http://www.w3.org/2000/svg"></svg></div>`;
+    const box = el.querySelector(".lk"), svg = el.querySelector(".lk-svg");
+    const item = (s, p) => box.querySelector(`.lk-item[data-s="${s}"][data-p="${p}"]`);
+    const dotPos = it => {
+      const b = box.getBoundingClientRect(), d = it.querySelector(".lk-dot").getBoundingClientRect();
+      return [d.left + d.width / 2 - b.left, d.top + d.height / 2 - b.top];
+    };
+    const lines = [];   // { p, color } oppure { p, color, rev: true }
+    let tmp = null, from = null, sel = null, mistakes = 0, done = false;
+    const sol = P.map(p => `${p.l} → ${p.r}`).join(", ");
+
+    function draw() {
+      const seg = (a, b, color, extra) => `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${color}" stroke-width="7" stroke-linecap="round" ${extra || ""}/>` +
+        `<circle cx="${a[0]}" cy="${a[1]}" r="6" fill="${color}"/>` + (extra ? "" : `<circle cx="${b[0]}" cy="${b[1]}" r="6" fill="${color}"/>`);
+      svg.innerHTML = lines.map(l => seg(dotPos(item("l", l.p)), dotPos(item("r", l.p)), l.color, l.rev ? 'stroke-dasharray="3 10"' : "")).join("") +
+        (tmp ? seg(tmp.a, tmp.b, tmp.color) : "");
+    }
+    function clearMarks() { box.querySelectorAll(".lk-item.act,.lk-item.hov").forEach(x => x.classList.remove("act", "hov")); }
+    function lock(p, color) { ["l", "r"].forEach(s => { const it = item(s, p); it.classList.add("m"); it.classList.remove("act", "hov"); it.style.setProperty("--c", color); }); }
+
+    function attempt(lp, rp) {
+      sel = null; from = null; clearMarks();
+      if (lp === rp) {
+        lock(lp, COL[lp]); lines.push({ p: lp, color: COL[lp] }); tmp = null; draw(); tapFn();
+        if (lines.length === n) { done = true; onDone(true, sol, mistakes === 0 ? "Tutte le coppie al primo colpo!" : "Tutte le coppie collegate!"); }
+        return;
+      }
+      mistakes++; boomFn();
+      const a = item("l", lp), b = item("r", rp);
+      a.classList.add("bad"); b.classList.add("bad");
+      tmp = { a: dotPos(a), b: dotPos(b), color: "#E5484D" }; draw();
+      setTimeout(() => { if (!el.isConnected) return; a.classList.remove("bad"); b.classList.remove("bad"); tmp = null; draw(); }, 450);
+      if (mistakes > 2) {
+        done = true;
+        for (let p = 0; p < n; p++) if (!lines.some(l => l.p === p)) { lock(p, "#E8E8F0"); lines.push({ p, color: "#7C7FA8", rev: true }); }
+        draw(); onDone(false, sol, "");
+      }
+    }
+    const rel = e => { const b = box.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+    box.addEventListener("pointerdown", e => {
+      if (done) return;
+      const it = e.target.closest(".lk-item");
+      if (!it || it.classList.contains("m")) return;
+      e.preventDefault();
+      try { box.setPointerCapture(e.pointerId); } catch (_) {}
+      const s = it.dataset.s, p = +it.dataset.p;
+      if (sel && sel.s !== s) { attempt(s === "l" ? p : sel.p, s === "r" ? p : sel.p); return; }
+      clearMarks(); sel = null;
+      it.classList.add("act");
+      from = { s, p, it, x: e.clientX, y: e.clientY, moved: false };
+    });
+    box.addEventListener("pointermove", e => {
+      if (done || !from) return;
+      if (!from.moved && Math.hypot(e.clientX - from.x, e.clientY - from.y) > 10) from.moved = true;
+      if (!from.moved) return;
+      tmp = { a: dotPos(from.it), b: rel(e), color: "#2B2D52" }; draw();
+      box.querySelectorAll(".lk-item.hov").forEach(x => x.classList.remove("hov"));
+      const t = document.elementFromPoint(e.clientX, e.clientY), ti = t && t.closest && t.closest(".lk-item");
+      if (ti && ti.dataset.s !== from.s && !ti.classList.contains("m")) ti.classList.add("hov");
+    });
+    box.addEventListener("pointerup", e => {
+      if (done || !from) return;
+      const f = from; from = null; tmp = null;
+      const t = document.elementFromPoint(e.clientX, e.clientY), ti = t && t.closest && t.closest(".lk-item");
+      if (f.moved && ti && ti.dataset.s !== f.s && !ti.classList.contains("m")) {
+        const q = +ti.dataset.p;
+        attempt(f.s === "l" ? f.p : q, f.s === "r" ? f.p : q);
+        return;
+      }
+      clearMarks(); draw();
+      if (!f.moved) { sel = { s: f.s, p: f.p }; f.it.classList.add("act"); }
+    });
+    box.addEventListener("pointercancel", () => { from = null; tmp = null; clearMarks(); draw(); });
     draw();
   }
 
@@ -1466,7 +1779,10 @@ const Games = (() => {
     vf:         { subjects: ALL, make: (c, s) => makeVF(c, s) },
     lettere:    { subjects: ALL, make: (c, s) => makeLettere(c, s) },
     fila:       { subjects: ALL, make: (c, s) => makeFila(c, s) },
-    intruso:    { subjects: ALL.filter(x => x !== "matematica" && x !== "italiano"), make: (c, s) => makeIntruso(c, s) }
+    intruso:    { subjects: ALL.filter(x => x !== "matematica" && x !== "italiano"), make: (c, s) => makeIntruso(c, s) },
+    impiccato:  { subjects: ALL, make: (c, s) => makeImpiccato(c, s) },
+    taglia:     { subjects: ALL, make: (c, s) => makeTaglia(c, s) },
+    linee:      { subjects: ALL, make: (c, s) => makeLinee(c, s) }
   };
 
   // Un giro di gioco per la materia e la classe, oppure null (allora si fa una domanda normale).
@@ -1511,6 +1827,12 @@ const Games = (() => {
       mountIntruso(el, r, onDone);
     } else if (r.kind === "fila") {
       mountFila(el, r, onDone);
+    } else if (r.kind === "impiccato") {
+      mountImpiccato(el, r, onDone);
+    } else if (r.kind === "taglia") {
+      mountTaglia(el, r, onDone);
+    } else if (r.kind === "linee") {
+      mountLinee(el, r, onDone);
     }
   }
 

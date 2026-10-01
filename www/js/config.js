@@ -1,6 +1,6 @@
 // ===== Configurazione: tutte le regole del gioco stanno qui =====
 const CONFIG = {
-  APP_NAME: "Studia e Gioca",
+  APP_NAME: "Gioca e Impara",
   MIN_MINUTES: 30,    // minuti garantiti ogni giorno
   MAX_MINUTES: 150,   // tetto giornaliero (2h30)
   BONUS: 2,           // minuti guadagnati per risposta giusta

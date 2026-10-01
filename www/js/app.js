@@ -230,11 +230,14 @@
     maybeShowInfo();
   }
 
+  const brandHtml = () => `<div class="brand">${Logo.svg("brand-em")}<span class="b1">Gioca</span><span class="b2">e</span><span class="b3">Impara</span></div>`;
+
   function renderHome() {
     const p = profile, th = themeFor(p.classId);
     const min = Credit.get(), pct = Math.round(min / CONFIG.MAX_MINUTES * 100), mark = Math.round(CONFIG.MIN_MINUTES / CONFIG.MAX_MINUTES * 100);
     const subs = subjectsForClass(p.classId);
     $app.innerHTML = `<section class="screen">
+      ${brandHtml()}
       <div class="top">
         <button class="avatar-btn" data-act="settings" aria-label="Il mio profilo" style="border:0;background:none;padding:0">${avatarHtml(p)}</button>
         <div class="who"><h2>Ciao, ${esc(p.nick)}!</h2><span class="pill">${classLabel(p.classId)}</span></div>
@@ -356,6 +359,14 @@
     if (r.kind === "vf") return fin([{ t: "Vero o falso. Per ogni frase tocca vero se la risposta è giusta, falso se è sbagliata. Prima frase: " }, ...vfSegs(r.cards[0])]);
     if (r.kind === "intruso") return fin([{ t: "Trova l'intruso. Tocca la parola che non c'entra con le altre tre. Primo giro: " }, ...oddSegs(r.rounds[0])]);
     if (r.kind === "lettere") return fin([{ t: "Rimetti in ordine le lettere per formare la parola. La parola da trovare corrisponde a: " }, { t: toSpeech(r.clue.l), l: r.eng ? "en" : "" }, { t: ". " + toSpeech(r.hint) }]);
+    if (r.kind === "impiccato") return fin([{ t: "Salva l'omino. Indovina la parola toccando le lettere. La parola da trovare corrisponde a: " }, { t: toSpeech(r.clue.l), l: r.eng ? "en" : "" }, { t: ". Due errori si perdonano, al terzo l'omino cade in acqua." }]);
+    if (r.kind === "linee") {
+      const segs = [{ t: "Collega con le linee. " + toSpeech(r.prompt) + " Parole a sinistra: " }];
+      r.pairs.forEach((p, i) => segs.push({ t: toSpeech(p.l) + (i < r.pairs.length - 1 ? ", " : "."), l: r.eng ? "en" : "" }));
+      segs.push({ t: " Parole a destra: " });
+      r.order.forEach((k, i) => segs.push({ t: toSpeech(r.pairs[k].r) + (i < r.order.length - 1 ? ", " : "."), l: r.rEn ? "en" : "" }));
+      return fin(segs);
+    }
     if (r.kind === "fila") {
       const segs = [{ t: "Metti in fila. " + toSpeech(r.prompt) + " Gli elementi sono: " }];
       r.pool.forEach((w, i) => segs.push({ t: toSpeech(w) + (i < r.pool.length - 1 ? ", " : "."), l: r.eng ? "en" : "" }));
@@ -380,7 +391,7 @@
       return fin(segs);
     }
     if (r.kind === "incastro") return toSpeech(r.prompt) + " Da collegare: " + r.pairs.map(p => toSpeech(p.l)).join(", ") + ". I pezzi sono: " + r.order.map(i => toSpeech(r.pairs[i].r)).join(", ") + ".";
-    const q = r.q, segs = [{ t: r.kind === "pesca" ? "Pesca il pesce con la risposta giusta. " : r.kind === "talpa" ? "Colpisci la talpa con la risposta giusta. " : "Colpisci il bersaglio con la risposta giusta. " }, ...langSegs(r.prompt, q && q.en), { t: " Le risposte sono: " }];
+    const q = r.q, segs = [{ t: r.kind === "pesca" ? "Pesca il pesce con la risposta giusta. " : r.kind === "talpa" ? "Colpisci la talpa con la risposta giusta. " : r.kind === "taglia" ? "Taglia al volo la risposta giusta, passando il dito sopra. " : "Colpisci il bersaglio con la risposta giusta. " }, ...langSegs(r.prompt, q && q.en), { t: " Le risposte sono: " }];
     q.a.forEach((a, i) => segs.push(...ansSegs(q, a), { t: i < q.a.length - 1 ? ", " : "." }));
     return fin(segs);
   }
@@ -401,7 +412,7 @@
       segs.push({ t: " La risposta giusta era: " });
       if (r && r.kind === "fila") {
         r.items.forEach((w, i) => segs.push({ t: toSpeech(w) + (i < r.items.length - 1 ? ", " : "."), l: r.eng ? "en" : "" }));
-      } else if (r && r.kind === "lettere" && r.eng) {
+      } else if (r && (r.kind === "lettere" || r.kind === "impiccato") && r.eng) {
         segs.push({ t: toSpeech(r.clue.l), l: "en" }, { t: ", " }, { t: toSpeech(r.clue.r) + ".", l: r.rEn ? "en" : "" });
       } else if (r && r.pairs && r.eng) {
         r.pairs.forEach((p, i) => {
@@ -559,6 +570,7 @@
     askCb = cb;
     setTheme(null);
     $app.innerHTML = `<section class="screen">
+      ${brandHtml()}
       <div class="hero">${Characters.svg({ family: "creatura", color: Characters.COLORS[0].hex, stage: 0, mood: "happy" })}</div>
       <div class="center"><h1>Vuoi che ti legga le domande?</h1><p class="muted" style="margin-top:6px">Puoi cambiare idea quando vuoi, dalle impostazioni.</p></div>
       <button class="btn big" data-act="narr-yes">🔊 Sì, leggimele</button>
@@ -640,7 +652,10 @@
 
   function openInfo() {
     openModal(`<h2>ℹ️ Avvertenze e informazioni</h2>
-      <p><b>Non sostituisce la scuola.</b> Studia e Gioca non sostituisce l'insegnamento né l'aiuto dei genitori: è solo un piccolo aiuto per fissare in mente alcune cose divertendosi, perché la ripetizione è ciò che fa davvero imparare e diventare bravi in qualcosa.</p>
+      <p><b>Chi l'ha pensata.</b> Gioca e Impara è stata ideata e creata da <b>Massimiliano Previtali</b>, educatore linguistico con 20 anni di esperienza nell'insegnamento delle lingue.</p>
+      <p><b>L'idea.</b> Sono convinto che la ripetizione faccia la perfezione, e che il divertimento abbia un potere d'insegnamento infinitamente superiore a quello «imposto»: ciò che si impara giocando resta. Per questo il nome comincia con «Gioca».</p>
+      <p><b>Il telefono: meglio usarlo bene.</b> Sono contrario all'uso spropositato dei cellulari. Ma viviamo in un mondo tecnologico e i bambini la tecnologia la usano comunque: allora cerchiamo di usarla al meglio, e di impedire che la usino male. Qui il tempo di telefono si guadagna: prima si gioca e si impara, poi arriva il tempo per i propri giochi.</p>
+      <p><b>Non sostituisce la scuola.</b> Gioca e Impara non sostituisce l'insegnamento né l'aiuto dei genitori: è solo un piccolo aiuto per fissare in mente alcune cose divertendosi, perché la ripetizione è ciò che fa davvero imparare e diventare bravi in qualcosa.</p>
       <p><b>Da dove vengono le domande.</b> Si basano sui programmi ministeriali italiani, consultati su internet: le <i>Indicazioni nazionali per il curricolo della scuola dell'infanzia e del primo ciclo d'istruzione</i> (D.M. 254 del 16 novembre 2012, con il documento di aggiornamento «Indicazioni nazionali e nuovi scenari» del 2018), ancora in vigore nell'anno scolastico 2026/27 per quasi tutte le classi. Le nuove Indicazioni (D.M. 221 del 9 dicembre 2025, Gazzetta Ufficiale n. 21 del 27 gennaio 2026) dal 2026/27 si applicano solo alle classi prime di primaria e media e poi, anno dopo anno, alle altre. Le domande sono state scritte per questa app e possono contenere errori.</p>
       <p><b>Genitori.</b> Si raccomanda a mamma e papà di tenere sotto controllo i figli quando usano il cellulare, soprattutto se sono piccoli, e di usare sempre buon senso e discrezione sul tempo davanti allo schermo.</p>
       <button class="btn" data-act="close">Ho capito</button>`);
@@ -748,6 +763,7 @@
 
   // ---------- avvio ----------
   function boot() {
+    Splash.done();
     refreshNarrate();
     const first = yes => { pendingAuto = yes; startWizard(false); };
     if (profile && typeof profile.classId !== "number") { Storage.resetAll(); profile = null; }
