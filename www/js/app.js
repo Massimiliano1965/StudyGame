@@ -49,7 +49,7 @@
   Games.setTap(() => Sfx.tap());
   Games.setBoom(() => Sfx.no());
   Games.setAvatar(() => charSvg(profile, "happy"));
-  Games.setSpeak(card => Voice.speak(fin(vfSegs(card)), msg => toast(msg, 6000)), () => !!(profile && profile.autoRead), () => Voice.canSpeak());
+  Games.setSpeak(card => Voice.speak(fin(card.words ? oddSegs(card) : vfSegs(card)), msg => toast(msg, 6000)), () => !!(profile && profile.autoRead), () => Voice.canSpeak());
 
   // ---------- utilità interfaccia ----------
   function toast(msg, ms) {
@@ -300,6 +300,13 @@
     return [...langSegs(card.q.q, card.q.en), { t: /[?!.:…]$/.test(card.q.q) ? " Risposta proposta: " : ". Risposta proposta: " }, ...ansSegs(card.q, card.cand), { t: "." }];
   }
 
+  // le quattro parole di "Trova l'intruso"
+  function oddSegs(card) {
+    const segs = [{ t: "Quale parola non c'entra con le altre? Le parole sono: " }];
+    card.words.forEach((w, i) => segs.push({ t: toSpeech(w) + (i < card.words.length - 1 ? ", " : "."), l: card.eng ? "en" : "" }));
+    return segs;
+  }
+
   const OPS = { "+": "più", "−": "meno", "×": "per", ":": "diviso", "=": "uguale a", "(": "apri parentesi", ")": "chiudi parentesi" };
   function roundSpeech(r) {
     if (r.kind === "frase") return "Metti le parole in ordine per fare una frase. Le parole sono: " + r.items.map(w => w.replace(/[.,;:!?]/g, "")).join(", ") + ".";
@@ -311,6 +318,7 @@
       return fin(segs);
     }
     if (r.kind === "vf") return fin([{ t: "Vero o falso. Per ogni frase tocca vero se la risposta è giusta, falso se è sbagliata. Prima frase: " }, ...vfSegs(r.cards[0])]);
+    if (r.kind === "intruso") return fin([{ t: "Trova l'intruso. Tocca la parola che non c'entra con le altre tre. Primo giro: " }, ...oddSegs(r.rounds[0])]);
     if (r.kind === "lettere") return fin([{ t: "Rimetti in ordine le lettere per formare la parola. La parola da trovare corrisponde a: " }, { t: toSpeech(r.clue.l), l: r.eng ? "en" : "" }, { t: ". " + toSpeech(r.hint) }]);
     if (r.kind === "memory") {
       const segs = [{ t: toSpeech(r.prompt) + " Le coppie sono: " }];

@@ -464,7 +464,89 @@ const Games = (() => {
       { prompt: "Collega ogni unità di misura alla sua grandezza.", pairs: [["metro", "lunghezza"], ["chilogrammo", "massa"], ["secondo", "tempo"], ["Kelvin", "temperatura"], ["Newton", "forza"], ["Joule", "energia"]] }
     ]
   };
-  const OTHER_PAIRS = { storia: STO_PAIRS, geografia: GEO_PAIRS, scienze: SCI_PAIRS };
+  // ---- Tecnologia, Arte, Musica, Educazione civica, Seconda lingua, Latino ----
+  const TEC_PAIRS = {
+    A: [
+      { prompt: "Collega ogni oggetto a ciò che serve a fare.", pairs: [["forbici", "tagliare"], ["colla", "incollare"], ["penna", "scrivere"], ["telefono", "telefonare"], ["frigorifero", "conservare il cibo"], ["lampadina", "fare luce"]] },
+      { prompt: "Collega ogni mezzo di trasporto a dove viaggia.", pairs: [["treno", "rotaie"], ["aereo", "cielo"], ["nave", "mare"], ["bicicletta", "strada"], ["metropolitana", "sotto terra"]] }
+    ],
+    B: [
+      { prompt: "Collega ogni materiale a ciò da cui si ricava.", pairs: [["carta", "legno degli alberi"], ["vetro", "sabbia"], ["plastica", "petrolio"], ["lana", "pecora"], ["cotone", "pianta del cotone"]] },
+      { prompt: "Collega ogni parte del computer a ciò che fa.", pairs: [["tastiera", "scrivere"], ["mouse", "muovere il cursore"], ["stampante", "stampare su carta"], ["schermo", "mostrare le immagini"], ["casse", "riprodurre i suoni"], ["microfono", "registrare la voce"]] },
+      { prompt: "Collega ogni fonte di energia a come si ottiene.", pairs: [["solare", "dalla luce del Sole"], ["eolica", "dal vento"], ["idroelettrica", "dall'acqua che cade"], ["geotermica", "dal calore della Terra"], ["petrolio", "combustibile fossile"]] }
+    ],
+    C: [
+      { prompt: "Collega ogni unità di misura elettrica alla sua grandezza.", pairs: [["volt", "tensione"], ["ampere", "corrente"], ["watt", "potenza"], ["ohm", "resistenza"], ["kilowattora", "energia consumata"]] },
+      { prompt: "Collega ogni termine informatico al suo significato.", pairs: [["algoritmo", "sequenza di istruzioni"], ["bit", "0 oppure 1"], ["browser", "naviga su Internet"], ["firewall", "protegge la rete"], ["URL", "indirizzo web"], ["password", "chiave segreta"]] },
+      { prompt: "Collega ogni materiale a una sua proprietà.", pairs: [["rame", "conduce l'elettricità"], ["gomma", "isola dall'elettricità"], ["vetro", "trasparente e fragile"], ["acciaio", "duro e resistente"], ["alluminio", "leggero"]] }
+    ]
+  };
+  const ART_PAIRS = {
+    A: [
+      { prompt: "Collega ogni mescolanza di colori al colore che si ottiene.", pairs: [["giallo + blu", "verde"], ["giallo + rosso", "arancione"], ["rosso + blu", "viola"], ["rosso + bianco", "rosa"], ["blu + bianco", "azzurro"]] },
+      { prompt: "Collega ogni artista a ciò che usa.", pairs: [["pittore", "pennello"], ["scultore", "scalpello"], ["fotografo", "macchina fotografica"], ["disegnatore", "matita"], ["ceramista", "argilla"]] }
+    ],
+    B: [
+      { prompt: "Collega ogni artista alla sua opera.", pairs: [["Leonardo", "La Gioconda"], ["Michelangelo", "Il David"], ["Van Gogh", "Notte stellata"], ["Picasso", "Guernica"], ["Botticelli", "La Primavera"], ["Klimt", "Il bacio"]] },
+      { prompt: "Collega ogni opera al luogo dove si trova.", pairs: [["Gioconda", "Louvre, Parigi"], ["David", "Firenze"], ["Cappella Sistina", "Città del Vaticano"], ["Ultima Cena", "Milano"], ["Partenone", "Atene"], ["Colosseo", "Roma"]] },
+      { prompt: "Collega ogni tecnica a come si fa.", pairs: [["acquerello", "colori diluiti in acqua"], ["affresco", "sul muro fresco"], ["mosaico", "piccole tessere"], ["collage", "pezzi incollati"], ["scultura", "si scolpisce un blocco"]] }
+    ],
+    C: [
+      { prompt: "Collega ogni artista alla sua corrente.", pairs: [["Monet", "Impressionismo"], ["Picasso", "Cubismo"], ["Dalí", "Surrealismo"], ["Warhol", "Pop art"], ["Boccioni", "Futurismo"], ["Caravaggio", "Barocco"]] },
+      { prompt: "Collega ogni stile a una sua caratteristica.", pairs: [["Romanico", "archi a tutto sesto"], ["Gotico", "archi a sesto acuto"], ["Barocco", "movimento e decorazioni"], ["Rinascimento", "prospettiva e proporzioni"], ["Neoclassico", "ispirato all'antica Grecia"]] },
+      { prompt: "Collega ogni monumento alla sua città.", pairs: [["Torre pendente", "Pisa"], ["Cupola di Brunelleschi", "Firenze"], ["Arena", "Verona"], ["Basilica di San Marco", "Venezia"], ["Mole Antonelliana", "Torino"]] }
+    ]
+  };
+  const MUS_PAIRS = {
+    A: [
+      { prompt: "Collega ogni strumento a come si suona.", pairs: [["flauto", "si soffia"], ["tamburo", "si batte"], ["violino", "si usa l'archetto"], ["chitarra", "si pizzicano le corde"], ["pianoforte", "si premono i tasti"]] },
+      { prompt: "Collega ogni parola della musica al suo significato.", pairs: [["forte", "con tanto volume"], ["piano", "con poco volume"], ["acuto", "alto, come un uccellino"], ["grave", "basso, come un leone"], ["veloce", "rapido"], ["lento", "calmo"]] }
+    ],
+    B: [
+      { prompt: "Collega ogni compositore a una sua opera.", pairs: [["Vivaldi", "Le quattro stagioni"], ["Verdi", "La traviata"], ["Rossini", "Il barbiere di Siviglia"], ["Mozart", "Il flauto magico"], ["Puccini", "Tosca"], ["Beethoven", "Nona sinfonia"]] },
+      { prompt: "Collega ogni strumento alla sua famiglia.", pairs: [["violino", "archi"], ["tromba", "ottoni"], ["flauto", "legni"], ["timpano", "percussioni"], ["pianoforte", "tastiera"]] },
+      { prompt: "Collega ogni segno al suo significato.", pairs: [["f (forte)", "suonare con forza"], ["p (piano)", "suonare piano"], ["crescendo", "volume che aumenta"], ["diminuendo", "volume che diminuisce"], ["pausa", "silenzio"]] }
+    ],
+    C: [
+      { prompt: "Collega ogni compositore alla sua epoca.", pairs: [["Bach", "Barocco"], ["Mozart", "Classicismo"], ["Chopin", "Romanticismo"], ["Debussy", "Impressionismo"], ["Stravinskij", "Novecento"]] },
+      { prompt: "Collega ogni indicazione di velocità al suo significato.", pairs: [["adagio", "lento"], ["andante", "a passo di camminata"], ["allegro", "veloce"], ["presto", "velocissimo"], ["moderato", "né lento né veloce"]] },
+      { prompt: "Collega ogni voce del coro al suo tipo.", pairs: [["soprano", "femminile acuta"], ["contralto", "femminile grave"], ["tenore", "maschile acuta"], ["basso", "maschile grave"]] }
+    ]
+  };
+  const CIV_PAIRS = {
+    A: [
+      { prompt: "Collega ogni luogo a chi ci lavora.", pairs: [["ospedale", "medico"], ["scuola", "maestra"], ["caserma dei pompieri", "vigile del fuoco"], ["stazione di polizia", "poliziotto"], ["biblioteca", "bibliotecario"]] },
+      { prompt: "Collega ogni segnale a ciò che dobbiamo fare.", pairs: [["semaforo rosso", "fermarsi"], ["semaforo verde", "passare"], ["semaforo giallo", "fare attenzione"], ["strisce pedonali", "attraversare"], ["marciapiede", "camminare"]] },
+      { prompt: "Collega ogni rifiuto al suo contenitore.", pairs: [["giornale", "carta"], ["bottiglia di vetro", "vetro"], ["bottiglia di plastica", "plastica"], ["buccia di banana", "umido"], ["lattina", "metalli"]] }
+    ],
+    B: [
+      { prompt: "Collega ogni festa alla sua data.", pairs: [["Festa della Repubblica", "2 giugno"], ["Festa della Liberazione", "25 aprile"], ["Festa dei lavoratori", "1 maggio"], ["Giorno della Memoria", "27 gennaio"], ["Natale", "25 dicembre"]] },
+      { prompt: "Collega ogni organo dello Stato a ciò che fa.", pairs: [["Parlamento", "fa le leggi"], ["Governo", "fa funzionare lo Stato"], ["Presidente della Repubblica", "garante della Costituzione"], ["Magistratura", "applica le leggi"], ["Sindaco", "guida il Comune"]] },
+      { prompt: "Collega ogni simbolo italiano a ciò che è.", pairs: [["tricolore", "la bandiera"], ["Canto degli Italiani", "l'inno"], ["Roma", "la capitale"], ["euro", "la moneta"], ["Costituzione", "la legge fondamentale"]] }
+    ],
+    C: [
+      { prompt: "Collega ogni articolo della Costituzione al suo tema.", pairs: [["Art. 1", "Repubblica fondata sul lavoro"], ["Art. 3", "uguaglianza"], ["Art. 11", "ripudio della guerra"], ["Art. 21", "libertà di pensiero"], ["Art. 34", "scuola aperta a tutti"]] },
+      { prompt: "Collega ogni organizzazione al suo scopo.", pairs: [["ONU", "pace tra le nazioni"], ["Unione europea", "cooperazione tra Stati europei"], ["UNESCO", "cultura e istruzione"], ["OMS", "salute nel mondo"], ["UNICEF", "diritti dei bambini"]] },
+      { prompt: "Collega ogni data a ciò che è successo.", pairs: [["2 giugno 1946", "nasce la Repubblica"], ["1° gennaio 1948", "Costituzione in vigore"], ["1957", "Trattati di Roma"], ["2002", "entra l'euro"]] }
+    ]
+  };
+  const L2_PAIRS = (() => {
+    const C = [
+      { prompt: "Collega ogni parola francese al suo significato.", pairs: [["bonjour", "buongiorno"], ["merci", "grazie"], ["maison", "casa"], ["chat", "gatto"], ["école", "scuola"], ["pain", "pane"]] },
+      { prompt: "Collega ogni parola spagnola al suo significato.", pairs: [["hola", "ciao"], ["gracias", "grazie"], ["perro", "cane"], ["agua", "acqua"], ["escuela", "scuola"], ["amigo", "amico"]] },
+      { prompt: "Collega ogni parola tedesca al suo significato.", pairs: [["Danke", "grazie"], ["Haus", "casa"], ["Hund", "cane"], ["Wasser", "acqua"], ["Schule", "scuola"], ["Buch", "libro"]] }
+    ];
+    return { A: C, B: C, C };
+  })();
+  const LAT_PAIRS = (() => {
+    const C = [
+      { prompt: "Collega ogni parola latina al suo significato.", pairs: [["puer", "ragazzo"], ["puella", "ragazza"], ["agricola", "contadino"], ["domus", "casa"], ["via", "strada"], ["nox", "notte"], ["rex", "re"], ["equus", "cavallo"]] },
+      { prompt: "Collega ogni frase latina al suo significato.", pairs: [["Carpe diem", "cogli l'attimo"], ["Alea iacta est", "il dado è tratto"], ["Veni, vidi, vici", "venni, vidi, vinsi"], ["Errare humanum est", "sbagliare è umano"], ["Mens sana in corpore sano", "mente sana in corpo sano"]] },
+      { prompt: "Collega ogni forma di «sum» al suo significato.", pairs: [["sum", "io sono"], ["es", "tu sei"], ["est", "egli è"], ["sumus", "noi siamo"], ["estis", "voi siete"], ["sunt", "essi sono"]] }
+    ];
+    return { A: C, B: C, C };
+  })();
+  const OTHER_PAIRS = { storia: STO_PAIRS, geografia: GEO_PAIRS, scienze: SCI_PAIRS, tecnologia: TEC_PAIRS, arte: ART_PAIRS, musica: MUS_PAIRS, civica: CIV_PAIRS, lingua2: L2_PAIRS, latino: LAT_PAIRS };
 
   // ====================================================================
   // SCENE DEL PUZZLE COMPLETATO (emoji, funzionano anche offline)
@@ -500,6 +582,12 @@ const Games = (() => {
       ["linear-gradient(#1B1F4B, #4B3A8F)", [["🪐", 50, 46, 90], ["🌍", 18, 28, 54], ["☄️", 82, 24, 44], ["🌙", 84, 72, 46], ["🛰️", 20, 76, 44], ["⭐", 60, 20, 30]], "L'universo non ha più segreti!"],
       ["linear-gradient(#BEE9FF 0 58%, #9EE493 58%)", [["🌳", 18, 46, 70], ["🌻", 50, 70, 54], ["🐝", 40, 34, 40], ["🦋", 74, 30, 40], ["🐛", 80, 80, 36], ["🌧️", 84, 16, 44]], "La natura è piena di meraviglie!"]
     ],
+    tec: ["linear-gradient(#E8F7FF, #FFF3C9)", [["💻", 50, 50, 84], ["🖱️", 22, 78, 44], ["⌨️", 54, 84, 44], ["🔧", 84, 26, 46], ["💡", 16, 24, 48], ["🤖", 82, 76, 52]], "Che bravo tecnico: tutto funziona!"],
+    arte: ["linear-gradient(#FFF1F6, #FFF8D6)", [["🎨", 50, 48, 84], ["🖌️", 20, 26, 50], ["🖼️", 82, 26, 52], ["🗿", 20, 78, 52], ["🌈", 80, 78, 46], ["✨", 50, 18, 32]], "Che artista! Il capolavoro è completo!"],
+    musica: ["linear-gradient(#EAD9FF, #FFE3F1)", [["🎹", 50, 66, 70], ["🎻", 20, 36, 56], ["🎺", 80, 36, 54], ["🥁", 16, 80, 50], ["🎵", 40, 18, 36], ["🎶", 66, 16, 36], ["🎤", 86, 80, 46]], "Che concerto: l'orchestra è al completo!"],
+    civica: ["linear-gradient(#CDEBFF 0 58%, #9EE493 58%)", [["🏛️", 50, 44, 84], ["🇮🇹", 20, 28, 50], ["🤝", 30, 80, 52], ["🗳️", 72, 78, 50], ["⚖️", 82, 28, 48], ["🌳", 12, 66, 50]], "Cittadini insieme: che bella comunità!"],
+    lingue: ["linear-gradient(#CDEBFF, #FFE3F1)", [["🌍", 50, 48, 96], ["🗣️", 18, 26, 50], ["💬", 82, 26, 50], ["✈️", 20, 80, 46], ["🥐", 80, 80, 46], ["💃", 50, 84, 40]], "Parli tante lingue: cittadino del mondo!"],
+    latino: ["linear-gradient(#FFEFD0, #E8D2A8)", [["🏛️", 50, 46, 84], ["🏺", 20, 76, 50], ["📜", 80, 76, 50], ["⚔️", 18, 26, 46], ["🏟️", 84, 28, 52], ["👑", 50, 16, 36]], "Ave! Parli come un antico Romano!"],
     mondo: [
       ["linear-gradient(#CDEBFF, #E8FFE3)", [["🌍", 50, 50, 110], ["🧭", 18, 24, 48], ["🗺️", 82, 24, 48], ["✈️", 22, 80, 46], ["⛰️", 80, 80, 46]], "Il mondo è nelle tue mani!"],
       ["linear-gradient(#BEE9FF 0 55%, #9EE493 55%)", [["🏔️", 24, 44, 76], ["🌋", 74, 46, 66], ["🏝️", 50, 80, 54], ["🌊", 16, 84, 44], ["🧭", 86, 16, 40]], "Montagne, vulcani e isole: che viaggio!"]
@@ -518,7 +606,7 @@ const Games = (() => {
   };
   const SCENE_RULES = [
     [/^matematica: .*equazion/, "eq"], [/^matematica/, "mat"],
-    [/^storia: .*(giorno della settimana|stagione|cosa di una volta)/, "calendario"], [/^storia/, "storia"], [/^geografia/, "mondo"], [/^scienze/, "scienze"],
+    [/^storia: .*(giorno della settimana|stagione|cosa di una volta)/, "calendario"], [/^storia/, "storia"], [/^geografia/, "mondo"], [/^scienze/, "scienze"], [/^tecnologia/, "tec"], [/^arte/, "arte"], [/^musica/, "musica"], [/^civica/, "civica"], [/^lingua2/, "lingue"], [/^latino/, "latino"],
     [/^inglese: .*colore/, "colori"], [/^inglese: .*animale/, "animali"], [/^inglese: .*numero/, "numeri"],
     [/^inglese: .*scuola/, "scuola"], [/^inglese: .*famiglia/, "famiglia"], [/^inglese: .*verbo inglese/, "verbi"],
     [/^inglese: .*tavola/, "tavola"], [/^inglese: .*contrario/, "contrariEn"], [/^inglese: .*irregolare/, "tempo"], [/^inglese/, "parole"],
@@ -1101,9 +1189,88 @@ const Games = (() => {
   }
 
   // ====================================================================
+  // TROVA L'INTRUSO: tre giri, quattro parole, una non c'entra con le altre
+  // ====================================================================
+  function makeIntruso(classId, subjectId) {
+    if (subjectId === "matematica" || subjectId === "italiano") return null;
+    const band = classId <= 1 ? "A" : classId <= 4 ? "B" : "C";
+    const eng = subjectId === "inglese";
+    const themes = (eng ? ENG_PAIRS : OTHER_PAIRS[subjectId] || {})[band];
+    if (!themes || themes.length < 2) return null;
+    const low = t => String(t).toLowerCase();
+    const rounds = [];
+    let order = shuffle(themes.slice()), guard = 0;
+    while (rounds.length < 3 && guard++ < 30) {
+      if (!order.length) order = shuffle(themes.slice());
+      const T = order.shift();
+      if (T.pairs.length < 3) continue;
+      const lefts = T.pairs.map(p => p[0]), rights = T.pairs.map(p => p[1]);
+      const others = shuffle(themes.filter(x => x !== T).flatMap(x => x.pairs.map(p => p[0])))
+        .filter(w => !lefts.some(l => low(l) === low(w)) && !rights.some(rr => low(rr) === low(w)));
+      if (!others.length) continue;
+      const rest = shuffle(lefts).slice(0, 3), odd = others[0];
+      const words = shuffle(rest.concat([odd]));
+      if (rounds.some(c => c.words.join("|") === words.join("|"))) continue;
+      rounds.push({ words, odd: words.indexOf(odd), rest, eng });
+    }
+    if (rounds.length < 3) return null;
+    return { kind: "intruso", title: "Trova l'intruso", eng, prompt: "Tre giri: trova l'intruso!",
+      hint: "Tocca la parola che non c'entra con le altre tre. Un errore si perdona, al secondo si perde.", rounds };
+  }
+
+  function mountIntruso(el, r, onDone) {
+    const R = r.rounds;
+    let i = 0, mistakes = 0, right = 0, busy = false, done = false;
+    const wrongList = [];
+    function draw() {
+      const c = R[i];
+      el.innerHTML = `<div class="vf odd">
+        <div class="vf-dots">${R.map((_, k) => `<i class="${k < i ? "done" : k === i ? "now" : ""}"></i>`).join("")}</div>
+        <div class="vf-card">
+          <div class="vf-q">Quale parola non c'entra con le altre?</div>
+          ${canSpeakFn() ? `<button class="btn ghost vf-say" data-say>🔊 Leggi</button>` : ""}
+        </div>
+        <div class="odd-grid">${c.words.map((w, k) => `<button class="odd-w" data-k="${k}">${esc(w)}</button>`).join("")}</div>
+      </div>`;
+      if (i > 0 && autoSpeakFn() && speakFn) speakFn(c);
+    }
+    function finish() {
+      done = true;
+      const ok = mistakes <= 1;
+      el.innerHTML = `<div class="vf"><div class="vf-dots">${R.map(() => `<i class="done"></i>`).join("")}</div>
+        <div class="vf-card"><div class="vf-end">${ok ? "🎉" : "😅"} ${right} su ${R.length} giuste</div></div></div>`;
+      onDone(ok, wrongList.join(" · "), ok ? (mistakes === 0 ? "Tre su tre: occhio da detective!" : "Bravo, hai trovato gli intrusi!") : "");
+    }
+    el.onclick = e => {
+      const say = e.target.closest("[data-say]");
+      if (say && speakFn) { speakFn(R[i]); return; }
+      const b = e.target.closest("[data-k]");
+      if (!b || busy || done) return;
+      busy = true; tapFn();
+      const c = R[i], ok = +b.dataset.k === c.odd;
+      el.querySelectorAll("[data-k]").forEach(x => { x.disabled = true; });
+      const good = el.querySelector(`[data-k="${c.odd}"]`);
+      if (good) good.classList.add("good");
+      if (ok) right++; else {
+        mistakes++; boomFn(); b.classList.add("bad");
+        wrongList.push(`${c.words[c.odd]} è l'intruso (gli altri: ${c.rest.join(", ")})`);
+        const card = el.querySelector(".vf-card");
+        if (card) card.insertAdjacentHTML("beforeend", `<div class="vf-fix">Gli altri tre vanno insieme: <b>${esc(c.rest.join(", "))}</b></div>`);
+      }
+      setTimeout(() => {
+        if (!el.isConnected) return;
+        busy = false;
+        if (mistakes > 1 || i >= R.length - 1) { finish(); return; }
+        i++; draw();
+      }, ok ? 650 : 1900);
+    };
+    draw();
+  }
+
+  // ====================================================================
   // SCELTA E COLLEGAMENTO CON L'APP
   // ====================================================================
-  const ALL = ["italiano", "matematica", "inglese", "storia", "geografia", "scienze"];
+  const ALL = ["italiano", "matematica", "inglese", "storia", "geografia", "scienze", "tecnologia", "arte", "musica", "civica", "lingua2", "latino"];
   const GAMES = {
     frase:      { subjects: ["italiano"], make: c => makeFrase(c) },
     operazione: { subjects: ["matematica"], make: c => makeOperazione(c) },
@@ -1115,7 +1282,8 @@ const Games = (() => {
     pesca:      { subjects: ALL, make: (c, s) => makePesca(c, s) },
     talpa:      { subjects: ALL, make: (c, s) => makeTalpe(c, s) },
     vf:         { subjects: ALL, make: (c, s) => makeVF(c, s) },
-    lettere:    { subjects: ALL, make: (c, s) => makeLettere(c, s) }
+    lettere:    { subjects: ALL, make: (c, s) => makeLettere(c, s) },
+    intruso:    { subjects: ALL.filter(x => x !== "matematica" && x !== "italiano"), make: (c, s) => makeIntruso(c, s) }
   };
 
   // Un giro di gioco per la materia e la classe, oppure null (allora si fa una domanda normale).
@@ -1156,6 +1324,8 @@ const Games = (() => {
       mountVF(el, r, onDone);
     } else if (r.kind === "lettere") {
       mountLettere(el, r, onDone);
+    } else if (r.kind === "intruso") {
+      mountIntruso(el, r, onDone);
     }
   }
 

@@ -428,3 +428,10 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 .lt-tile { width: 54px; height: 60px; padding: 0; font-family: inherit; font-weight: 800; font-size: 28px; text-transform: uppercase; color: #2B2D52; background: #7ED9FF; border: 3px solid var(--edge); border-radius: 14px; box-shadow: 0 5px 0 var(--edge); touch-action: manipulation; }
 .lt-tile:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--edge); }
 @keyframes ltshake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+/* ===== Trova l'intruso ===== */
+.odd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.odd-w { min-height: 84px; padding: 10px; font-family: inherit; font-weight: 800; font-size: 22px; line-height: 1.15; color: #2B2D52; background: #FFE066; border: 3px solid var(--edge); border-radius: 18px; box-shadow: 0 5px 0 var(--edge); overflow-wrap: anywhere; touch-action: manipulation; }
+.odd-w.good { background: var(--good); color: #fff; opacity: 1; }
+.odd-w.bad { background: var(--bad); color: #fff; opacity: 1; }
+.odd-w[disabled] { opacity: .7; }
