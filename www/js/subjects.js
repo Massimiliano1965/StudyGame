@@ -16,7 +16,7 @@ const SUBJECTS = [
 ];
 
 // Materie che hanno già domande pronte (le altre arrivano nelle ondate successive)
-const READY_SUBJECTS = ["matematica", "italiano"];
+const READY_SUBJECTS = ["matematica", "italiano", "inglese"];
 
 function subjectsForClass(classId) {
   return SUBJECTS.filter(s => classId >= s.from && classId <= s.to);

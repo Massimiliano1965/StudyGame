@@ -388,11 +388,33 @@ const Games = (() => {
     ]
   };
 
+  const ENG_PAIRS = {
+    A: [
+      { prompt: "Collega ogni colore inglese al suo significato.", pairs: [["red", "rosso"], ["blue", "blu"], ["green", "verde"], ["yellow", "giallo"], ["black", "nero"], ["white", "bianco"], ["pink", "rosa"], ["orange", "arancione"]] },
+      { prompt: "Collega ogni animale inglese al suo significato.", pairs: [["dog", "cane"], ["cat", "gatto"], ["bird", "uccello"], ["fish", "pesce"], ["horse", "cavallo"], ["cow", "mucca"], ["rabbit", "coniglio"], ["duck", "anatra"]] },
+      { prompt: "Collega ogni numero inglese al suo significato.", pairs: [["one", "uno"], ["two", "due"], ["three", "tre"], ["four", "quattro"], ["five", "cinque"], ["six", "sei"], ["seven", "sette"], ["ten", "dieci"]] }
+    ],
+    B: [
+      { prompt: "Collega ogni parola della scuola al suo significato.", pairs: [["pencil", "matita"], ["desk", "banco"], ["teacher", "insegnante"], ["bag", "zaino"], ["window", "finestra"], ["door", "porta"], ["chair", "sedia"]] },
+      { prompt: "Collega ogni parola della famiglia al suo significato.", pairs: [["mother", "madre"], ["father", "padre"], ["brother", "fratello"], ["sister", "sorella"], ["grandmother", "nonna"], ["uncle", "zio"], ["aunt", "zia"]] },
+      { prompt: "Collega ogni verbo inglese al suo significato.", pairs: [["to eat", "mangiare"], ["to drink", "bere"], ["to sleep", "dormire"], ["to run", "correre"], ["to read", "leggere"], ["to write", "scrivere"], ["to open", "aprire"]] }
+    ],
+    C: [
+      { prompt: "Collega ogni parola inglese al suo contrario.", pairs: [["hot", "cold"], ["early", "late"], ["easy", "difficult"], ["rich", "poor"], ["strong", "weak"], ["safe", "dangerous"]] },
+      { prompt: "Collega ogni verbo irregolare al suo passato.", pairs: [["go", "went"], ["see", "saw"], ["eat", "ate"], ["buy", "bought"], ["take", "took"], ["write", "wrote"], ["have", "had"]] },
+      { prompt: "Collega ogni parola inglese al suo significato.", pairs: [["although", "anche se"], ["however", "tuttavia"], ["because", "perché"], ["always", "sempre"], ["never", "mai"], ["together", "insieme"]] }
+    ]
+  };
+
   function makeIncastro(classId, subjectId) {
     let prompt, pairs;
     if (subjectId === "matematica") {
       pairs = mathPairs(classId);
       prompt = classId >= 7 ? "Collega ogni equazione alla sua soluzione." : "Collega ogni operazione al suo risultato.";
+    } else if (subjectId === "inglese") {
+      const theme = pick(ENG_PAIRS[classId <= 1 ? "A" : classId <= 4 ? "B" : "C"]);
+      pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
+      prompt = theme.prompt;
     } else {
       const theme = pick(ITA_PAIRS[classId <= 1 ? "A" : classId <= 4 ? "B" : "C"]);
       pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
@@ -486,7 +508,7 @@ const Games = (() => {
     operazione: { subjects: ["matematica"], make: c => makeOperazione(c) },
     bersaglio:  { subjects: ["italiano", "matematica"], make: (c, s) => makeBersaglio(c, s) },
     corsa:      { subjects: ["italiano", "matematica"], make: (c, s) => makeCorsa(c, s) },
-    incastro:   { subjects: ["italiano", "matematica"], make: (c, s) => makeIncastro(c, s) }
+    incastro:   { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makeIncastro(c, s) }
   };
 
   // Un giro di gioco per la materia e la classe, oppure null (allora si fa una domanda normale).

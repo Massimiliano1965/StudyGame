@@ -248,7 +248,7 @@
 
   function startGame(ids) {
     const ok = ids.filter(isReady);
-    if (!ok.length) { toast("Scegli almeno una sfida con il bollino verde: Matematica o Italiano."); return; }
+    if (!ok.length) { toast("Scegli almeno una sfida con il bollino verde: Matematica, Italiano o Inglese."); return; }
     game = { subjects: ok, streak: 0, right: 0, listening: false, lastKind: "", round: null };
     nextQuestion();
   }
