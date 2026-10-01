@@ -356,6 +356,11 @@
     if (r.kind === "vf") return fin([{ t: "Vero o falso. Per ogni frase tocca vero se la risposta è giusta, falso se è sbagliata. Prima frase: " }, ...vfSegs(r.cards[0])]);
     if (r.kind === "intruso") return fin([{ t: "Trova l'intruso. Tocca la parola che non c'entra con le altre tre. Primo giro: " }, ...oddSegs(r.rounds[0])]);
     if (r.kind === "lettere") return fin([{ t: "Rimetti in ordine le lettere per formare la parola. La parola da trovare corrisponde a: " }, { t: toSpeech(r.clue.l), l: r.eng ? "en" : "" }, { t: ". " + toSpeech(r.hint) }]);
+    if (r.kind === "fila") {
+      const segs = [{ t: "Metti in fila. " + toSpeech(r.prompt) + " Gli elementi sono: " }];
+      r.pool.forEach((w, i) => segs.push({ t: toSpeech(w) + (i < r.pool.length - 1 ? ", " : "."), l: r.eng ? "en" : "" }));
+      return fin(segs);
+    }
     if (r.kind === "memory") {
       const segs = [{ t: toSpeech(r.prompt) + " Le coppie sono: " }];
       r.pairs.forEach((p, i) => segs.push({ t: toSpeech(p.l), l: r.eng ? "en" : "" }, { t: " con " }, { t: toSpeech(p.r) + (i < r.pairs.length - 1 ? ", " : "."), l: r.rEn ? "en" : "" }));
@@ -394,7 +399,9 @@
     const segs = [{ t: fb.title + "." }];
     if (fb.correct) {
       segs.push({ t: " La risposta giusta era: " });
-      if (r && r.kind === "lettere" && r.eng) {
+      if (r && r.kind === "fila") {
+        r.items.forEach((w, i) => segs.push({ t: toSpeech(w) + (i < r.items.length - 1 ? ", " : "."), l: r.eng ? "en" : "" }));
+      } else if (r && r.kind === "lettere" && r.eng) {
         segs.push({ t: toSpeech(r.clue.l), l: "en" }, { t: ", " }, { t: toSpeech(r.clue.r) + ".", l: r.rEn ? "en" : "" });
       } else if (r && r.pairs && r.eng) {
         r.pairs.forEach((p, i) => {
@@ -483,9 +490,24 @@
     game.fb = { title: ok ? pick(PRAISE[th]) : pick(OOPS), delta: r.delta, text, correct: ok ? "" : (correct || "") };
   }
 
+  // sbagliato: il personaggio si schiaccia e piange; giusto: balla (moonwalk, giravolta, posa)
+  function animateHero(hero, ok) {
+    hero.classList.remove("hop", "shake", "squash", "dance");
+    hero.querySelectorAll(".tear,.cry,.hat,.glove").forEach(n => n.remove());
+    void hero.offsetWidth;
+    if (ok) {
+      hero.style.setProperty("--dance", pick(["moonwalk", "spin", "lean"]));
+      hero.insertAdjacentHTML("beforeend", '<span class="hat">🎩</span><span class="glove">🧤</span>');
+      hero.classList.add("dance");
+    } else {
+      hero.insertAdjacentHTML("beforeend", '<span class="tear l"></span><span class="tear r"></span><span class="cry">😭</span>');
+      hero.classList.add("squash");
+    }
+  }
+
   function afterResult(ok) {
     const hero = document.getElementById("hero");
-    if (hero) hero.classList.add(ok ? "hop" : "shake");
+    if (hero) animateHero(hero, ok);
     if (ok) { Sfx.ok(); sparks(hero); } else { Sfx.no(); }
     window.scrollTo(0, document.body.scrollHeight);
     if (profile.autoRead) Voice.speak(feedbackSpeech(), msg => toast(msg, 6000));
@@ -607,12 +629,11 @@
     const p = profile;
     openModal(`
       <div class="top">${avatarHtml(p)}<div class="who"><h2>${esc(p.nick)}</h2><span class="pill">${classLabel(p.classId)}</span></div></div>
-      <button class="btn alt" data-act="edit">✏️ Cambia nome, classe o compagno</button>
+      <button class="btn alt" data-act="edit">✏️ Cambia nome o classe</button>
       <button class="btn alt" data-act="editphoto">📷 Cambia foto</button>
-      <div class="row-set"><span>Leggi le domande ad alta voce</span><button class="switch ${p.autoRead ? "on" : ""}" data-act="toggle-read" aria-pressed="${!!p.autoRead}">${p.autoRead ? "Sì" : "No"}</button></div>
-      <div class="row-set l2-set"><span>Seconda lingua</span><div class="l2-pick">${L2.codes().map(c => `<button class="switch ${(p.l2 || L2.DEFAULT) === c ? "on" : ""}" data-act="set-l2" data-id="${c}" aria-pressed="${(p.l2 || L2.DEFAULT) === c}">${L2.LANGS[c].flag} ${L2.LANGS[c].name}</button>`).join("")}</div></div>
+      <div class="row-set l2-set"><span class="set-label">Seconda lingua</span><div class="l2-pick">${L2.codes().map(c => `<button class="switch ${(p.l2 || L2.DEFAULT) === c ? "on" : ""}" data-act="set-l2" data-id="${c}" aria-pressed="${(p.l2 || L2.DEFAULT) === c}"><span class="fl">${L2.LANGS[c].flag}</span><span>${L2.LANGS[c].name}</span></button>`).join("")}</div></div>
       <div class="row-set"><span>Suoni</span><button class="switch ${p.sound !== false ? "on" : ""}" data-act="toggle-sound" aria-pressed="${p.sound !== false}">${p.sound !== false ? "Sì" : "No"}</button></div>
-      <button class="btn ghost" data-act="info">ℹ️ Avvertenze e informazioni</button>
+      <button class="btn ghost" data-act="info">ℹ️ Avvertenze</button>
       <button class="btn ghost" data-act="reset">🗑 Ricomincia da zero</button>
       <button class="btn" data-act="close">Chiudi</button>`);
   }

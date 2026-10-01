@@ -435,8 +435,8 @@ const Games = (() => {
       { prompt: "Collega ogni evento alla sua data.", pairs: [["Nascita di Roma", "753 a.C."], ["Caduta di Roma", "476 d.C."], ["Scoperta dell'America", "1492"], ["Rivoluzione francese", "1789"]] }
     ],
     C: [
-      { prompt: "Collega ogni evento alla sua data.", pairs: [["Scoperta dell'America", "1492"], ["Rivoluzione francese", "1789"], ["Unità d'Italia", "1861"], ["Prima guerra mondiale", "1914"], ["Repubblica italiana", "1946"], ["Caduta del Muro", "1989"]] },
-      { prompt: "Collega ogni personaggio al suo ruolo.", pairs: [["Napoleone", "imperatore francese"], ["Garibaldi", "spedizione dei Mille"], ["Cavour", "primo ministro"], ["Gutenberg", "stampa"], ["Lutero", "Riforma"], ["Colombo", "America"]] },
+      { cl: [6, 7], prompt: "Collega ogni evento alla sua data.", pairs: [["Scoperta dell'America", "1492"], ["Rivoluzione francese", "1789"], ["Unità d'Italia", "1861"], ["Prima guerra mondiale", "1914"], ["Repubblica italiana", "1946"], ["Caduta del Muro", "1989"]] },
+      { cl: [6, 7], prompt: "Collega ogni personaggio al suo ruolo.", pairs: [["Napoleone", "imperatore francese"], ["Garibaldi", "spedizione dei Mille"], ["Cavour", "primo ministro"], ["Gutenberg", "stampa"], ["Lutero", "Riforma"], ["Colombo", "America"]] },
       { prompt: "Collega ogni periodo alla sua caratteristica.", pairs: [["Feudalesimo", "signori e vassalli"], ["Rinascimento", "arte e cultura classica"], ["Rivoluzione industriale", "macchine e fabbriche"], ["Crociate", "Terra Santa"], ["Illuminismo", "la ragione"]] }
     ]
   };
@@ -675,12 +675,12 @@ const Games = (() => {
       prompt = theme.prompt;
       eng = true; rEn = !!theme.rEn;   // per la voce: parole a sinistra in inglese; a destra inglese solo se rEn
     } else if (OTHER_PAIRS[subjectId]) {
-      const theme = pick(OTHER_PAIRS[subjectId][classId <= 1 ? "A" : classId <= 4 ? "B" : "C"]);
+      const theme = pick(Questions.inClass(OTHER_PAIRS[subjectId][classId <= 1 ? "A" : classId <= 4 ? "B" : "C"], classId));
       pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
       prompt = theme.prompt;
       if (subjectId === "lingua2") eng = true;   // le parole a sinistra sono straniere: la voce le legge nella lingua scelta
     } else {
-      const theme = pick(ITA_PAIRS[classId <= 1 ? "A" : classId <= 4 ? "B" : "C"]);
+      const theme = pick(Questions.inClass(ITA_PAIRS[classId <= 1 ? "A" : classId <= 4 ? "B" : "C"], classId));
       pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
       prompt = theme.prompt;
     }
@@ -1199,7 +1199,8 @@ const Games = (() => {
     if (subjectId === "matematica" || subjectId === "italiano") return null;
     const band = classId <= 1 ? "A" : classId <= 4 ? "B" : "C";
     const eng = subjectId === "inglese" || subjectId === "lingua2";
-    const themes = (subjectId === "inglese" ? ENG_PAIRS : OTHER_PAIRS[subjectId] || {})[band];
+    const allThemes = (subjectId === "inglese" ? ENG_PAIRS : OTHER_PAIRS[subjectId] || {})[band];
+    const themes = allThemes && Questions.inClass(allThemes, classId);
     if (!themes || themes.length < 2) return null;
     const low = t => String(t).toLowerCase();
     const rounds = [];
@@ -1272,6 +1273,183 @@ const Games = (() => {
   }
 
   // ====================================================================
+  // METTI IN FILA: tocca gli elementi nell'ordine giusto (numeri, giorni, epoche, pianeti, note…)
+  // ====================================================================
+  const MESI = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
+  const GIORNI = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"];
+  const EN_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const EN_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const EN_NUM = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+  const PIANETI = ["Mercurio", "Venere", "Terra", "Marte", "Giove", "Saturno", "Urano", "Nettuno"];
+  const INVENZIONI = ["Stampa di Gutenberg", "Telescopio di Galileo", "Pila di Volta", "Radio di Marconi", "Aeroplano dei fratelli Wright", "Computer", "Smartphone"];
+  const MONTAGNE = ["Monte Bianco", "Monte Rosa", "Cervino", "Gran Paradiso", "Etna", "Gran Sasso"];
+  const CITTA_NS = ["Trento", "Milano", "Firenze", "Roma", "Napoli", "Catanzaro", "Palermo"];
+  const OCEANI = ["Pacifico", "Atlantico", "Indiano", "Artico"];
+  const COLORI_ARC = ["rosso", "arancione", "giallo", "verde", "azzurro", "indaco", "viola"];
+  const NOTE = ["do", "re", "mi", "fa", "sol", "la", "si"];
+  const DURATE = ["semibreve", "minima", "semiminima", "croma", "semicroma"];
+  const DINAMICHE = ["pianissimo", "piano", "mezzoforte", "forte", "fortissimo"];
+  const EPOCHE = ["Preistoria", "Età antica", "Medioevo", "Età moderna", "Età contemporanea"];
+  const SEQS = {
+    storia: {
+      A: [
+        { p: "Metti in fila i giorni della settimana.", items: GIORNI }, { p: "Metti in fila i mesi dell'anno.", items: MESI },
+        { p: "Metti in fila i momenti della giornata.", items: ["mattina", "mezzogiorno", "pomeriggio", "sera", "notte"] },
+        { p: "Metti in fila le stagioni, a partire dalla primavera.", items: ["primavera", "estate", "autunno", "inverno"] }
+      ],
+      B: [
+        { p: "Metti in fila le età della storia, dalla più antica.", items: EPOCHE },
+        { p: "Metti in fila i periodi della Preistoria, dal più antico.", items: ["Paleolitico", "Neolitico", "Età del bronzo", "Età del ferro"] },
+        { p: "Metti in fila questi eventi, dal più antico.", items: ["Nascita di Roma", "Caduta dell'Impero romano d'Occidente", "Scoperta dell'America", "Rivoluzione francese", "Unità d'Italia"] }
+      ],
+      C: [
+        { cl: [5, 7], p: "Metti in fila questi eventi, dal più antico.", items: ["Caduta dell'Impero romano d'Occidente", "Incoronazione di Carlo Magno", "Prima Crociata", "Peste nera", "Caduta di Costantinopoli", "Scoperta dell'America"] },
+        { cl: [6, 7], p: "Metti in fila questi eventi, dal più antico.", items: ["Scoperta dell'America", "Rivoluzione francese", "Unità d'Italia", "Prima guerra mondiale", "Seconda guerra mondiale", "Nascita della Repubblica italiana", "Caduta del Muro di Berlino"] },
+        { p: "Metti in fila le età della storia, dalla più antica.", items: EPOCHE }
+      ]
+    },
+    geografia: {
+      A: [{ p: "Metti in fila dal più piccolo al più grande.", items: ["la casa", "la strada", "il quartiere", "la città"] }],
+      B: [{ p: "Metti in fila queste città, da Nord a Sud.", items: CITTA_NS }, { p: "Metti in fila gli oceani, dal più grande al più piccolo.", items: OCEANI }],
+      C: [{ p: "Metti in fila queste città, da Nord a Sud.", items: CITTA_NS }, { p: "Metti in fila gli oceani, dal più grande al più piccolo.", items: OCEANI },
+        { p: "Metti in fila queste montagne, dalla più alta alla più bassa.", items: MONTAGNE }]
+    },
+    scienze: {
+      A: [
+        { p: "Metti in fila la vita di una pianta.", items: ["seme", "germoglio", "pianta", "fiore", "frutto"] },
+        { p: "Metti in fila la vita di una farfalla.", items: ["uovo", "bruco", "crisalide", "farfalla"] },
+        { p: "Metti in fila le età di una persona.", items: ["neonato", "bambino", "adulto", "anziano"] }
+      ],
+      B: [
+        { p: "Metti in fila i pianeti, dal più vicino al Sole.", items: PIANETI },
+        { p: "Metti in fila la catena alimentare, a partire dall'erba.", items: ["erba", "cavalletta", "rana", "serpente", "aquila"] },
+        { p: "Metti in fila il viaggio del cibo nel corpo.", items: ["bocca", "esofago", "stomaco", "intestino tenue", "intestino crasso"] }
+      ],
+      C: [
+        { p: "Metti in fila i pianeti, dal più vicino al Sole.", items: PIANETI },
+        { p: "Metti in fila i livelli del corpo, dal più piccolo al più grande.", items: ["cellula", "tessuto", "organo", "apparato", "organismo"] },
+        { p: "Metti in fila il viaggio del cibo nel corpo.", items: ["bocca", "esofago", "stomaco", "intestino tenue", "intestino crasso"] }
+      ]
+    },
+    tecnologia: {
+      A: [{ p: "Metti in fila dal più lento al più veloce.", items: ["a piedi", "bicicletta", "automobile", "treno veloce", "aereo"] }],
+      B: [{ p: "Metti in fila queste invenzioni, dalla più antica.", items: INVENZIONI }],
+      C: [{ p: "Metti in fila queste invenzioni, dalla più antica.", items: INVENZIONI }]
+    },
+    arte: {
+      A: [{ p: "Metti in fila i colori dell'arcobaleno, dal rosso.", items: COLORI_ARC }],
+      B: [{ p: "Metti in fila i colori dell'arcobaleno, dal rosso.", items: COLORI_ARC }],
+      C: [{ p: "Metti in fila questi movimenti artistici, dal più antico.", items: ["Romanico", "Gotico", "Rinascimento", "Barocco", "Neoclassicismo", "Impressionismo", "Cubismo"] }]
+    },
+    musica: {
+      A: [{ p: "Metti in fila le note musicali, a partire dal do.", items: NOTE }],
+      B: [{ p: "Metti in fila le note musicali, a partire dal do.", items: NOTE }, { p: "Metti in fila le durate, dalla più lunga alla più corta.", items: DURATE }],
+      C: [{ p: "Metti in fila le durate, dalla più lunga alla più corta.", items: DURATE }, { p: "Metti in fila i volumi, dal più piano al più forte.", items: DINAMICHE }]
+    },
+    civica: {
+      A: [{ p: "Metti in fila dal più piccolo al più grande.", items: ["la classe", "la scuola", "il quartiere", "la città"] }],
+      B: [{ p: "Metti in fila dal più piccolo al più grande.", items: ["il Comune", "la Provincia", "la Regione", "lo Stato", "l'Unione europea"] }],
+      C: [{ p: "Metti in fila dal più piccolo al più grande.", items: ["il Comune", "la Provincia", "la Regione", "lo Stato", "l'Unione europea"] }]
+    },
+    inglese: {
+      eng: true,
+      A: [{ p: "Put the numbers in order. Metti in fila i numeri.", items: EN_NUM }, { p: "Put the days in order. Metti in fila i giorni.", items: EN_DAYS }],
+      B: [{ p: "Metti in fila i giorni della settimana.", items: EN_DAYS }, { p: "Metti in fila i mesi dell'anno.", items: EN_MONTHS }, { p: "Metti in fila i numeri.", items: EN_NUM }],
+      C: [{ p: "Metti in fila i mesi dell'anno.", items: EN_MONTHS }, { p: "Metti in fila i giorni della settimana.", items: EN_DAYS }, { p: "Metti in fila le stagioni.", items: ["spring", "summer", "autumn", "winter"] }]
+    },
+    latino: {
+      A: [{ p: "Metti in fila i numeri latini, da unus.", items: ["unus", "duo", "tres", "quattuor", "quinque", "sex", "septem", "octo", "novem", "decem"] }],
+      B: [{ p: "Metti in fila i numeri latini, da unus.", items: ["unus", "duo", "tres", "quattuor", "quinque", "sex", "septem", "octo", "novem", "decem"] }],
+      C: [{ p: "Metti in fila i numeri latini, da unus.", items: ["unus", "duo", "tres", "quattuor", "quinque", "sex", "septem", "octo", "novem", "decem"] }]
+    }
+  };
+  const ITA_ALFA = {
+    A: ["albero", "barca", "casa", "dado", "elefante", "fiore", "gatto", "isola", "luna", "mela", "naso", "ombrello", "pane", "rana", "sole", "tavolo", "uva", "vela", "zaino"],
+    B: ["amicizia", "bosco", "cavallo", "dolce", "estate", "finestra", "giardino", "libro", "montagna", "natura", "orologio", "palazzo", "quaderno", "ragazzo", "scuola", "treno", "vento", "zucchero"],
+    C: ["abitudine", "bellezza", "coraggio", "dolore", "energia", "fantasia", "gentilezza", "illusione", "libertà", "memoria", "orizzonte", "pazienza", "ricordo", "silenzio", "tempesta", "universo", "vittoria"]
+  };
+
+  function filaMath(c) {
+    const dec = x => String(x).replace(".", ",");
+    const n = c <= 2 ? 4 : 5;
+    const asc = Math.random() < 0.5;
+    let vals = [];
+    const uniqN = gen => { const set = new Map(); let g = 0; while (set.size < n && g++ < 200) { const v = gen(); set.set(v.k, v.s); } return [...set.entries()]; };
+    let items;
+    if (c === 0) items = uniqN(() => { const v = rnd(1, 20); return { k: v, s: String(v) }; });
+    else if (c === 1) items = uniqN(() => { const v = rnd(5, 99); return { k: v, s: String(v) }; });
+    else if (c === 2) items = uniqN(() => { const v = rnd(20, 999); return { k: v, s: String(v) }; });
+    else if (c === 3) items = uniqN(() => { const v = rnd(120, 9999); return { k: v, s: String(v) }; });
+    else if (c === 4) items = uniqN(() => { const v = rnd(1, 199) / 10; return { k: v, s: dec(v) }; });
+    else if (c === 5) items = uniqN(() => { const v = rnd(5, 999) / (Math.random() < 0.5 ? 100 : 1000); return { k: v, s: dec(v) }; });
+    else if (c === 6) items = uniqN(() => { const v = rnd(-15, 15); return { k: v, s: v < 0 ? "−" + (-v) : String(v) }; });
+    else items = uniqN(() => {
+      const r = Math.random();
+      if (r < 0.4) { const v = rnd(-9, 9); return { k: v, s: v < 0 ? "−" + (-v) : String(v) }; }
+      if (r < 0.7) { const q = rnd(2, 9); return { k: q, s: "√" + q * q }; }
+      const b = rnd(2, 5), e = rnd(2, 3); return { k: Math.pow(b, e), s: b + (e === 2 ? "²" : "³") };
+    });
+    if (items.length < n) return null;
+    items.sort((a, b) => asc ? a[0] - b[0] : b[0] - a[0]);
+    return { p: asc ? "Metti in fila i numeri, dal più piccolo al più grande." : "Metti in fila i numeri, dal più grande al più piccolo.", items: items.map(x => x[1]) };
+  }
+
+  function makeFila(classId, subjectId) {
+    const band = classId <= 1 ? "A" : classId <= 4 ? "B" : "C";
+    const n = classId <= 2 ? 4 : 5;
+    let src = null, eng = false;
+    if (subjectId === "matematica") src = filaMath(classId);
+    else if (subjectId === "italiano") {
+      const pool = shuffle(ITA_ALFA[band].slice()), take = [], seen = new Set();
+      for (const w of pool) { if (!seen.has(w[0]) && take.length < n) { seen.add(w[0]); take.push(w); } }
+      src = { p: "Metti in fila queste parole in ordine alfabetico.", items: take.sort((a, b) => a.localeCompare(b, "it")) };
+    } else if (subjectId === "lingua2") {
+      const list = L2.seqs(); if (list.length) { src = pick(list); eng = true; }
+    } else if (SEQS[subjectId]) {
+      const list = Questions.inClass(SEQS[subjectId][band] || [], classId);
+      if (list.length) { src = pick(list); eng = !!SEQS[subjectId].eng; }
+    }
+    if (!src || src.items.length < 3) return null;
+    let items = src.items;
+    if (items.length > n) {   // si prendono n elementi a caso, ma restano nel loro ordine
+      const idx = shuffle(items.map((_, i) => i)).slice(0, n).sort((a, b) => a - b);
+      items = idx.map(i => items[i]);
+    }
+    let pool = shuffle(items.slice()), g = 0;
+    while (pool.every((v, i) => v === items[i]) && g++ < 30) pool = shuffle(pool);
+    return { kind: "fila", title: "Metti in fila", eng, prompt: src.p, hint: "Tocca gli elementi nell'ordine giusto, uno dopo l'altro. Un errore si perdona.",
+      items, pool, solution: items.join(" → ") };
+  }
+
+  function mountFila(el, r, onDone) {
+    const items = r.items, n = items.length;
+    let next = 0, mistakes = 0, done = false, busy = false;
+    function draw(failed) {
+      const used = new Set(items.slice(0, next));
+      el.innerHTML = `<div class="fila">
+        <div class="fila-slots">${items.map((it, k) => `<div class="fila-slot ${k < next ? "on" : ""} ${failed && k >= next ? "show" : ""}"><b>${k + 1}</b><span>${k < next || failed ? esc(it) : ""}</span></div>`).join("")}</div>
+        <div class="fila-pool">${r.pool.map((it, k) => used.has(it) ? "" : `<button class="fila-chip" data-k="${k}">${esc(it)}</button>`).join("")}</div>
+      </div>`;
+    }
+    el.onclick = e => {
+      if (done || busy) return;
+      const b = e.target.closest("[data-k]");
+      if (!b) return;
+      const it = r.pool[+b.dataset.k];
+      tapFn();
+      if (it === items[next]) {
+        next++;
+        if (next >= n) { done = true; draw(); el.querySelectorAll(".fila-slot").forEach(x => x.classList.add("ok")); onDone(true, r.solution, mistakes === 0 ? "Tutto in fila al primo colpo!" : "Tutto in fila!"); return; }
+        draw(); return;
+      }
+      mistakes++; boomFn(); b.classList.add("bad");
+      if (mistakes > 1) { done = true; busy = true; setTimeout(() => { if (!el.isConnected) return; draw(true); onDone(false, r.solution, ""); }, 500); return; }
+      busy = true; setTimeout(() => { if (!el.isConnected) return; busy = false; draw(); }, 600);
+    };
+    draw();
+  }
+
+  // ====================================================================
   // SCELTA E COLLEGAMENTO CON L'APP
   // ====================================================================
   const ALL = ["italiano", "matematica", "inglese", "storia", "geografia", "scienze", "tecnologia", "arte", "musica", "civica", "lingua2", "latino"];
@@ -1287,6 +1465,7 @@ const Games = (() => {
     talpa:      { subjects: ALL, make: (c, s) => makeTalpe(c, s) },
     vf:         { subjects: ALL, make: (c, s) => makeVF(c, s) },
     lettere:    { subjects: ALL, make: (c, s) => makeLettere(c, s) },
+    fila:       { subjects: ALL, make: (c, s) => makeFila(c, s) },
     intruso:    { subjects: ALL.filter(x => x !== "matematica" && x !== "italiano"), make: (c, s) => makeIntruso(c, s) }
   };
 
@@ -1330,6 +1509,8 @@ const Games = (() => {
       mountLettere(el, r, onDone);
     } else if (r.kind === "intruso") {
       mountIntruso(el, r, onDone);
+    } else if (r.kind === "fila") {
+      mountFila(el, r, onDone);
     }
   }
 

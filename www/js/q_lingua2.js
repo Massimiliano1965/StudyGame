@@ -113,6 +113,60 @@ const L2 = (() => {
       ["calcio", "football", "fútbol", "Fußball"], ["palla", "ballon", "pelota", "Ball"], ["nuoto", "natation", "natación", "Schwimmen"],
       ["gioco", "jeu", "juego", "Spiel"], ["musica", "musique", "música", "Musik"], ["film", "film", "película", "Film"],
       ["canzone", "chanson", "canción", "Lied"]
+    ] },
+    { name: "natura", rows: [
+      ["stella", "étoile", "estrella", "Stern"], ["nuvola", "nuage", "nube", "Wolke"], ["cielo", "ciel", "cielo", "Himmel"],
+      ["fiume", "fleuve", "río", "Fluss"], ["lago", "lac", "lago", "See"], ["foresta", "forêt", "bosque", "Wald"],
+      ["isola", "île", "isla", "Insel"], ["spiaggia", "plage", "playa", "Strand"], ["erba", "herbe", "hierba", "Gras"],
+      ["terra", "terre", "tierra", "Erde"], ["fuoco", "feu", "fuego", "Feuer"], ["ghiaccio", "glace", "hielo", "Eis"]
+    ] },
+    { name: "in casa", rows: [
+      ["divano", "canapé", "sofá", "Sofa"], ["lampada", "lampe", "lámpara", "Lampe"], ["specchio", "miroir", "espejo", "Spiegel"],
+      ["armadio", "armoire", "armario", "Schrank"], ["bagno", "salle de bain", "baño", "Badezimmer"], ["telefono", "téléphone", "teléfono", "Telefon"],
+      ["chiave", "clé", "llave", "Schlüssel"], ["tetto", "toit", "techo", "Dach"], ["scala", "escalier", "escalera", "Treppe"],
+      ["orologio", "horloge", "reloj", "Uhr"], ["tappeto", "tapis", "alfombra", "Teppich"]
+    ] },
+    { name: "pasti e dolci", rows: [
+      ["colazione", "petit-déjeuner", "desayuno", "Frühstück"], ["pranzo", "déjeuner", "almuerzo", "Mittagessen"], ["cena", "dîner", "cena", "Abendessen"],
+      ["pasta", "pâtes", "pasta", "Nudeln"], ["zuppa", "soupe", "sopa", "Suppe"], ["gelato", "crème glacée", "helado", "Eiscreme"],
+      ["torta", "gâteau", "tarta", "Kuchen"], ["biscotto", "biscuit", "galleta", "Keks"], ["succo", "jus", "zumo", "Saft"],
+      ["tè", "thé", "té", "Tee"], ["cioccolato", "chocolat", "chocolate", "Schokolade"], ["pollo", "poulet", "pollo", "Hähnchen"]
+    ] },
+    { name: "numeri fino a venti e oltre", rows: [
+      ["undici", "onze", "once", "elf"], ["dodici", "douze", "doce", "zwölf"], ["tredici", "treize", "trece", "dreizehn"],
+      ["quattordici", "quatorze", "catorce", "vierzehn"], ["quindici", "quinze", "quince", "fünfzehn"], ["sedici", "seize", "dieciséis", "sechzehn"],
+      ["diciassette", "dix-sept", "diecisiete", "siebzehn"], ["diciotto", "dix-huit", "dieciocho", "achtzehn"], ["diciannove", "dix-neuf", "diecinueve", "neunzehn"],
+      ["venti", "vingt", "veinte", "zwanzig"], ["trenta", "trente", "treinta", "dreißig"], ["quaranta", "quarante", "cuarenta", "vierzig"],
+      ["cinquanta", "cinquante", "cincuenta", "fünfzig"], ["cento", "cent", "cien", "hundert"]
+    ] },
+    { name: "altri verbi", rows: [
+      ["cantare", "chanter", "cantar", "singen"], ["ballare", "danser", "bailar", "tanzen"], ["correre", "courir", "correr", "laufen"],
+      ["saltare", "sauter", "saltar", "springen"], ["aprire", "ouvrir", "abrir", "öffnen"], ["chiudere", "fermer", "cerrar", "schließen"],
+      ["vedere", "voir", "ver", "sehen"], ["comprare", "acheter", "comprar", "kaufen"], ["capire", "comprendre", "entender", "verstehen"],
+      ["vivere", "vivre", "vivir", "leben"], ["abitare", "habiter", "habitar", "wohnen"]
+    ] },
+    { name: "altri aggettivi", rows: [
+      ["veloce", "rapide", "rápido", "schnell"], ["lento", "lent", "lento", "langsam"], ["forte", "fort", "fuerte", "stark"],
+      ["giovane", "jeune", "joven", "jung"], ["difficile", "difficile", "difícil", "schwierig"], ["facile", "facile", "fácil", "leicht"],
+      ["buono", "bon", "bueno", "gut"], ["cattivo", "mauvais", "malo", "schlecht"], ["pulito", "propre", "limpio", "sauber"],
+      ["sporco", "sale", "sucio", "schmutzig"], ["ricco", "riche", "rico", "reich"], ["povero", "pauvre", "pobre", "arm"]
+    ] },
+    { name: "altri animali", rows: [
+      ["orso", "ours", "oso", "Bär"], ["lupo", "loup", "lobo", "Wolf"], ["volpe", "renard", "zorro", "Fuchs"],
+      ["scimmia", "singe", "mono", "Affe"], ["pecora", "mouton", "oveja", "Schaf"], ["anatra", "canard", "pato", "Ente"],
+      ["farfalla", "papillon", "mariposa", "Schmetterling"], ["ape", "abeille", "abeja", "Biene"], ["rana", "grenouille", "rana", "Frosch"],
+      ["serpente", "serpent", "serpiente", "Schlange"], ["tartaruga", "tortue", "tortuga", "Schildkröte"], ["delfino", "dauphin", "delfín", "Delfin"]
+    ] },
+    { name: "altri mesi", rows: [
+      ["marzo", "mars", "marzo", "März"], ["luglio", "juillet", "julio", "Juli"], ["agosto", "août", "agosto", "August"],
+      ["settembre", "septembre", "septiembre", "September"], ["ottobre", "octobre", "octubre", "Oktober"],
+      ["novembre", "novembre", "noviembre", "November"], ["dicembre", "décembre", "diciembre", "Dezember"]
+    ] },
+    { name: "in città", rows: [
+      ["ponte", "pont", "puente", "Brücke"], ["piazza", "place", "plaza", "Platz"], ["chiesa", "église", "iglesia", "Kirche"],
+      ["mercato", "marché", "mercado", "Markt"], ["ristorante", "restaurant", "restaurante", "Restaurant"], ["farmacia", "pharmacie", "farmacia", "Apotheke"],
+      ["aeroporto", "aéroport", "aeropuerto", "Flughafen"], ["castello", "château", "castillo", "Schloss"], ["museo", "musée", "museo", "Museum"],
+      ["cinema", "cinéma", "cine", "Kino"]
     ] }
   ];
 
@@ -132,7 +186,17 @@ const L2 = (() => {
     ["Quanto costa?", "Combien ça coûte ?", "¿Cuánto cuesta?", "Wie viel kostet das?"],
     ["Che ora è?", "Quelle heure est-il ?", "¿Qué hora es?", "Wie spät ist es?"],
     ["Benvenuto", "Bienvenue", "Bienvenido", "Willkommen"],
-    ["Buon compleanno", "Joyeux anniversaire", "Feliz cumpleaños", "Alles Gute zum Geburtstag"]
+    ["Buon compleanno", "Joyeux anniversaire", "Feliz cumpleaños", "Alles Gute zum Geburtstag"],
+    ["Ho fame", "J'ai faim", "Tengo hambre", "Ich habe Hunger"],
+    ["Ho sete", "J'ai soif", "Tengo sed", "Ich habe Durst"],
+    ["Sono stanco", "Je suis fatigué", "Estoy cansado", "Ich bin müde"],
+    ["Dove abiti?", "Où habites-tu ?", "¿Dónde vives?", "Wo wohnst du?"],
+    ["Che cos'è?", "Qu'est-ce que c'est ?", "¿Qué es esto?", "Was ist das?"],
+    ["Aiuto!", "Au secours !", "¡Socorro!", "Hilfe!"],
+    ["Buon viaggio", "Bon voyage", "Buen viaje", "Gute Reise"],
+    ["Che tempo fa?", "Quel temps fait-il ?", "¿Qué tiempo hace?", "Wie ist das Wetter?"],
+    ["Oggi piove", "Il pleut aujourd'hui", "Hoy llueve", "Heute regnet es"],
+    ["Ho un fratello", "J'ai un frère", "Tengo un hermano", "Ich habe einen Bruder"]
   ];
   const ESSERE = [
     ["io sono", "Je suis", "Yo soy", "Ich bin"], ["tu sei", "Tu es", "Tú eres", "Du bist"],
@@ -189,6 +253,23 @@ const L2 = (() => {
     THEMES[code] = { A: themes, B: themes, C: themes };
   });
 
+  // file da mettere in ordine (numeri, giorni, mesi) per il gioco «Metti in fila»: [{p, items}] nella lingua scelta
+  function seqs(code) {
+    const L = LANGS[code || cur], col = L.col, out = [];
+    const rowsOf = name => (CATS.find(c => c.name === name) || { rows: [] }).rows;
+    const allRows = CATS.flatMap(c => c.rows);
+    const pickIt = list => list.map(it => (allRows.find(r => r[0] === it) || [])[col]).filter(Boolean);
+    const num = pickIt(["uno", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove", "dieci"]);
+    if (num.length === 10) out.push({ p: `Metti in fila i numeri da uno a dieci in ${L.adj}.`, items: num });
+    const num2 = pickIt(["undici", "dodici", "tredici", "quattordici", "quindici", "sedici", "diciassette", "diciotto", "diciannove", "venti"]);
+    if (num2.length === 10) out.push({ p: `Metti in fila i numeri da undici a venti in ${L.adj}.`, items: num2 });
+    const days = rowsOf("giorni della settimana").map(r => r[col]);
+    if (days.length === 7) out.push({ p: `Metti in fila i giorni della settimana in ${L.adj}, da lunedì.`, items: days });
+    const months = pickIt(["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]);
+    if (months.length === 12) out.push({ p: `Metti in fila i mesi dell'anno in ${L.adj}, da gennaio.`, items: months });
+    return out;
+  }
+
   let cur = DEFAULT;
   const use = code => {
     cur = LANGS[code] ? code : DEFAULT;
@@ -205,6 +286,7 @@ const L2 = (() => {
     loc: () => LANGS[cur].loc,
     name: () => LANGS[cur].name,
     pairs: () => THEMES[cur],
+    seqs: () => seqs(cur),
     banks: BANKS
   };
 })();

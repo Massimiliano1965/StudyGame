@@ -177,10 +177,28 @@ const Questions = (() => {
     }
   }
 
+  // ---------- pensiero computazionale e educazione finanziaria (nuove Indicazioni) ----------
+  function modern(classId) {
+    const algo = () => {
+      const n = rnd(2, 9), k = rnd(1, 9);
+      if (classId <= 4) return build(`Un robot esegue queste istruzioni. Parti da ${n}. 1) Raddoppia. 2) Aggiungi ${k}. Che numero ottiene?`, 2 * n + k, 4, `${n} × 2 = ${2 * n}, poi + ${k} = ${2 * n + k}.`);
+      return build(`Un programma parte da x = ${n}. Istruzioni: 1) x = x × 3. 2) x = x − ${k}. Qual è il valore finale di x?`, 3 * n - k, 4, `${n} × 3 = ${3 * n}, poi − ${k} = ${3 * n - k}.`);
+    };
+    const loop = () => { const k = rnd(2, 9), m = rnd(3, 8), n = rnd(0, 10);
+      return build(`Un programma parte da ${n} e ripete ${m} volte l'istruzione «aggiungi ${k}». Che numero si ottiene alla fine?`, n + k * m, 6, `${k} × ${m} = ${k * m}, poi ${n} + ${k * m} = ${n + k * m}.`); };
+    const bin = () => { const v = rnd(2, 31); return build(`Quanto vale in numeri decimali il numero binario ${v.toString(2)}?`, v, 4, `Si sommano le potenze di 2 corrispondenti agli 1: il risultato è ${v}.`); };
+    const save = () => { const k = rnd(5, 40), m = rnd(3, 12); return build(`Metti da parte ${k} euro al mese. Quanti euro avrai dopo ${m} mesi?`, k * m, Math.max(5, k), `${k} × ${m} = ${k * m} euro.`); };
+    const budget = () => { const e = rnd(10, 30) * 10, a = rnd(2, 8) * 10, b = rnd(2, 8) * 10; return build(`Il tuo budget del mese è di ${e} euro. Spendi ${a} euro per i giochi e ${b} per i libri. Quanti euro ti restano?`, e - a - b, 10, `${a} + ${b} = ${a + b}; ${e} − ${a + b} = ${e - a - b} euro.`); };
+    const interest = () => { const c = rnd(1, 10) * 100, r = pick([2, 3, 4, 5]); return build(`Depositi ${c} euro in banca con un interesse del ${r}% all'anno. Quanti euro di interesse ottieni dopo un anno?`, c * r / 100, 3, `${r}% di ${c} = ${c * r / 100} euro.`); };
+    const opts = classId <= 4 ? [algo, loop, save, budget] : [algo, loop, bin, save, budget, interest];
+    return pick(opts)();
+  }
+
   // ---------- matematica generata per classe ----------
   function math(classId) {
     if (Math.random() < 0.3) return problemQuiz(classId);
     if (Math.random() < 0.22) return geo(classId);
+    if (classId >= 3 && Math.random() < 0.12) return modern(classId);
     switch (classId) {
       case 0: { // 1ª el.: fino a 20
         if (Math.random() < 0.5) {
@@ -239,15 +257,19 @@ const Questions = (() => {
     }
   }
 
+  // Una domanda può avere cl: [dalla, alla] (indici di classe 0-7): allora compare solo in quelle classi.
+  // Serve a tenere la 1ª media sul programma della 1ª media e non su quello di 2ª e 3ª.
+  const inClass = (arr, classId) => { const f = arr.filter(q => !q.cl || (classId >= q.cl[0] && classId <= q.cl[1])); return f.length ? f : arr; };
+
   function italian(classId) {
     const band = classId <= 1 ? "A" : classId <= 4 ? "B" : "C";
-    return shuffleWithAnswer(pick(QBANK.italiano[band]));
+    return shuffleWithAnswer(pick(inClass(QBANK.italiano[band], classId)));
   }
 
   // domande a risposta multipla prese dal banco della materia (A = 1ª–2ª el., B = 3ª–5ª el., C = medie)
   function fromBank(subjectId, classId) {
     const band = classId <= 1 ? "A" : classId <= 4 ? "B" : "C";
-    return shuffleWithAnswer(pick(QBANK[subjectId][band]));
+    return shuffleWithAnswer(pick(inClass(QBANK[subjectId][band], classId)));
   }
 
   // Una domanda per la materia e la classe scelte
@@ -258,5 +280,5 @@ const Questions = (() => {
     return null;
   }
 
-  return { next, problem };
+  return { next, problem, inClass };
 })();
