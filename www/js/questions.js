@@ -139,9 +139,48 @@ const Questions = (() => {
     return build(p.text, p.answer, Math.max(3, Math.round(Math.abs(p.answer) / 5)), p.expl, p.answer < 0);
   }
 
+  // ---------- geometria per classe ----------
+  function geo(classId) {
+    const FIG = [["triangolo", 3], ["quadrato", 4], ["rettangolo", 4], ["pentagono", 5], ["esagono", 6]];
+    const sides = (maxN) => { const f = pick(FIG.filter(x => x[1] <= maxN)); const art = f[0] === "esagono" ? "L'" : "Il "; return build(`Quanti lati ha un ${f[0]}?`, f[1], 2, `${art}${f[0]} ha ${f[1]} lati.`); };
+    const corners = () => { const f = pick(FIG.slice(0, 3)); return build(`Quanti angoli ha un ${f[0]}?`, f[1], 2, `Il ${f[0]} ha ${f[1]} angoli.`); };
+    const perSq = (lo, hi) => { const l = rnd(lo, hi); return build(`Un quadrato ha il lato di ${l} cm. Quanto misura il perimetro?`, 4 * l, 4, `Perimetro = 4 × ${l} = ${4 * l} cm.`); };
+    const perRect = (lo, hi) => { const l = rnd(lo, hi), h = rnd(lo, hi); return build(`Un rettangolo ha i lati di ${l} cm e ${h} cm. Quanto misura il perimetro?`, 2 * (l + h), 4, `Perimetro = 2 × (${l} + ${h}) = ${2 * (l + h)} cm.`); };
+    const perTri = (lo, hi) => { const a = rnd(lo, hi), b = rnd(lo, hi), c = rnd(lo, hi); return build(`Un triangolo ha i lati di ${a} cm, ${b} cm e ${c} cm. Quanto misura il perimetro?`, a + b + c, 4, `Perimetro = ${a} + ${b} + ${c} = ${a + b + c} cm.`); };
+    const sideFromPer = () => { const l = rnd(3, 15); return build(`Un quadrato ha il perimetro di ${4 * l} cm. Quanto misura il lato?`, l, 3, `Lato = perimetro : 4 = ${4 * l} : 4 = ${l} cm.`); };
+    const areaSq = () => { const l = rnd(2, 12); return build(`Quanto misura l'area di un quadrato con il lato di ${l} cm (in cm²)?`, l * l, 6, `Area = lato × lato = ${l} × ${l} = ${l * l} cm².`); };
+    const areaRect = () => { const l = rnd(3, 15), h = rnd(2, 12); return build(`Quanto misura l'area di un rettangolo di ${l} cm per ${h} cm (in cm²)?`, l * h, 8, `Area = base × altezza = ${l} × ${h} = ${l * h} cm².`); };
+    const areaTri = () => { const b = 2 * rnd(2, 10), h = rnd(2, 12); return build(`Un triangolo ha la base di ${b} cm e l'altezza di ${h} cm. Quanto misura l'area (in cm²)?`, b * h / 2, 6, `Area = base × altezza : 2 = ${b} × ${h} : 2 = ${b * h / 2} cm².`); };
+    const areaPar = () => { const b = rnd(3, 14), h = rnd(2, 10); return build(`Un parallelogramma ha la base di ${b} cm e l'altezza di ${h} cm. Quanto misura l'area (in cm²)?`, b * h, 8, `Area = base × altezza = ${b} × ${h} = ${b * h} cm².`); };
+    const areaRomb = () => { const d = 2 * rnd(2, 8), D = rnd(3, 12); return build(`Un rombo ha le diagonali di ${d} cm e ${D} cm. Quanto misura l'area (in cm²)?`, d * D / 2, 6, `Area = (d1 × d2) : 2 = ${d} × ${D} : 2 = ${d * D / 2} cm².`); };
+    const areaTrap = () => { const B = rnd(6, 14), b = rnd(2, B - 2), h = 2 * rnd(2, 6), a = (B + b) * h / 2; return build(`Un trapezio ha le basi di ${B} cm e ${b} cm e l'altezza di ${h} cm. Quanto misura l'area (in cm²)?`, a, 6, `Area = (B + b) × h : 2 = (${B} + ${b}) × ${h} : 2 = ${a} cm².`); };
+    const angTri = () => { const a = rnd(30, 90), b = rnd(20, Math.min(120, 160 - a)); const c = 180 - a - b; return build(`In un triangolo due angoli misurano ${a}° e ${b}°. Quanto misura il terzo angolo (in gradi)?`, c, 10, `La somma degli angoli di un triangolo è 180°: 180 − ${a} − ${b} = ${c}°.`); };
+    const angQuad = () => { const a = rnd(60, 110), b = rnd(60, 110), c = rnd(60, 110), d = 360 - a - b - c; return build(`In un quadrilatero tre angoli misurano ${a}°, ${b}° e ${c}°. Quanto misura il quarto angolo (in gradi)?`, d, 10, `La somma degli angoli di un quadrilatero è 360°: 360 − ${a} − ${b} − ${c} = ${d}°.`); };
+    const angRetto = () => { const a = rnd(10, 80); return build(`Un angolo misura ${a}°. Quanto misura il suo angolo complementare (in gradi)?`, 90 - a, 8, `Due angoli complementari sommano 90°: 90 − ${a} = ${90 - a}°.`); };
+    const angSupp = () => { const a = rnd(20, 160); return build(`Un angolo misura ${a}°. Quanto misura il suo angolo supplementare (in gradi)?`, 180 - a, 10, `Due angoli supplementari sommano 180°: 180 − ${a} = ${180 - a}°.`); };
+    const volCubo = () => { const l = rnd(2, 8); return build(`Quanto misura il volume di un cubo con lo spigolo di ${l} cm (in cm³)?`, l * l * l, Math.max(4, l * 2), `Volume = spigolo × spigolo × spigolo = ${l} × ${l} × ${l} = ${l * l * l} cm³.`); };
+    const volPar = () => { const a = rnd(2, 9), b = rnd(2, 8), c = rnd(2, 7); return build(`Un parallelepipedo misura ${a} cm, ${b} cm e ${c} cm. Quanto misura il volume (in cm³)?`, a * b * c, 10, `Volume = ${a} × ${b} × ${c} = ${a * b * c} cm³.`); };
+    const pitagora = () => { const t = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25], [6, 8, 10], [9, 12, 15], [20, 21, 29]]); const k = t[2] <= 15 ? pick([1, 2]) : 1; const [a, b, c] = t.map(x => x * k);
+      return build(`Un triangolo rettangolo ha i cateti di ${a} cm e ${b} cm. Quanto misura l'ipotenusa (in cm)?`, c, 4, `Ipotenusa = √(${a}² + ${b}²) = √${a * a + b * b} = ${c} cm.`); };
+    const pitagoraCat = () => { const t = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17], [6, 8, 10]]); const [a, b, c] = t; return build(`Un triangolo rettangolo ha l'ipotenusa di ${c} cm e un cateto di ${a} cm. Quanto misura l'altro cateto (in cm)?`, b, 4, `Cateto = √(${c}² − ${a}²) = √${b * b} = ${b} cm.`); };
+    const circ = () => { const r = rnd(2, 12); return build(`Un cerchio ha il raggio di ${r} cm. Quanto misura il diametro (in cm)?`, 2 * r, 4, `Diametro = 2 × raggio = 2 × ${r} = ${2 * r} cm.`); };
+    const circLen = () => { const r = pick([25, 50, 75]); const v = Math.round(2 * 3.14 * r); return build(`Un cerchio ha il raggio di ${r} cm. Quanto misura la circonferenza (usa π = 3,14)?`, v, 6, `Circonferenza = 2 × 3,14 × ${r} = ${fmt(v)} cm.`); };
+    switch (classId) {
+      case 0: return Math.random() < 0.6 ? sides(4) : corners();
+      case 1: return pick([() => sides(5), corners, () => perSq(2, 6)])();
+      case 2: return pick([() => sides(6), () => perSq(2, 10), () => perRect(2, 9), () => perTri(2, 9)])();
+      case 3: return pick([() => perSq(5, 25), () => perRect(3, 14), () => perTri(4, 16), sideFromPer, angRetto])();
+      case 4: return pick([areaSq, areaRect, areaTri, areaPar, () => perRect(5, 20), angTri])();
+      case 5: return pick([areaTri, areaPar, areaRomb, areaTrap, angTri, angQuad, angSupp, circ, volCubo])();
+      case 6: return pick([areaTrap, areaRomb, angTri, angQuad, volCubo, volPar, pitagora, circLen, circ])();
+      default: return pick([pitagora, pitagoraCat, circLen, volPar, volCubo, areaTrap, angQuad])();
+    }
+  }
+
   // ---------- matematica generata per classe ----------
   function math(classId) {
     if (Math.random() < 0.3) return problemQuiz(classId);
+    if (Math.random() < 0.22) return geo(classId);
     switch (classId) {
       case 0: { // 1ª el.: fino a 20
         if (Math.random() < 0.5) {

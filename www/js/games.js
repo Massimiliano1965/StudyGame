@@ -321,7 +321,18 @@ const Games = (() => {
   // INCASTRO (italiano e matematica): collega ogni pezzo al suo posto
   // ====================================================================
   function mathPairs(c) {
+    const geoPair = () => {
+      const fig = [["Triangolo", "3 lati"], ["Quadrato", "4 lati"], ["Pentagono", "5 lati"], ["Esagono", "6 lati"], ["Ottagono", "8 lati"]];
+      if (c === 0) { const f = pick(fig.slice(0, 2)); return { l: f[0], r: f[1] }; }
+      if (c <= 2) { const f = pick(fig.slice(0, 4)); return { l: f[0], r: f[1] }; }
+      if (c === 3) { const l = rnd(3, 15); return pick([{ l: `Perimetro quadrato, lato ${l} cm`, r: `${4 * l} cm` }, { l: `Quadrato di perimetro ${4 * l} cm: lato`, r: `${l} cm` }]); }
+      if (c === 4) { const l = rnd(3, 12), h = rnd(2, 9); return pick([{ l: `Area quadrato, lato ${l} cm`, r: `${l * l} cm²` }, { l: `Perimetro rettangolo ${l} × ${h} cm`, r: `${2 * (l + h)} cm` }]); }
+      if (c === 5) { const b = 2 * rnd(2, 9), h = rnd(2, 9); return pick([{ l: `Area triangolo, base ${b} altezza ${h}`, r: `${b * h / 2} cm²` }, { l: `Spigolo cubo ${rnd(2, 5)} cm: volume`, r: null }]); }
+      if (c === 6) { const t = pick([[3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17]]); return pick([{ l: `Cateti ${t[0]} e ${t[1]}: ipotenusa`, r: `${t[2]} cm` }, { l: `Triangolo con angoli ${t[0] * 10}° e ${t[1] * 5}°: il terzo`, r: `${180 - t[0] * 10 - t[1] * 5}°` }]); }
+      const t = pick([[3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17]]); const x = rnd(2, 6); return pick([{ l: `Cateti ${t[0]} e ${t[1]}: ipotenusa`, r: `${t[2]} cm` }, { l: `Cubo di spigolo ${x} cm: volume`, r: `${x * x * x} cm³` }]);
+    };
     const gen = () => {
+      if (Math.random() < 0.2) { const g = geoPair(); if (g && g.r) return g; }
       switch (c) {
         case 0: {
           if (Math.random() < 0.6) { const a = rnd(1, 9), b = rnd(1, 10); return { l: `${a} + ${b}`, r: N(a + b) }; }
