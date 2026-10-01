@@ -83,37 +83,48 @@ const Voice = (() => {
   const hasSynth = () => !!(window.TTS || window.speechSynthesis);
   const canSpeak = hasSynth;
 
+  let speaking = false, token = 0;
+  const stateFns = [];
+  const setSpeaking = on => { if (speaking !== on) { speaking = on; stateFns.forEach(f => { try { f(on); } catch (e) {} }); } };
+  const isSpeaking = () => speaking;
+  const onState = fn => stateFns.push(fn);
+
   // onFail(messaggio) viene chiamata se la voce non parte, così l'app può avvisare
   function speak(text, onFail) {
-    const fail = (why) => {
-      if (!onFail) return;
+    const my = ++token;
+    setSpeaking(true);
+    const fail = why => {
+      if (!onFail || my !== token) return;
       const detail = why ? " (" + String(why && why.message || why).slice(0, 80) + ")" : "";
       onFail("La voce non parte: controlla che il telefono abbia la sintesi vocale con l'italiano." + detail);
     };
     return new Promise(resolve => {
+      const done = () => { if (my === token) setSpeaking(false); resolve(); };
       try {
         if (window.TTS) {
           const r = window.TTS.speak({ text, locale: LANG, rate: 0.95 });
-          if (r && r.then) r.then(() => resolve(), err => { fail(err); resolve(); }); else resolve();
+          if (r && r.then) r.then(done, err => { fail(err); done(); }); else done();
           return;
         }
         if (window.speechSynthesis) {
           window.speechSynthesis.cancel();
           const u = new SpeechSynthesisUtterance(text);
           u.lang = LANG; u.rate = 0.92; u.pitch = 1.1;
-          const v = (window.speechSynthesis.getVoices() || []).find(x => /^it/i.test(x.lang));
-          if (v) u.voice = v;
-          u.onend = () => resolve();
-          u.onerror = e => { fail(e && e.error); resolve(); };
+          const vc = (window.speechSynthesis.getVoices() || []).find(x => /^it/i.test(x.lang));
+          if (vc) u.voice = vc;
+          u.onend = () => done();
+          u.onerror = e => { fail(e && e.error); done(); };
           window.speechSynthesis.speak(u);
           return;
         }
       } catch (e) { fail(e); }
-      resolve();
+      done();
     });
   }
 
   function stopSpeaking() {
+    token++;
+    setSpeaking(false);
     try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
     try { if (window.TTS && window.TTS.stop) { const r = window.TTS.stop(); if (r && r.catch) r.catch(() => {}); } } catch (e) {}
   }
@@ -156,5 +167,5 @@ const Voice = (() => {
     });
   }
 
-  return { speak, stopSpeaking, listen, canSpeak, canListen, matchOption, numerify };
+  return { speak, stopSpeaking, isSpeaking, onState, listen, canSpeak, canListen, matchOption, numerify };
 })();

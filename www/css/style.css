@@ -238,3 +238,9 @@ body[data-theme="teen"] .ans.right .shape::before, body[data-theme="teen"] .ans.
   .hero, .hop, .shake, .spark { animation: none; }
 }
 @media (max-width: 340px) { body { font-size: 16px; } .qtext { font-size: 21px; } }
+
+/* pulsante lettura su ogni schermata */
+.narrate { position: fixed; right: 12px; top: calc(76px + env(safe-area-inset-top)); z-index: 10; width: 52px; height: 52px; padding: 0; display: grid; place-items: center; font-size: 26px; border-radius: 50%; border: 3px solid var(--edge); background: var(--card); box-shadow: 0 4px 0 var(--edge); cursor: pointer; }
+.narrate:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge); }
+.narrate.on { background: var(--bad); color: #fff; }
+.narrate[hidden] { display: none; }

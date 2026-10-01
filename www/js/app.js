@@ -9,6 +9,9 @@
   let selected = [];    // materie scelte nella home
   let game = null;      // sfida in corso
   let toastTimer = null;
+  let askCb = null;      // schermata iniziale "vuoi la narrazione?"
+  let pendingAuto = true; // scelta fatta in quella schermata
+  const $narr = document.getElementById("narrate");
 
   const pick = a => a[Math.floor(Math.random() * a.length)];
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -92,7 +95,7 @@
     wiz = {
       step: step || 0, editing: !!editing,
       d: editing && profile ? { ...profile } :
-        { nick: "", classId: null, family: "creatura", color: Characters.COLORS[0].hex, photo: null, autoRead: true, sound: true }
+        { nick: "", classId: null, family: "creatura", color: Characters.COLORS[0].hex, photo: null, autoRead: pendingAuto, sound: true }
     };
     renderWizard();
   }
@@ -173,7 +176,7 @@
   function finishWizard() {
     const d = wiz.d;
     profile = { nick: d.nick.trim(), classId: d.classId, family: d.family, color: d.color, photo: d.photo || null,
-      autoRead: wiz.editing ? !!d.autoRead : true,
+      autoRead: !!d.autoRead, narrAsked: true,
       sound: d.sound !== false };
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
     wiz = null;
@@ -251,11 +254,14 @@
     if (profile.autoRead) readQuestion();
   }
 
-  function readQuestion() {
+  function questionSpeech() {
     const q = game.q;
     const ord = ["Prima", "Seconda", "Terza", "Quarta"];
-    const txt = toSpeech(q.q) + ". " + q.a.map((a, i) => `${ord[i]}: ${toSpeech(a)}.`).join(" ");
-    Voice.speak(txt, msg => toast(msg, 6000));
+    return toSpeech(q.q) + ". " + q.a.map((a, i) => `${ord[i]}: ${toSpeech(a)}.`).join(" ");
+  }
+
+  function readQuestion() {
+    Voice.speak(questionSpeech(), msg => toast(msg, 6000));
   }
 
   function renderGame() {
@@ -273,8 +279,7 @@
       <div class="card qcard">
         <span class="qsub" style="--sc:${sub.color}">${sub.icon} ${esc(sub.name)}</span>
         <div class="qtext">${esc(q.q)}</div>
-        ${(canSpeak || canListen) && !game.answered ? `<div class="tools">
-          ${canSpeak ? `<button class="btn ghost" data-act="read">🔊 Ascolta</button>` : ""}
+        ${canListen && !game.answered ? `<div class="tools">
           ${canListen ? `<button class="btn ghost ${game.listening ? "listening" : ""}" data-act="mic">${game.listening ? "🎤 Ti ascolto…" : "🎤 Rispondi a voce"}</button>` : ""}
         </div>` : ""}
       </div>
@@ -328,6 +333,47 @@
       toast("Il microfono non è disponibile. Tocca la risposta.");
     });
   }
+
+  // ====================================================================
+  // NARRAZIONE: scelta iniziale e pulsante su ogni schermata
+  // ====================================================================
+  function askNarration(cb) {
+    askCb = cb;
+    setTheme(null);
+    $app.innerHTML = `<section class="screen">
+      <div class="hero">${Characters.svg({ family: "creatura", color: Characters.COLORS[0].hex, stage: 0, mood: "happy" })}</div>
+      <div class="center"><h1>Vuoi che ti legga le domande?</h1><p class="muted" style="margin-top:6px">Puoi cambiare idea quando vuoi, dalle impostazioni.</p></div>
+      <button class="btn big" data-act="narr-yes">🔊 Sì, leggimele</button>
+      <button class="btn alt big" data-act="narr-no">🔇 No, grazie</button>
+    </section>`;
+  }
+
+  function narrChoice(yes) {
+    const cb = askCb; askCb = null;
+    if (yes) Voice.speak("Perfetto, ti leggerò le domande.", msg => toast(msg, 6000));
+    if (cb) cb(yes);
+  }
+
+  function getNarration() {
+    if (askCb) return "Vuoi che ti legga le domande? Tocca sì, leggimele, oppure no, grazie.";
+    if (wiz) return ["Ciao! Come ti chiami? Scrivi il tuo nome o un soprannome inventato.",
+      "Che classe fai? Così ti preparo le sfide giuste.",
+      "Scegli il tuo compagno. Crescerà con te, classe dopo classe!",
+      "Vuoi metterci la tua foto? È facoltativa e resta solo su questo telefono."][wiz.step] || "";
+    if (game) return game.answered && game.fb ? game.fb.title + ". " + toSpeech(game.fb.text) : questionSpeech();
+    if (profile) return `Ciao ${profile.nick}! Oggi hai ${Credit.format(Credit.get())} di telefono. Scegli le sfide che vuoi e tocca Gioca.`;
+    return "";
+  }
+
+  function refreshNarrate() {
+    if (!$narr) return;
+    const on = Voice.isSpeaking();
+    $narr.hidden = !Voice.canSpeak();
+    $narr.textContent = on ? "⏹" : "🔊";
+    $narr.classList.toggle("on", on);
+    $narr.setAttribute("aria-label", on ? "Ferma la lettura" : "Leggi questa pagina");
+  }
+  Voice.onState(refreshNarrate);
 
   // ====================================================================
   // IMPOSTAZIONI
@@ -385,6 +431,13 @@
     // sfida
     ans: el => answer(+el.dataset.i),
     read: () => readQuestion(),
+    narrate: () => {
+      if (Voice.isSpeaking()) { Voice.stopSpeaking(); return; }
+      const t = getNarration();
+      if (t) Voice.speak(t, msg => toast(msg, 6000));
+    },
+    "narr-yes": () => narrChoice(true),
+    "narr-no": () => narrChoice(false),
     mic: () => listenForAnswer(),
     "next-q": () => nextQuestion(),
     exit: () => { Voice.stopSpeaking(); showHome(); },
@@ -395,12 +448,13 @@
     "toggle-read": () => { profile.autoRead = !profile.autoRead; Storage.saveProfile(profile); openSettings(); },
     "toggle-sound": () => { profile.sound = profile.sound === false; Storage.saveProfile(profile); openSettings(); renderHome(); },
     reset: () => confirmReset(),
-    "reset-yes": () => { Storage.resetAll(); profile = null; closeModal(); Credit.refresh(); startWizard(false); }
+    "reset-yes": () => { Storage.resetAll(); profile = null; closeModal(); Credit.refresh(); askNarration(yes => { pendingAuto = yes; startWizard(false); }); }
   };
 
   document.addEventListener("click", e => {
     const el = e.target.closest("[data-act]");
     if (!el || el.disabled) return;
+    if (el.dataset.act !== "narrate") Voice.stopSpeaking();
     const fn = actions[el.dataset.act];
     if (fn) fn(el);
   });
@@ -410,20 +464,18 @@
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) { Voice.stopSpeaking(); return; }
     Credit.refresh();
-    if (profile && !wiz && !game) renderHome();
+    if (profile && !wiz && !game && !askCb) renderHome();
   });
 
   // ---------- avvio ----------
   function boot() {
-    if (profile) {
-      if (typeof profile.classId !== "number") { Storage.resetAll(); profile = null; startWizard(false); }
-      else {
-        selected = subjectsForClass(profile.classId).filter(s => isReady(s.id)).map(s => s.id);
-        showHome();
-      }
-    } else {
-      startWizard(false);
-    }
+    refreshNarrate();
+    const first = yes => { pendingAuto = yes; startWizard(false); };
+    if (profile && typeof profile.classId !== "number") { Storage.resetAll(); profile = null; }
+    if (!profile) { askNarration(first); return; }
+    selected = subjectsForClass(profile.classId).filter(s => isReady(s.id)).map(s => s.id);
+    if (profile.narrAsked) showHome();
+    else askNarration(yes => { profile.autoRead = yes; profile.narrAsked = true; Storage.saveProfile(profile); showHome(); });
   }
   // Nell'app Android si aspetta che i plugin (voce, microfono) siano pronti
   if (window.cordova) document.addEventListener("deviceready", boot, false);
