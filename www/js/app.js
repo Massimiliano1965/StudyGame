@@ -198,10 +198,10 @@
   }
 
   function finishWizard() {
-    const d = wiz.d;
+    const d = wiz.d, seen = !!(profile && profile.infoSeen);
     profile = { nick: d.nick.trim(), classId: d.classId, family: d.family, color: d.color, photo: d.photo || null,
       autoRead: !!d.autoRead, narrAsked: true,
-      sound: d.sound !== false, l2: d.l2 || undefined };
+      sound: d.sound !== false, l2: d.l2 || undefined, infoSeen: seen };
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
     wiz = null;
     Credit.refresh();
@@ -223,6 +223,7 @@
     game = null;
     setTheme(profile.classId);
     renderHome();
+    maybeShowInfo();
   }
 
   function renderHome() {
@@ -243,7 +244,8 @@
         <div class="bar" role="img" aria-label="${min} minuti su ${CONFIG.MAX_MINUTES}"><i style="width:${pct}%"></i><b style="left:${mark}%"></b></div>
         <div class="bar-labels"><span>${CONFIG.MIN_MINUTES} min garantiti</span><span>massimo ${esc(Credit.format(CONFIG.MAX_MINUTES))}</span></div>
       </div>
-      <h2>Scegli le sfide</h2>
+      <div class="sel-head"><h2>Scegli le sfide</h2>
+        <span class="sel-btns"><button class="btn ghost small" data-act="sel-all">✔ Tutte</button><button class="btn ghost small" data-act="sel-none">✖ Nessuna</button></span></div>
       <div class="subjects">${subs.map(s => {
         const ready = isReady(s.id), sel = selected.includes(s.id);
         return `<button class="tile ${ready ? "" : "soon"} ${sel ? "sel" : ""}" data-act="subject" data-id="${s.id}" style="--tc:${s.color}" aria-pressed="${sel}">
@@ -584,8 +586,23 @@
       <div class="row-set"><span>Leggi le domande ad alta voce</span><button class="switch ${p.autoRead ? "on" : ""}" data-act="toggle-read" aria-pressed="${!!p.autoRead}">${p.autoRead ? "Sì" : "No"}</button></div>
       <div class="row-set l2-set"><span>Seconda lingua</span><div class="l2-pick">${L2.codes().map(c => `<button class="switch ${(p.l2 || L2.DEFAULT) === c ? "on" : ""}" data-act="set-l2" data-id="${c}" aria-pressed="${(p.l2 || L2.DEFAULT) === c}">${L2.LANGS[c].flag} ${L2.LANGS[c].name}</button>`).join("")}</div></div>
       <div class="row-set"><span>Suoni</span><button class="switch ${p.sound !== false ? "on" : ""}" data-act="toggle-sound" aria-pressed="${p.sound !== false}">${p.sound !== false ? "Sì" : "No"}</button></div>
+      <button class="btn ghost" data-act="info">ℹ️ Avvertenze e informazioni</button>
       <button class="btn ghost" data-act="reset">🗑 Ricomincia da zero</button>
       <button class="btn" data-act="close">Chiudi</button>`);
+  }
+
+  function openInfo() {
+    openModal(`<h2>ℹ️ Avvertenze e informazioni</h2>
+      <p><b>Non sostituisce la scuola.</b> Studia e Gioca non sostituisce l'insegnamento né l'aiuto dei genitori: è solo un piccolo aiuto per fissare in mente alcune cose divertendosi, perché la ripetizione è ciò che fa davvero imparare e diventare bravi in qualcosa.</p>
+      <p><b>Da dove vengono le domande.</b> Si basano sui programmi ministeriali italiani: le <i>Indicazioni nazionali per il curricolo della scuola dell'infanzia e del primo ciclo d'istruzione</i> (Ministero dell'Istruzione, D.M. 254 del 16 novembre 2012, con l'aggiornamento «Indicazioni nazionali e nuovi scenari» del 2018), consultate su internet. Le domande sono state scritte per questa app e possono contenere errori.</p>
+      <p><b>Genitori.</b> Si raccomanda a mamma e papà di tenere sotto controllo i figli quando usano il cellulare, soprattutto se sono piccoli, e di usare sempre buon senso e discrezione sul tempo davanti allo schermo.</p>
+      <button class="btn" data-act="close">Ho capito</button>`);
+  }
+
+  function maybeShowInfo() {
+    if (!profile || profile.infoSeen || wiz || askCb) return;
+    profile.infoSeen = true; Storage.saveProfile(profile);
+    openInfo();
   }
 
   function confirmReset() {
@@ -640,6 +657,9 @@
     close: () => closeModal(),
     edit: () => { closeModal(); startWizard(true, 0); },
     editphoto: () => { closeModal(); startWizard(true, 3); },
+    "sel-all": () => { selected = subjectsForClass(profile.classId).filter(s => isReady(s.id)).map(s => s.id); Sfx.tap(); renderHome(); },
+    "sel-none": () => { selected = []; Sfx.tap(); renderHome(); },
+    info: () => openInfo(),
     "toggle-read": () => { profile.autoRead = !profile.autoRead; Storage.saveProfile(profile); refreshVoiceToggle(); openSettings(); },
     "voice-toggle": () => {
       profile.autoRead = !profile.autoRead; Storage.saveProfile(profile);
