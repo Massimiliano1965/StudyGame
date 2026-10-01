@@ -446,7 +446,25 @@ const Games = (() => {
       { prompt: "Collega ogni fiume alla città che attraversa.", pairs: [["Senna", "Parigi"], ["Tamigi", "Londra"], ["Tevere", "Roma"], ["Arno", "Firenze"], ["Nilo", "Il Cairo"]] }
     ]
   };
-  const OTHER_PAIRS = { storia: STO_PAIRS, geografia: GEO_PAIRS };
+  const SCI_PAIRS = {
+    A: [
+      { prompt: "Collega ogni animale al suo cucciolo.", pairs: [["gatto", "gattino"], ["cane", "cucciolo"], ["mucca", "vitello"], ["pecora", "agnello"], ["cavallo", "puledro"], ["gallina", "pulcino"]] },
+      { prompt: "Collega ogni parte del corpo al suo senso.", pairs: [["occhi", "vista"], ["orecchie", "udito"], ["naso", "olfatto"], ["lingua", "gusto"], ["pelle", "tatto"]] },
+      { prompt: "Collega ogni parte della pianta a ciò che fa.", pairs: [["radice", "beve l'acqua"], ["foglia", "prende la luce"], ["fiore", "diventa frutto"], ["seme", "nasce la pianta"], ["tronco", "sostiene la pianta"]] }
+    ],
+    B: [
+      { prompt: "Collega ogni pianeta alla sua caratteristica.", pairs: [["Mercurio", "il più vicino al Sole"], ["Giove", "il più grande"], ["Marte", "il pianeta rosso"], ["Saturno", "gli anelli"], ["Terra", "la vita"]] },
+      { prompt: "Collega ogni animale alla sua classe.", pairs: [["delfino", "mammifero"], ["aquila", "uccello"], ["rana", "anfibio"], ["serpente", "rettile"], ["squalo", "pesce"], ["ape", "insetto"]] },
+      { prompt: "Collega ogni passaggio di stato al suo nome.", pairs: [["da solido a liquido", "fusione"], ["da liquido a gas", "evaporazione"], ["da gas a liquido", "condensazione"], ["da liquido a solido", "solidificazione"]] },
+      { prompt: "Collega ogni organo alla sua funzione.", pairs: [["cuore", "pompa il sangue"], ["polmoni", "respirare"], ["stomaco", "digerisce"], ["cervello", "pensare"], ["ossa", "sostengono il corpo"]] }
+    ],
+    C: [
+      { prompt: "Collega ogni simbolo al suo elemento chimico.", pairs: [["H", "idrogeno"], ["O", "ossigeno"], ["Fe", "ferro"], ["Na", "sodio"], ["C", "carbonio"], ["Au", "oro"]] },
+      { prompt: "Collega ogni scienziato alla sua scoperta.", pairs: [["Newton", "gravitazione"], ["Darwin", "evoluzione"], ["Mendel", "ereditarietà"], ["Galileo", "telescopio"], ["Marie Curie", "radioattività"], ["Pasteur", "pastorizzazione"]] },
+      { prompt: "Collega ogni unità di misura alla sua grandezza.", pairs: [["metro", "lunghezza"], ["chilogrammo", "massa"], ["secondo", "tempo"], ["Kelvin", "temperatura"], ["Newton", "forza"], ["Joule", "energia"]] }
+    ]
+  };
+  const OTHER_PAIRS = { storia: STO_PAIRS, geografia: GEO_PAIRS, scienze: SCI_PAIRS };
 
   // ====================================================================
   // SCENE DEL PUZZLE COMPLETATO (emoji, funzionano anche offline)
@@ -477,6 +495,11 @@ const Games = (() => {
       ["linear-gradient(#EAD9FF 0 58%, #C9B58A 58%)", [["🏛️", 50, 46, 90], ["🏺", 18, 76, 48], ["🏟️", 82, 70, 56], ["⚔️", 20, 28, 42], ["🏆", 80, 28, 44]], "Grecia e Roma: la storia è a posto!"],
       ["linear-gradient(#CDEBFF 0 58%, #9EE493 58%)", [["🏰", 50, 46, 92], ["🛡️", 20, 74, 48], ["⚔️", 80, 74, 44], ["🐎", 16, 36, 50], ["🚩", 82, 30, 44]], "Cavalieri e castelli: tutto al suo posto!"]
     ],
+    scienze: [
+      ["linear-gradient(#E8F7FF, #D9FFE8)", [["🔬", 50, 50, 84], ["🧪", 18, 28, 52], ["⚗️", 82, 26, 52], ["🧬", 20, 78, 48], ["💡", 80, 78, 46], ["🔭", 50, 18, 40]], "Che bel laboratorio: sei uno scienziato!"],
+      ["linear-gradient(#1B1F4B, #4B3A8F)", [["🪐", 50, 46, 90], ["🌍", 18, 28, 54], ["☄️", 82, 24, 44], ["🌙", 84, 72, 46], ["🛰️", 20, 76, 44], ["⭐", 60, 20, 30]], "L'universo non ha più segreti!"],
+      ["linear-gradient(#BEE9FF 0 58%, #9EE493 58%)", [["🌳", 18, 46, 70], ["🌻", 50, 70, 54], ["🐝", 40, 34, 40], ["🦋", 74, 30, 40], ["🐛", 80, 80, 36], ["🌧️", 84, 16, 44]], "La natura è piena di meraviglie!"]
+    ],
     mondo: [
       ["linear-gradient(#CDEBFF, #E8FFE3)", [["🌍", 50, 50, 110], ["🧭", 18, 24, 48], ["🗺️", 82, 24, 48], ["✈️", 22, 80, 46], ["⛰️", 80, 80, 46]], "Il mondo è nelle tue mani!"],
       ["linear-gradient(#BEE9FF 0 55%, #9EE493 55%)", [["🏔️", 24, 44, 76], ["🌋", 74, 46, 66], ["🏝️", 50, 80, 54], ["🌊", 16, 84, 44], ["🧭", 86, 16, 40]], "Montagne, vulcani e isole: che viaggio!"]
@@ -495,7 +518,7 @@ const Games = (() => {
   };
   const SCENE_RULES = [
     [/^matematica: .*equazion/, "eq"], [/^matematica/, "mat"],
-    [/^storia: .*(giorno della settimana|stagione|cosa di una volta)/, "calendario"], [/^storia/, "storia"], [/^geografia/, "mondo"],
+    [/^storia: .*(giorno della settimana|stagione|cosa di una volta)/, "calendario"], [/^storia/, "storia"], [/^geografia/, "mondo"], [/^scienze/, "scienze"],
     [/^inglese: .*colore/, "colori"], [/^inglese: .*animale/, "animali"], [/^inglese: .*numero/, "numeri"],
     [/^inglese: .*scuola/, "scuola"], [/^inglese: .*famiglia/, "famiglia"], [/^inglese: .*verbo inglese/, "verbi"],
     [/^inglese: .*tavola/, "tavola"], [/^inglese: .*contrario/, "contrariEn"], [/^inglese: .*irregolare/, "tempo"], [/^inglese/, "parole"],
@@ -523,6 +546,10 @@ const Games = (() => {
     alto: "🦒", basso: "🐭", caldo: "🔥", freddo: "❄️", grande: "🐘", piccolo: "🐭", giorno: "☀️", notte: "🌙",
     mare: "🌊", lago: "🏞️", montagna: "⛰️", fiume: "🏞️", pianura: "🌾", isola: "🏝️", Colosseo: "🏟️", colosseo: "🏟️", vesuvio: "🌋", piramidi: "🔺", partenone: "🏛️",
     inverno: "❄️", primavera: "🌸", estate: "☀️", autunno: "🍂", candela: "🕯️", lampadina: "💡", lettera: "✉️", telefono: "☎️", computer: "💻", automobile: "🚗", carrozza: "🐎",
+    gattino: "🐱", cucciolo: "🐶", vitello: "🐮", agnello: "🐑", puledro: "🐴", pulcino: "🐥", occhi: "👀", orecchie: "👂", naso: "👃", pelle: "🖐️",
+    radice: "🌱", foglia: "🍃", fiore: "🌸", seme: "🌰", tronco: "🪵", mercurio: "☿️", giove: "🪐", marte: "🔴", saturno: "🪐", terra: "🌍",
+    delfino: "🐬", aquila: "🦅", rana: "🐸", serpente: "🐍", squalo: "🦈", ape: "🐝", cuore: "❤️", polmoni: "🫁", cervello: "🧠", ossa: "🦴",
+    darwin: "🐢", newton: "🍎", galileo: "🔭", "marie curie": "☢️", mendel: "🌱", pasteur: "🧫", metro: "📏", secondo: "⏱️", joule: "⚡", kelvin: "🌡️",
     aperto: "🔓", chiuso: "🔒", veloce: "⚡", lento: "🐌", felice: "😀", triste: "😢", dolce: "🍬", amaro: "🍋", nuovo: "✨", vecchio: "👴"
   };
   const emojiFor = p => EMO[String(p.l).toLowerCase()] || EMO[String(p.r).toLowerCase()] || "";
@@ -1076,7 +1103,7 @@ const Games = (() => {
   // ====================================================================
   // SCELTA E COLLEGAMENTO CON L'APP
   // ====================================================================
-  const ALL = ["italiano", "matematica", "inglese", "storia", "geografia"];
+  const ALL = ["italiano", "matematica", "inglese", "storia", "geografia", "scienze"];
   const GAMES = {
     frase:      { subjects: ["italiano"], make: c => makeFrase(c) },
     operazione: { subjects: ["matematica"], make: c => makeOperazione(c) },
