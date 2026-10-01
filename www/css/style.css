@@ -244,3 +244,41 @@ body[data-theme="teen"] .ans.right .shape::before, body[data-theme="teen"] .ans.
 .narrate:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge); }
 .narrate.on { background: var(--bad); color: #fff; }
 .narrate[hidden] { display: none; }
+
+/* ---------- giochi: puzzle e tiro a segno ---------- */
+.hero.xs { width: 92px; }
+.qcard .muted { font-size: 16px; }
+.feedback .sol { font-size: 20px; }
+.gbuild { display: flex; flex-direction: column; gap: 14px; }
+.slots { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; min-height: 92px; padding: 12px; background: var(--card-soft); border: 3px dashed var(--edge); border-radius: 20px; }
+.slots.empty { align-items: center; justify-content: center; }
+.slot-hint { color: var(--muted); font-size: 17px; text-align: center; }
+.pool { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; min-height: 60px; }
+.chipw {
+  min-height: 54px; padding: 8px 16px; font-family: inherit; font-weight: 700; font-size: 22px; color: #2B2D52;
+  background: #fff; border: 3px solid var(--edge); border-radius: 16px; box-shadow: 0 4px 0 var(--edge); touch-action: manipulation;
+}
+.chipw:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge); }
+.slots .chipw { background: #FFE066; }
+.chipw.num { min-width: 54px; background: #7ED9FF; }
+.chipw.op, .chipw.par { min-width: 54px; background: #FF9EC0; }
+.chipw.eq { min-width: 54px; background: #B9F27A; }
+.pool .chipw.word { background: #fff; }
+.slots .chipw.ok, .chipw.ok { background: var(--good); color: #fff; }
+.slots .chipw.bad, .chipw.bad { background: var(--bad); color: #fff; }
+body[data-theme="teen"] .chipw.ok, body[data-theme="teen"] .chipw.bad { color: #0D0C33; }
+.gactions { display: flex; gap: 12px; }
+.gactions .btn { flex: 1; }
+.gactions .btn.go { flex: 1.6; min-height: 62px; font-size: 22px; }
+.arena { position: relative; overflow: hidden; background: var(--card-soft); border: 3px solid var(--edge); border-radius: 22px; }
+.target {
+  position: absolute; left: 0; display: flex; align-items: center; gap: 8px; min-height: 62px; max-width: 66%; padding: 6px 16px 6px 10px;
+  font-family: inherit; font-weight: 700; line-height: 1.1; text-align: left; color: #2B2D52;
+  background: var(--tc, #FFD23F); border: 3px solid var(--edge); border-radius: 999px; box-shadow: 0 4px 0 var(--edge);
+  will-change: transform; touch-action: manipulation;
+}
+.target .bull { flex: none; font-size: 26px; }
+.target.ok { background: var(--good); color: #fff; }
+.target.bad { background: var(--bad); color: #fff; }
+.target.dim { opacity: .5; }
+body[data-theme="teen"] .target.ok, body[data-theme="teen"] .target.bad { color: #0D0C33; }

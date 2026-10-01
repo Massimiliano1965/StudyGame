@@ -5,6 +5,7 @@ const CONFIG = {
   MAX_MINUTES: 150,   // tetto giornaliero (2h30)
   BONUS: 2,           // minuti guadagnati per risposta giusta
   MALUS: 1,           // minuti persi per risposta sbagliata (mai sotto il minimo garantito)
+  GAME_SHARE: 0.7,    // quota di giri che sono giochi (il resto sono domande a risposta multipla)
   NICK_MAX: 14,
   PHOTO_SIZE: 256,    // lato (px) della foto salvata sul telefono
   CLASSES: [

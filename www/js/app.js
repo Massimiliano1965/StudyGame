@@ -46,6 +46,8 @@
     };
   })();
 
+  Games.setTap(() => Sfx.tap());
+
   // ---------- utilità interfaccia ----------
   function toast(msg, ms) {
     $toast.textContent = msg; $toast.hidden = false;
@@ -85,6 +87,7 @@
       .replace(/−/g, " meno ").replace(/=/g, " uguale a ")
       .replace(/\^(\d)/g, " alla $1 ").replace(/(\d+)\s*%/g, "$1 per cento")
       .replace(/(\d+)\/(\d+)/g, "$1 fratto $2")
+      .replace(/km\/h/g, " chilometri all'ora")
       .replace(/cm²/g, " centimetri quadrati").replace(/\bcm\b/g, " centimetri");
   }
 
@@ -195,6 +198,7 @@
   };
 
   function showHome() {
+    Games.stop();
     game = null;
     setTheme(profile.classId);
     renderHome();
@@ -242,16 +246,27 @@
   function startGame(ids) {
     const ok = ids.filter(isReady);
     if (!ok.length) { toast("Scegli almeno una sfida con il bollino verde: Matematica o Italiano."); return; }
-    game = { subjects: ok, streak: 0, right: 0, listening: false };
+    game = { subjects: ok, streak: 0, right: 0, listening: false, lastKind: "", round: null };
     nextQuestion();
   }
 
   function nextQuestion() {
+    Games.stop();
     game.sid = pick(game.subjects);
-    game.q = Questions.next(game.sid, profile.classId);
+    game.round = Games.pick(game.sid, profile.classId, game.lastKind, CONFIG.GAME_SHARE);
+    game.lastKind = game.round ? game.round.kind : "quiz";
+    game.q = game.round ? null : Questions.next(game.sid, profile.classId);
     game.answered = false; game.chosen = -1; game.mood = "happy"; game.fb = null; game.listening = false;
     renderGame();
     if (profile.autoRead) readQuestion();
+  }
+
+  const OPS = { "+": "più", "−": "meno", "×": "per", ":": "diviso", "=": "uguale a", "(": "apri parentesi", ")": "chiudi parentesi" };
+  function roundSpeech(r) {
+    if (r.kind === "frase") return "Metti le parole in ordine per fare una frase. Le parole sono: " + r.items.map(w => w.replace(/[.,;:!?]/g, "")).join(", ") + ".";
+    if (r.kind === "operazione") return (r.problem ? toSpeech(r.prompt) + " " : "") + "Metti in ordine numeri e segni per fare l'operazione. Ci sono: " +
+      r.items.map(t => OPS[t] || (/^−\d/.test(t) ? "meno " + t.slice(1) : t)).join(", ") + ".";
+    return "Colpisci il bersaglio con la risposta giusta. " + toSpeech(r.prompt) + " Le risposte sono: " + r.q.a.map(toSpeech).join(", ") + ".";
   }
 
   function questionSpeech() {
@@ -262,15 +277,47 @@
 
   // testo letto dopo la risposta: esito, risposta giusta (se sbagliata) e spiegazione
   function feedbackSpeech() {
-    const q = game.q, fb = game.fb, wrong = game.chosen !== q.c;
-    return fb.title + "." + (wrong ? " La risposta giusta era: " + toSpeech(q.a[q.c]) + "." : "") + (fb.text ? " " + toSpeech(fb.text) : "");
+    const fb = game.fb;
+    return fb.title + "." + (fb.correct ? " La risposta giusta era: " + toSpeech(fb.correct) + "." : "") + (fb.text ? " " + toSpeech(fb.text) : "");
   }
 
   function readQuestion() {
-    Voice.speak(questionSpeech(), msg => toast(msg, 6000));
+    Voice.speak(game.round ? roundSpeech(game.round) : questionSpeech(), msg => toast(msg, 6000));
+  }
+
+  function feedbackHtml(fb, showSol) {
+    return `<div class="card feedback">
+        <div class="head"><h2>${esc(fb.title)}</h2><span class="delta ${fb.delta > 0 ? "up" : fb.delta < 0 ? "down" : ""}">${fb.delta > 0 ? "+" : fb.delta < 0 ? "−" : ""}${fb.delta === 0 ? "" : Math.abs(fb.delta) + " min"}</span></div>
+        ${showSol && fb.correct ? `<p class="sol">Soluzione: <b>${esc(fb.correct)}</b></p>` : ""}
+        ${fb.text ? `<p>${esc(fb.text)}</p>` : ""}
+        <button class="btn big" data-act="next-q">Avanti ▶</button>
+      </div>`;
+  }
+
+  // schermata di un gioco (puzzle o tiro a segno)
+  function renderRound() {
+    const r = game.round, sub = SUBJECTS.find(s => s.id === game.sid);
+    $app.innerHTML = `<section class="screen">
+      <div class="gtop">
+        <button class="icon-btn" data-act="exit" aria-label="Esci dalla sfida">✕</button>
+        <span class="chip" id="gmins" aria-label="Minuti di oggi">⏱ ${esc(Credit.format(Credit.get()))}</span>
+        <span class="space"></span>
+        <span class="chip" id="gstreak" aria-label="Serie di risposte giuste">🔥 ${game.streak}</span>
+      </div>
+      <div id="hero" class="hero xs">${charSvg(profile, game.mood)}</div>
+      <div class="card qcard">
+        <span class="qsub" style="--sc:${sub.color}">${sub.icon} ${esc(sub.name)} · ${esc(r.title)}</span>
+        <div class="qtext">${esc(r.prompt)}</div>
+        ${r.hint ? `<p class="muted">${esc(r.hint)}</p>` : ""}
+      </div>
+      <div id="gbox"></div>
+      <div id="gfb"></div>
+    </section>`;
+    Games.mount(document.getElementById("gbox"), r, roundDone);
   }
 
   function renderGame() {
+    if (game.round) { renderRound(); return; }
     const q = game.q, sub = SUBJECTS.find(s => s.id === game.sid), fb = game.fb;
     const min = Credit.get();
     const canSpeak = Voice.canSpeak(), canListen = Voice.canListen();
@@ -295,32 +342,49 @@
         return `<button class="ans ${cls}" data-act="ans" data-i="${i}" style="--ac:${ANS_COL[i]}" ${game.answered ? "disabled" : ""}>
           <span class="shape"><span>${SHAPES[i]}</span></span><span>${esc(a)}</span></button>`;
       }).join("")}</div>
-      ${fb ? `<div class="card feedback">
-        <div class="head"><h2>${esc(fb.title)}</h2><span class="delta ${fb.delta > 0 ? "up" : fb.delta < 0 ? "down" : ""}">${fb.delta > 0 ? "+" : fb.delta < 0 ? "−" : ""}${fb.delta === 0 ? "" : Math.abs(fb.delta) + " min"}</span></div>
-        <p>${esc(fb.text)}</p>
-        <button class="btn big" data-act="next-q">Avanti ▶</button>
-      </div>` : ""}
+      ${fb ? feedbackHtml(fb, false) : ""}
     </section>`;
   }
 
-  function answer(i) {
-    if (!game || game.answered) return;
+  function finishRound(ok, expl, correct) {
     Voice.stopSpeaking();
-    const q = game.q, ok = i === q.c;
     const r = Credit.answer(ok);
-    game.answered = true; game.chosen = i; game.mood = ok ? "cheer" : "sad"; game.listening = false;
+    game.answered = true; game.mood = ok ? "cheer" : "sad"; game.listening = false;
     if (ok) { game.streak++; game.right++; } else { game.streak = 0; }
     const th = themeFor(profile.classId);
-    let text = q.e || "";
+    let text = expl || "";
     if (ok && r.delta === 0) text = (text ? text + " " : "") + "Hai già il massimo di oggi, ma continua pure per allenarti!";
     if (!ok && r.delta === 0) text = (text ? text + " " : "") + "I minuti garantiti restano tuoi.";
-    game.fb = { title: ok ? pick(PRAISE[th]) : pick(OOPS), delta: r.delta, text };
-    renderGame();
+    game.fb = { title: ok ? pick(PRAISE[th]) : pick(OOPS), delta: r.delta, text, correct: ok ? "" : (correct || "") };
+  }
+
+  function afterResult(ok) {
     const hero = document.getElementById("hero");
     if (hero) hero.classList.add(ok ? "hop" : "shake");
     if (ok) { Sfx.ok(); sparks(hero); } else { Sfx.no(); }
     window.scrollTo(0, document.body.scrollHeight);
     if (profile.autoRead) Voice.speak(feedbackSpeech(), msg => toast(msg, 6000));
+  }
+
+  function answer(i) {
+    if (!game || game.answered || game.round) return;
+    const q = game.q, ok = i === q.c;
+    game.chosen = i;
+    finishRound(ok, q.e, q.a[q.c]);
+    renderGame();
+    afterResult(ok);
+  }
+
+  // un gioco è finito: aggiorno minuti, personaggio e riquadro del risultato senza ridisegnare il gioco
+  function roundDone(ok, correct, expl) {
+    if (!game || !game.round || game.answered) return;
+    finishRound(ok, expl, correct);
+    const hero = document.getElementById("hero"), m = document.getElementById("gmins"), st = document.getElementById("gstreak"), f = document.getElementById("gfb");
+    if (hero) hero.innerHTML = charSvg(profile, game.mood);
+    if (m) m.textContent = "⏱ " + Credit.format(Credit.get());
+    if (st) st.textContent = "🔥 " + game.streak;
+    if (f) f.innerHTML = feedbackHtml(game.fb, true);
+    afterResult(ok);
   }
 
   function listenForAnswer() {
@@ -367,7 +431,7 @@
       "Che classe fai? Così ti preparo le sfide giuste.",
       "Scegli il tuo compagno. Crescerà con te, classe dopo classe!",
       "Vuoi metterci la tua foto? È facoltativa e resta solo su questo telefono."][wiz.step] || "";
-    if (game) return game.answered && game.fb ? feedbackSpeech() : questionSpeech();
+    if (game) return game.answered && game.fb ? feedbackSpeech() : (game.round ? roundSpeech(game.round) : questionSpeech());
     if (profile) return `Ciao ${profile.nick}! Oggi hai ${Credit.format(Credit.get())} di telefono. Scegli le sfide che vuoi e tocca Gioca.`;
     return "";
   }

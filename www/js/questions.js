@@ -48,27 +48,96 @@ const Questions = (() => {
     return { q: q.q, a: items.map(x => x.t), c: items.findIndex(x => x.ok), e: q.e || "" };
   }
 
+  const fmt = n => n < 0 ? "−" + (-n) : String(n);
+
   // 4 risposte numeriche diverse tra loro, vicine alla giusta
-  function numericOptions(correct, spread) {
+  function numericOptions(correct, spread, neg) {
     const set = new Set([correct]);
     let guard = 0;
     while (set.size < 4 && guard++ < 200) {
       const d = rnd(1, spread) * (Math.random() < 0.5 ? -1 : 1);
       const v = correct + d;
-      if (v >= 0) set.add(v);
+      if (v >= 0 || neg) set.add(v);
     }
     let extra = 1;
     while (set.size < 4) set.add(correct + extra++);
-    return [...set].map(String);
+    return [...set].map(fmt);
   }
 
-  function build(q, correct, spread, expl) {
-    const opts = numericOptions(correct, spread);
-    return shuffleWithAnswer({ q, a: [String(correct), ...opts.filter(o => o !== String(correct))].slice(0, 4), c: 0, e: expl });
+  function build(q, correct, spread, expl, neg) {
+    const opts = numericOptions(correct, spread, neg);
+    return shuffleWithAnswer({ q, a: [fmt(correct), ...opts.filter(o => o !== fmt(correct))].slice(0, 4), c: 0, e: expl });
+  }
+
+
+  // ---------- problemini (testo + operazione che li risolve) ----------
+  const NAMES = ["Franco", "Giulia", "Marco", "Sara", "Luca", "Anna", "Matteo", "Chiara", "Leo", "Elena", "Paolo", "Marta"];
+  const THINGS = ["mele", "biglie", "figurine", "caramelle", "matite", "palloncini", "libri", "adesivi", "pere", "carte"];
+
+  // Ritorna { text, answer, tokens (operazione vera che li risolve), expl }
+  function problem(classId) {
+    const N = pick(NAMES), T = pick(THINGS);
+    const P = (text, answer, toks, expl) => ({ text, answer, tokens: toks.map(x => typeof x === "number" ? fmt(x) : x), expl });
+    const gens = [];
+
+    if (classId <= 1) {
+      const lim = classId === 0 ? 12 : 60, hi = classId === 0 ? 9 : 30;
+      gens.push(() => { const a = rnd(5, lim), b = rnd(1, Math.min(hi, a - 1));
+        return P(`${N} ha ${a} ${T} e ne ${pick(["perde", "regala"])} ${b}. Quante ${T} rimangono a ${N}?`, a - b, [a, "−", b, "=", a - b], `${a} meno ${b} fa ${a - b}.`); });
+      gens.push(() => { const a = rnd(2, lim - 3), b = rnd(2, hi);
+        return P(`${N} ha ${a} ${T} e ne trova altre ${b}. Quante ${T} ha adesso?`, a + b, [a, "+", b, "=", a + b], `${a} più ${b} fa ${a + b}.`); });
+      if (classId === 1) {
+        gens.push(() => { const a = rnd(10, 50), b = rnd(10, 40);
+          return P(`In una scatola ci sono ${a} ${T}, in un'altra ce ne sono ${b}. Quante ${T} ci sono in tutto?`, a + b, [a, "+", b, "=", a + b], `${a} più ${b} fa ${a + b}.`); });
+        gens.push(() => { const t = rnd(2, 5), n = rnd(2, 10);
+          return P(`${N} prepara ${t} sacchetti con ${n} ${T} ciascuno. Quante ${T} usa in tutto?`, t * n, [t, "×", n, "=", t * n], `${t} per ${n} fa ${t * n}.`); });
+      }
+    } else if (classId === 2) {
+      gens.push(() => { const n = rnd(3, 10), k = rnd(3, 9);
+        return P(`Una scatola contiene ${n} ${T}. Quante ${T} ci sono in ${k} scatole?`, k * n, [k, "×", n, "=", k * n], `${k} per ${n} fa ${k * n}.`); });
+      gens.push(() => { const n = rnd(2, 10), k = rnd(2, 9);
+        return P(`${N} divide ${k * n} ${T} in parti uguali tra ${k} amici. Quante ${T} riceve ogni amico?`, n, [k * n, ":", k, "=", n], `${k * n} diviso ${k} fa ${n}.`); });
+      gens.push(() => { const a = rnd(120, 480), b = rnd(20, 110);
+        return P(`Un negozio ha ${a} ${T} e ne vende ${b}. Quante ${T} restano?`, a - b, [a, "−", b, "=", a - b], `${a} meno ${b} fa ${a - b}.`); });
+    } else if (classId === 3) {
+      gens.push(() => { const k = rnd(2, 6), n = rnd(6, 12), b = rnd(3, Math.min(20, k * n - 1));
+        return P(`${N} compra ${k} confezioni da ${n} ${T} e ne regala ${b}. Quante ${T} rimangono a ${N}?`, k * n - b, [k, "×", n, "−", b, "=", k * n - b], `${k} per ${n} fa ${k * n}, poi ${k * n} meno ${b} fa ${k * n - b}.`); });
+      gens.push(() => { const p = rnd(2, 5), q = rnd(3, 9), k = rnd(2, 5);
+        return P(`Una penna costa ${p} euro e un quaderno ${q} euro. Quanto spendi per ${k} penne e un quaderno?`, k * p + q, [k, "×", p, "+", q, "=", k * p + q], `${k} penne costano ${k * p} euro, più ${q} fa ${k * p + q} euro.`); });
+    } else {
+      const sconto = () => { const x = pick([20, 40, 60, 80, 100, 120, 200]), p = pick(classId === 4 ? [10, 25, 50] : [10, 20, 25, 30, 50]), d = x * p / 100;
+        return P(`Un gioco da ${x} euro ha lo sconto del ${p}%. Quanto costa ora?`, x - d, [x, "−", d, "=", x - d], `Lo sconto è ${d} euro: ${x} meno ${d} fa ${x - d}.`); };
+      const bici = () => { const n = pick([20, 40, 60, 80, 100]), p = pick([10, 25, 50]), v = n * p / 100;
+        return P(`In una scuola ci sono ${n} alunni e il ${p}% va a scuola in bicicletta. Quanti alunni vanno in bicicletta?`, v, [n, "×", p, ":", 100, "=", v], `Il ${p}% di ${n} è ${v}.`); };
+      const velocita = () => { const v = pick([40, 50, 60, 80, 90, 100, 120]), t = rnd(2, 5);
+        return P(`Un'auto viaggia a ${v} km/h per ${t} ore. Quanti chilometri percorre?`, v * t, [v, "×", t, "=", v * t], `${v} per ${t} fa ${v * t} chilometri.`); };
+      if (classId === 4) {
+        gens.push(sconto, bici);
+        gens.push(() => { const c = rnd(2, 6), s = c * rnd(3, 9), a = rnd(1, s - 1), b = s - a;
+          return P(`${N} ha ${a} ${T} e ne riceve altre ${b}, poi le divide in ${c} gruppi uguali. Quante ${T} ci sono in ogni gruppo?`, s / c, ["(", a, "+", b, ")", ":", c, "=", s / c], `${a} più ${b} fa ${s}, poi ${s} diviso ${c} fa ${s / c}.`); });
+      } else if (classId === 5) {
+        gens.push(sconto, bici, velocita);
+      } else if (classId === 6) {
+        gens.push(sconto, velocita);
+        gens.push(() => { const a = rnd(2, 9), b = rnd(2, 14);
+          return P(`La mattina la temperatura è di ${fmt(-a)} gradi. A mezzogiorno è salita di ${b} gradi. Quanti gradi ci sono a mezzogiorno?`, b - a, [fmt(-a), "+", b, "=", b - a], `Parti da ${fmt(-a)} e sali di ${b}: ottieni ${fmt(b - a)}.`); });
+      } else {
+        gens.push(sconto, velocita);
+        gens.push(() => { const a = rnd(2, 9), x = rnd(2, 12), b = rnd(1, 15), c = a * x + b;
+          return P(`Pensa a un numero: moltiplicalo per ${a} e aggiungi ${b}. Ottieni ${c}. Qual è il numero?`, x, [a, "×", x, "+", b, "=", c], `${c} meno ${b} fa ${c - b}, poi ${c - b} diviso ${a} fa ${x}.`); });
+      }
+    }
+    return pick(gens)();
+  }
+
+  function problemQuiz(classId) {
+    const p = problem(classId);
+    return build(p.text, p.answer, Math.max(3, Math.round(Math.abs(p.answer) / 5)), p.expl, p.answer < 0);
   }
 
   // ---------- matematica generata per classe ----------
   function math(classId) {
+    if (Math.random() < 0.3) return problemQuiz(classId);
     switch (classId) {
       case 0: { // 1ª el.: fino a 20
         if (Math.random() < 0.5) {
@@ -139,5 +208,5 @@ const Questions = (() => {
     return null;
   }
 
-  return { next };
+  return { next, problem };
 })();
