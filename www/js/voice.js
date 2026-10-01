@@ -87,7 +87,8 @@ const Voice = (() => {
     return new Promise(resolve => {
       try {
         if (window.TTS) {
-          window.TTS.speak({ text, locale: LANG, rate: 0.9 }, () => resolve(), () => resolve());
+          const r = window.TTS.speak({ text, locale: LANG, rate: 0.95 });
+          if (r && r.then) r.then(() => resolve(), () => resolve()); else resolve();
           return;
         }
         if (window.speechSynthesis) {
@@ -107,7 +108,7 @@ const Voice = (() => {
 
   function stopSpeaking() {
     try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
-    try { if (window.TTS && window.TTS.stop) window.TTS.stop(); } catch (e) {}
+    try { if (window.TTS && window.TTS.stop) { const r = window.TTS.stop(); if (r && r.catch) r.catch(() => {}); } } catch (e) {}
   }
 
   // ---------- microfono ----------

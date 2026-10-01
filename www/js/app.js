@@ -414,13 +414,18 @@
   });
 
   // ---------- avvio ----------
-  if (profile) {
-    if (typeof profile.classId !== "number") { Storage.resetAll(); profile = null; startWizard(false); }
-    else {
-      selected = subjectsForClass(profile.classId).filter(s => isReady(s.id)).map(s => s.id);
-      showHome();
+  function boot() {
+    if (profile) {
+      if (typeof profile.classId !== "number") { Storage.resetAll(); profile = null; startWizard(false); }
+      else {
+        selected = subjectsForClass(profile.classId).filter(s => isReady(s.id)).map(s => s.id);
+        showHome();
+      }
+    } else {
+      startWizard(false);
     }
-  } else {
-    startWizard(false);
   }
+  // Nell'app Android si aspetta che i plugin (voce, microfono) siano pronti
+  if (window.cordova) document.addEventListener("deviceready", boot, false);
+  else boot();
 })();

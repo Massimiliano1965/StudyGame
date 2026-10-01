@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="it.massi.studygame" version="2.0.0" xmlns="http://www.w3.org/ns/widgets">
+<widget id="it.massi.studygame" version="2.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
   <name>Studia e Gioca</name>
   <description>Studia, gioca e guadagna tempo di telefono.</description>
   <content src="index.html" />
@@ -7,4 +7,12 @@
   <preference name="Orientation" value="portrait" />
   <preference name="android-minSdkVersion" value="24" />
   <preference name="BackgroundColor" value="0xFFBFE8FF" />
+  <platform name="android">
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <queries>
+        <intent><action android:name="android.speech.RecognitionService" /></intent>
+        <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
+      </queries>
+    </config-file>
+  </platform>
 </widget>
