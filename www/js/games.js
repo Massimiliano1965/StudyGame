@@ -432,8 +432,17 @@ const Games = (() => {
     retorica: ["linear-gradient(#EAD9FF, #FFF)", [["🎭", 50, 50, 90], ["✨", 20, 24, 44], ["🖋️", 82, 26, 48], ["🌬️", 20, 78, 44], ["💭", 80, 78, 44]], "Che bei giri di parole!"],
     autori: ["linear-gradient(#FFEFD0, #E8D2A8)", [["🏛️", 50, 48, 84], ["📚", 20, 76, 56], ["🖋️", 80, 76, 48], ["👓", 28, 22, 42], ["📜", 74, 24, 46]], "Grandi autori, grandi libri!"],
     categorie: ["linear-gradient(#D9F2FF, #FFF)", [["🔤", 50, 46, 84], ["📖", 22, 76, 52], ["✏️", 78, 76, 48], ["🧠", 20, 24, 44], ["🎓", 80, 24, 50]], "Ogni parola ha la sua casa!"],
-    mat: ["linear-gradient(#D9F2FF, #FFF3C9)", [["🧮", 50, 54, 88], ["➕", 18, 24, 46], ["✖️", 82, 24, 46], ["➗", 22, 82, 44], ["➖", 78, 82, 44], ["🔢", 50, 16, 36]], "I numeri tornano: che bravo matematico!"],
-    eq: ["linear-gradient(#EAD9FF, #FFF)", [["⚖️", 50, 52, 90], ["🕵️", 20, 28, 54], ["🔍", 82, 26, 48], ["🏆", 50, 18, 40], ["🗝️", 80, 80, 44]], "Hai trovato la x: detective dei numeri!"]
+    mat: [
+      ["linear-gradient(#D9F2FF, #FFF3C9)", [["🧮", 50, 54, 88], ["➕", 18, 24, 46], ["✖️", 82, 24, 46], ["➗", 22, 82, 44], ["➖", 78, 82, 44], ["🔢", 50, 16, 36]], "I numeri tornano: che bravo matematico!"],
+      ["linear-gradient(#1B1F4B, #4B3A8F)", [["🚀", 50, 48, 84], ["🪐", 18, 26, 60], ["⭐", 82, 22, 36], ["🌙", 84, 70, 48], ["✨", 24, 74, 34], ["🛸", 62, 20, 40]], "Conti perfetti: si parte per lo spazio!"],
+      ["linear-gradient(#FFF1C9 0 60%, #C98B5A 60%)", [["🧺", 50, 66, 74], ["🍎", 30, 56, 46], ["🍌", 70, 56, 46], ["🍊", 40, 78, 38], ["🍇", 62, 80, 38], ["🛒", 14, 70, 52], ["🏪", 86, 30, 66]], "Che spesa precisa: i conti tornano!"],
+      ["linear-gradient(#BEE9FF 0 58%, #F4C98A 58%)", [["🏁", 86, 40, 56], ["🏆", 50, 30, 68], ["🥇", 18, 28, 48], ["🏃", 30, 74, 58], ["👏", 72, 76, 46], ["🎉", 52, 80, 36]], "Vittoria! Campione dei numeri!"]
+    ],
+    eq: [
+      ["linear-gradient(#EAD9FF, #FFF)", [["⚖️", 50, 52, 90], ["🕵️", 20, 28, 54], ["🔍", 82, 26, 48], ["🏆", 50, 18, 40], ["🗝️", 80, 80, 44]], "Hai trovato la x: detective dei numeri!"],
+      ["linear-gradient(#FFE9B8 0 55%, #F4C98A 55%)", [["🗺️", 50, 38, 70], ["🏴‍☠️", 18, 30, 50], ["💎", 50, 78, 54], ["🪙", 78, 74, 40], ["🧭", 84, 28, 46], ["🏝️", 20, 76, 56]], "La x segna il tesoro: trovato!"],
+      ["linear-gradient(#D9F2FF, #E8FFE3)", [["🤖", 50, 50, 90], ["⚙️", 18, 26, 48], ["🔧", 82, 26, 44], ["💡", 22, 80, 44], ["🔋", 80, 78, 44]], "Il robot ha risolto l'equazione!"]
+    ]
   };
   const SCENE_RULES = [
     [/^matematica: .*equazion/, "eq"], [/^matematica/, "mat"],
@@ -448,10 +457,38 @@ const Games = (() => {
     for (const [re, k] of SCENE_RULES) if (re.test(s)) return k;
     return "parole";
   }
+  // una figurina per le parole del puzzle (se la parola non c'è, si salta)
+  const EMO = {
+    red: "🔴", blue: "🔵", green: "🟢", yellow: "🟡", black: "⚫", white: "⚪", pink: "🌸", orange: "🟠",
+    dog: "🐶", cat: "🐱", bird: "🐦", fish: "🐟", horse: "🐴", cow: "🐄", rabbit: "🐇", duck: "🦆",
+    one: "1️⃣", two: "2️⃣", three: "3️⃣", four: "4️⃣", five: "5️⃣", six: "6️⃣", seven: "7️⃣", ten: "🔟",
+    pencil: "✏️", desk: "🖥️", teacher: "🧑‍🏫", bag: "🎒", window: "🪟", door: "🚪", chair: "🪑",
+    mother: "👩", father: "👨", brother: "👦", sister: "👧", grandmother: "👵", uncle: "🧔", aunt: "👩‍🦰",
+    "to eat": "🍽️", "to drink": "🥤", "to sleep": "😴", "to run": "🏃", "to read": "📖", "to write": "✍️", "to open": "📂",
+    bread: "🍞", banana: "🍌", bottle: "🍼", plate: "🍽️", glass: "🥛", apple: "🍎", fork: "🍴", milk: "🥛",
+    hot: "🔥", cold: "❄️", early: "🌅", late: "🌙", easy: "😊", difficult: "😰", rich: "💰", poor: "🪙", strong: "💪", weak: "🥀",
+    safe: "🛡️", dangerous: "⚠️", go: "🚶", see: "👀", eat: "🍽️", buy: "🛒", take: "🤲", write: "✍️", have: "🤝",
+    gatto: "🐱", fiore: "🌸", penna: "🖊️", libro: "📖", casa: "🏠", albero: "🌳", bambino: "🧒", sedia: "🪑", mela: "🍎",
+    cane: "🐶", mucca: "🐄", pecora: "🐑", asino: "🐴", leone: "🦁", rana: "🐸", cavallo: "🐴", maiale: "🐷",
+    alto: "🦒", basso: "🐭", caldo: "🔥", freddo: "❄️", grande: "🐘", piccolo: "🐭", giorno: "☀️", notte: "🌙",
+    aperto: "🔓", chiuso: "🔒", veloce: "⚡", lento: "🐌", felice: "😀", triste: "😢", dolce: "🍬", amaro: "🍋", nuovo: "✨", vecchio: "👴"
+  };
+  const emojiFor = p => EMO[String(p.l).toLowerCase()] || EMO[String(p.r).toLowerCase()] || "";
+
+  // ogni volta una scena diversa: colori, posizioni, specchio e figure a caso
   function sceneHtml(key, pairs) {
-    const sc = SCENES[key] || SCENES.parole;
-    return `<div class="scene" style="background:${sc[0]}">${sc[1].map((it, i) =>
-      `<span class="sc-it" style="left:${it[1]}%;top:${it[2]}%;font-size:${it[3]}px;animation-delay:${(i * 0.16).toFixed(2)}s">${it[0]}</span>`).join("")}</div>
+    let sc = SCENES[key] || SCENES.parole;
+    if (Array.isArray(sc[0])) sc = pick(sc);                         // più varianti: ne scelgo una
+    const flip = Math.random() < 0.5, hue = rnd(0, 359), jit = n => n + rnd(-5, 5);
+    let decor = shuffle(sc[1].slice());
+    if (decor.length > 5) decor = decor.slice(0, rnd(5, decor.length));
+    const words = pairs.map(emojiFor).filter(Boolean);
+    const items = decor.map(it => [it[0], jit(flip ? 100 - it[1] : it[1]), Math.min(words.length ? 70 : 90, jit(it[2])), Math.round(it[3] * (0.9 + Math.random() * 0.25))]);
+    shuffle(["✨", "⭐", "🎈", "💫", "🌟"]).slice(0, 2).forEach(e => items.push([e, rnd(8, 92), rnd(10, 40), rnd(24, 36)]));
+    const dark = /#1B1F4B/.test(sc[0]);
+    const strip = words.length ? `<div class="sc-strip">${shuffle(words.slice()).map((e, i) => `<span style="animation-delay:${(items.length * 0.16 + i * 0.2).toFixed(2)}s">${e}</span>`).join("")}</div>` : "";
+    return `<div class="scene"><div class="sc-bg" style="background:${sc[0]};${dark ? "" : `filter:hue-rotate(${hue}deg)`}"></div>${items.map((it, i) =>
+      `<span class="sc-it" style="left:${it[1]}%;top:${it[2]}%;font-size:${it[3]}px;animation-delay:${(i * 0.16).toFixed(2)}s">${it[0]}</span>`).join("")}${strip}</div>
       <div class="sc-cap">🎉 ${esc(sc[2])}</div>
       <div class="sc-words">${pairs.map(p => `<span>${esc(p.l)} = ${esc(p.r)}</span>`).join("")}</div>`;
   }

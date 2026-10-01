@@ -329,6 +329,10 @@ body[data-theme="teen"] .inc-drop.ok { color: #0D0C33; }
 
 /* scena a puzzle completato */
 .scene { position: relative; height: 230px; border: 3px solid var(--edge); border-radius: 22px; overflow: hidden; box-shadow: 0 4px 0 var(--edge); }
+.sc-bg { position: absolute; inset: 0; }
+.sc-strip { position: absolute; left: 6px; right: 6px; bottom: 6px; display: flex; justify-content: space-around; align-items: center; padding: 4px 6px; background: rgba(255,255,255,.72); border-radius: 16px; font-size: 38px; line-height: 1.1; }
+.sc-strip span { animation: scpop2 .6s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes scpop2 { 0% { opacity: 0; transform: scale(0) rotate(-25deg); } 100% { opacity: 1; transform: scale(1) rotate(0); } }
 .sc-it { position: absolute; line-height: 1; transform: translate(-50%, -50%); animation: scpop .6s cubic-bezier(.3, 1.6, .5, 1) both; }
 @keyframes scpop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(-25deg); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); } }
 .sc-cap { text-align: center; font-weight: 800; font-size: 22px; line-height: 1.15; }
