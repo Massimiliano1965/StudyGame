@@ -127,7 +127,7 @@ const Voice = (() => {
           let chain = Promise.resolve();
           segs.forEach(s => {
             chain = chain.then(() => my !== token ? undefined :
-              window.TTS.speak({ text: s.t, locale: s.l === "en" ? LANG_EN : LANG, rate: 0.95 }));
+              window.TTS.speak({ text: s.t, locale: s.l === "en" ? LANG_EN : LANG, rate: s.l === "en" ? 1.15 : 0.95 }));
           });
           chain.then(done, err => { fail(err); done(); });
           return;
@@ -138,7 +138,7 @@ const Voice = (() => {
           segs.forEach((s, i) => {
             const en = s.l === "en";
             const u = new SpeechSynthesisUtterance(s.t);
-            u.lang = en ? LANG_EN : LANG; u.rate = 0.92; u.pitch = 1.1;
+            u.lang = en ? LANG_EN : LANG; u.rate = en ? 1.1 : 0.92; u.pitch = 1.1;
             const vc = en
               ? (voices.find(x => /^en[-_]US/i.test(x.lang)) || voices.find(x => /^en/i.test(x.lang)))
               : voices.find(x => /^it/i.test(x.lang));

@@ -15,6 +15,12 @@ Progetto: Studia e Gioca (repo GitHub Massimiliano1965/StudyGame, app Android Co
 - app.js: `langSegs`, `ansSegs`, `fin`, poi `roundSpeech`, `questionSpeech`, `feedbackSpeech`.
 - NON ancora provato su telefono: la voce inglese va verificata dopo la build.
 
+## Fatto dopo: scene, esplosione, voce
+- Voce inglese provata sul telefono: funziona. Ora va un po' più veloce (en: 1.15, italiano invariato).
+- Incastro completato: al posto delle caselle appare una scena a tema (emoji, offline), con didascalia e le coppie. Scene in games.js (`SCENES`, `SCENE_RULES`, `sceneKey`, `sceneHtml`), scelte dal testo della consegna. Nuovo tema inglese "tavola" (bread, banana, bottle, plate...).
+- Secondo errore: il puzzle esplode (BOOM) e ricomincia da capo con pezzi rimescolati; nessun minuto perso. Il primo errore si perdona. `Games.setBoom` suona Sfx.no.
+- NON ancora provato su telefono: scene ed esplosione.
+
 ## Da fare
 - Provare la voce inglese sul telefono (una domanda "Come si dice «gatto» in inglese?" e un Incastro dei colori). Se non parte, dirlo e si guarda.
 - Poi la prossima materia/gioco: la decide Massi.

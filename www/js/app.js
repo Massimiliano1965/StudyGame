@@ -47,6 +47,7 @@
   })();
 
   Games.setTap(() => Sfx.tap());
+  Games.setBoom(() => Sfx.no());
   Games.setAvatar(() => charSvg(profile, "happy"));
 
   // ---------- utilità interfaccia ----------

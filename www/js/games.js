@@ -17,6 +17,8 @@ const Games = (() => {
   let raf = 0;
   let tapFn = () => {};
   const setTap = fn => { tapFn = fn || (() => {}); };
+  let boomFn = () => {};
+  const setBoom = fn => { boomFn = fn || (() => {}); };
   function stop() { if (raf) { cancelAnimationFrame(raf); raf = 0; } }
 
   // ====================================================================
@@ -397,7 +399,8 @@ const Games = (() => {
     B: [
       { prompt: "Collega ogni parola della scuola al suo significato.", pairs: [["pencil", "matita"], ["desk", "banco"], ["teacher", "insegnante"], ["bag", "zaino"], ["window", "finestra"], ["door", "porta"], ["chair", "sedia"]] },
       { prompt: "Collega ogni parola della famiglia al suo significato.", pairs: [["mother", "madre"], ["father", "padre"], ["brother", "fratello"], ["sister", "sorella"], ["grandmother", "nonna"], ["uncle", "zio"], ["aunt", "zia"]] },
-      { prompt: "Collega ogni verbo inglese al suo significato.", pairs: [["to eat", "mangiare"], ["to drink", "bere"], ["to sleep", "dormire"], ["to run", "correre"], ["to read", "leggere"], ["to write", "scrivere"], ["to open", "aprire"]] }
+      { prompt: "Collega ogni verbo inglese al suo significato.", pairs: [["to eat", "mangiare"], ["to drink", "bere"], ["to sleep", "dormire"], ["to run", "correre"], ["to read", "leggere"], ["to write", "scrivere"], ["to open", "aprire"]] },
+      { prompt: "Collega ogni parola della tavola al suo significato.", pairs: [["bread", "pane"], ["banana", "banana"], ["bottle", "bottiglia"], ["plate", "piatto"], ["glass", "bicchiere"], ["apple", "mela"], ["fork", "forchetta"], ["milk", "latte"]] }
     ],
     C: [
       { rEn: true, prompt: "Collega ogni parola inglese al suo contrario.", pairs: [["hot", "cold"], ["early", "late"], ["easy", "difficult"], ["rich", "poor"], ["strong", "weak"], ["safe", "dangerous"]] },
@@ -405,6 +408,53 @@ const Games = (() => {
       { prompt: "Collega ogni parola inglese al suo significato.", pairs: [["although", "anche se"], ["however", "tuttavia"], ["because", "perché"], ["always", "sempre"], ["never", "mai"], ["together", "insieme"]] }
     ]
   };
+
+  // ====================================================================
+  // SCENE DEL PUZZLE COMPLETATO (emoji, funzionano anche offline)
+  // [sfondo, [[emoji, x%, y%, grandezza px], ...], didascalia]
+  // ====================================================================
+  const SKY = "linear-gradient(#BEE9FF 0 58%, #9EE493 58%)";
+  const SCENES = {
+    colori: ["linear-gradient(#BEE9FF, #E8F7FF)", [["🌈", 50, 38, 120], ["☁️", 14, 18, 56], ["☁️", 86, 22, 48], ["🎨", 26, 80, 56], ["🖍️", 50, 84, 44], ["🌻", 74, 78, 54], ["🦋", 84, 52, 36]], "Che bel mondo a colori!"],
+    animali: [SKY, [["☀️", 90, 12, 40], ["🏡", 80, 46, 66], ["🌳", 10, 46, 66], ["🐦", 45, 18, 34], ["🐄", 28, 72, 58], ["🐴", 55, 70, 58], ["🐇", 74, 84, 40], ["🦆", 16, 88, 38]], "Una fattoria piena di amici!"],
+    numeri: ["linear-gradient(#FFE3F1, #FFF5C2)", [["🎂", 50, 72, 82], ["🎈", 18, 36, 60], ["🎈", 34, 22, 52], ["🎈", 66, 22, 52], ["🎈", 82, 36, 60], ["🎉", 14, 80, 48], ["🎁", 86, 80, 48]], "Che festa! Tutti i numeri a posto!"],
+    scuola: ["linear-gradient(#FFF1C9 0 62%, #E0B98A 62%)", [["🪟", 14, 30, 56], ["🧑‍🏫", 50, 34, 68], ["🚪", 88, 36, 60], ["🪑", 22, 76, 54], ["🪑", 44, 80, 54], ["🎒", 66, 80, 46], ["✏️", 82, 72, 38], ["📚", 32, 56, 36]], "La classe è pronta: si comincia la lezione!"],
+    famiglia: [SKY, [["☀️", 88, 12, 44], ["🏠", 50, 42, 92], ["🌳", 10, 50, 62], ["🌳", 90, 50, 62], ["👨‍👩‍👧‍👦", 50, 80, 70], ["🐕", 20, 86, 40]], "Una bella famiglia felice!"],
+    verbi: ["linear-gradient(#E6D9FF, #FFFFFF)", [["🍽️", 15, 34, 54], ["🥤", 38, 22, 50], ["😴", 62, 34, 56], ["🏃", 85, 28, 56], ["📖", 25, 76, 52], ["✍️", 50, 80, 48], ["🚪", 78, 76, 48]], "Che giornata piena di azioni!"],
+    tavola: ["linear-gradient(#FFF3D6 0 52%, #C98B5A 52%)", [["🍽️", 50, 72, 84], ["🍞", 24, 62, 54], ["🍌", 77, 62, 54], ["🍼", 10, 80, 50], ["🍎", 33, 86, 40], ["🍴", 88, 82, 44], ["🥛", 66, 88, 40], ["🕯️", 50, 26, 50]], "La tavola è apparecchiata: buon appetito!"],
+    contrariEn: ["linear-gradient(#FFD9A8 0 50%, #CDEBFF 50%)", [["☀️", 24, 28, 70], ["🔥", 24, 74, 46], ["❄️", 76, 28, 64], ["⛄", 76, 72, 60], ["⚖️", 50, 50, 50]], "Caldo e freddo: opposti ma amici!"],
+    tempo: ["linear-gradient(#E3F0FF, #FFFFFF)", [["⏳", 50, 24, 50], ["🕰️", 14, 28, 46], ["🚂", 30, 68, 72], ["📖", 76, 66, 56], ["⭐", 86, 24, 34]], "Il passato dei verbi: viaggio nel tempo!"],
+    parole: ["linear-gradient(#CDEBFF, #E8FFE3)", [["🌍", 50, 50, 110], ["✈️", 18, 24, 50], ["💬", 82, 24, 50], ["🗣️", 20, 80, 46], ["🗺️", 80, 80, 46]], "Ora parli inglese come un viaggiatore!"],
+    contrariIt: ["linear-gradient(#FFE9B8 0 50%, #B9C3FF 50%)", [["☀️", 20, 24, 48], ["🌙", 80, 72, 48], ["🐘", 30, 66, 80], ["🐭", 70, 30, 36], ["⚖️", 50, 50, 44]], "Grandi e piccoli, giorno e notte: tutto a posto!"],
+    plurali: ["linear-gradient(#FFE3F1, #FFF)", [["🍎", 40, 26, 44], ["🍎", 58, 22, 44], ["🌸", 16, 62, 50], ["🌸", 30, 76, 44], ["🐱", 55, 68, 58], ["🐱", 72, 80, 50], ["📚", 86, 54, 52]], "Uno, due, tanti: i plurali sono a posto!"],
+    versi: [SKY, [["🎵", 30, 20, 38], ["🎶", 70, 18, 38], ["🦁", 50, 44, 60], ["🐄", 20, 76, 56], ["🐑", 42, 82, 50], ["🐴", 64, 76, 56], ["🐸", 86, 86, 38]], "Che concerto di versi!"],
+    sinonimi: ["linear-gradient(#FFF0B8, #FFE0F0)", [["🤝", 50, 56, 90], ["😊", 20, 28, 54], ["😄", 80, 28, 54], ["✨", 50, 20, 34]], "Parole gemelle: stesso significato!"],
+    retorica: ["linear-gradient(#EAD9FF, #FFF)", [["🎭", 50, 50, 90], ["✨", 20, 24, 44], ["🖋️", 82, 26, 48], ["🌬️", 20, 78, 44], ["💭", 80, 78, 44]], "Che bei giri di parole!"],
+    autori: ["linear-gradient(#FFEFD0, #E8D2A8)", [["🏛️", 50, 48, 84], ["📚", 20, 76, 56], ["🖋️", 80, 76, 48], ["👓", 28, 22, 42], ["📜", 74, 24, 46]], "Grandi autori, grandi libri!"],
+    categorie: ["linear-gradient(#D9F2FF, #FFF)", [["🔤", 50, 46, 84], ["📖", 22, 76, 52], ["✏️", 78, 76, 48], ["🧠", 20, 24, 44], ["🎓", 80, 24, 50]], "Ogni parola ha la sua casa!"],
+    mat: ["linear-gradient(#D9F2FF, #FFF3C9)", [["🧮", 50, 54, 88], ["➕", 18, 24, 46], ["✖️", 82, 24, 46], ["➗", 22, 82, 44], ["➖", 78, 82, 44], ["🔢", 50, 16, 36]], "I numeri tornano: che bravo matematico!"],
+    eq: ["linear-gradient(#EAD9FF, #FFF)", [["⚖️", 50, 52, 90], ["🕵️", 20, 28, 54], ["🔍", 82, 26, 48], ["🏆", 50, 18, 40], ["🗝️", 80, 80, 44]], "Hai trovato la x: detective dei numeri!"]
+  };
+  const SCENE_RULES = [
+    [/^matematica: .*equazion/, "eq"], [/^matematica/, "mat"],
+    [/^inglese: .*colore/, "colori"], [/^inglese: .*animale/, "animali"], [/^inglese: .*numero/, "numeri"],
+    [/^inglese: .*scuola/, "scuola"], [/^inglese: .*famiglia/, "famiglia"], [/^inglese: .*verbo inglese/, "verbi"],
+    [/^inglese: .*tavola/, "tavola"], [/^inglese: .*contrario/, "contrariEn"], [/^inglese: .*irregolare/, "tempo"], [/^inglese/, "parole"],
+    [/contrario/, "contrariIt"], [/plurale/, "plurali"], [/verso/, "versi"], [/stessa cosa/, "sinonimi"],
+    [/passato prossimo/, "tempo"], [/figura retorica/, "retorica"], [/autore/, "autori"], [/categoria/, "categorie"]
+  ];
+  function sceneKey(subjectId, prompt) {
+    const s = subjectId + ": " + prompt;
+    for (const [re, k] of SCENE_RULES) if (re.test(s)) return k;
+    return "parole";
+  }
+  function sceneHtml(key, pairs) {
+    const sc = SCENES[key] || SCENES.parole;
+    return `<div class="scene" style="background:${sc[0]}">${sc[1].map((it, i) =>
+      `<span class="sc-it" style="left:${it[1]}%;top:${it[2]}%;font-size:${it[3]}px;animation-delay:${(i * 0.16).toFixed(2)}s">${it[0]}</span>`).join("")}</div>
+      <div class="sc-cap">🎉 ${esc(sc[2])}</div>
+      <div class="sc-words">${pairs.map(p => `<span>${esc(p.l)} = ${esc(p.r)}</span>`).join("")}</div>`;
+  }
 
   function makeIncastro(classId, subjectId) {
     let prompt, pairs, eng = false, rEn = false;
@@ -424,8 +474,8 @@ const Games = (() => {
     if (pairs.length < 3) return null;
     let order = shuffle(pairs.map((_, i) => i)), g = 0;
     while (order.every((v, i) => v === i) && g++ < 20) order = shuffle(order);
-    return { kind: "incastro", title: "Incastro", eng, rEn, prompt, hint: "Trascina ogni pezzo al suo posto, oppure toccalo e poi tocca il posto.", pairs, order,
-      solution: pairs.map(p => `${p.l} → ${p.r}`).join(" · ") };
+    return { kind: "incastro", title: "Incastro", eng, rEn, prompt, hint: "Trascina ogni pezzo al suo posto, oppure toccalo e poi tocca il posto. Un errore si perdona, al secondo il puzzle esplode!", pairs, order,
+      scene: sceneKey(subjectId, prompt), solution: pairs.map(p => `${p.l} → ${p.r}`).join(" · ") };
   }
 
   function mountIncastro(el, r, onDone) {
@@ -447,15 +497,38 @@ const Games = (() => {
         pc.classList.add("gone"); clearSel(); placed++; tapFn();
         if (placed === P.length) {
           done = true;
-          const ok = mistakes <= 1;
-          onDone(ok, r.solution, ok ? (mistakes === 0 ? "Tutto incastrato al primo colpo!" : "Incastrato!") : `Hai sbagliato ${mistakes} volte.`);
+          const box = el.querySelector(".inc");
+          if (box) box.innerHTML = sceneHtml(r.scene, P);
+          onDone(true, r.solution, mistakes === 0 ? "Tutto incastrato al primo colpo!" : "Incastrato!");
         }
       } else {
         mistakes++; clearSel();
         const d = drops[s];
         d.classList.add("nope"); pc.classList.add("nope");
+        if (mistakes > 1) { done = true; explode(); return; }
         setTimeout(() => { d.classList.remove("nope"); pc.classList.remove("nope"); }, 450);
       }
+    }
+
+    // secondo errore: il puzzle esplode e si ricomincia da capo
+    function explode() {
+      boomFn();
+      el.querySelectorAll(".nope").forEach(n => n.classList.remove("nope"));
+      el.querySelectorAll(".inc-row, .piece:not(.gone)").forEach(p => {
+        p.style.setProperty("--dx", rnd(-170, 170) + "px");
+        p.style.setProperty("--dy", rnd(-240, 180) + "px");
+        p.style.setProperty("--rot", rnd(-540, 540) + "deg");
+        p.classList.add("boom");
+      });
+      const box = el.querySelector(".inc");
+      if (box) box.insertAdjacentHTML("beforeend", `<div class="boom-msg"><span>💥 BOOM!<small>Si ricomincia da capo</small></span></div>`);
+      setTimeout(() => {
+        if (!el.isConnected) return;
+        let o = shuffle(P.map((_, i) => i)), g = 0;
+        while (o.every((v, i) => v === i) && g++ < 20) o = shuffle(o);
+        r.order = o;
+        mountIncastro(el, r, onDone);
+      }, 1500);
     }
 
     // trascinamento (mouse o dito)
@@ -537,5 +610,5 @@ const Games = (() => {
     }
   }
 
-  return { pick: pickRound, mount, stop, setTap, setAvatar, isTrue, calc };
+  return { pick: pickRound, mount, stop, setTap, setBoom, setAvatar, isTrue, calc };
 })();

@@ -326,3 +326,19 @@ body[data-theme="teen"] .inc-drop.ok { color: #0D0C33; }
 .piece.sel { background: #7ED9FF; outline: 4px solid var(--accent); }
 .piece.drag { position: relative; z-index: 12; box-shadow: 0 10px 18px rgba(0,0,0,.35); cursor: grabbing; }
 .piece.gone { display: none; }
+
+/* scena a puzzle completato */
+.scene { position: relative; height: 230px; border: 3px solid var(--edge); border-radius: 22px; overflow: hidden; box-shadow: 0 4px 0 var(--edge); }
+.sc-it { position: absolute; line-height: 1; transform: translate(-50%, -50%); animation: scpop .6s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes scpop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(-25deg); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); } }
+.sc-cap { text-align: center; font-weight: 800; font-size: 22px; line-height: 1.15; }
+.sc-words { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; font-weight: 700; font-size: 17px; color: var(--muted); }
+
+/* esplosione del puzzle */
+.inc { position: relative; }
+.inc-row.boom, .piece.boom { animation: boom .9s ease-in forwards; }
+@keyframes boom { 0% { transform: translate(0, 0) rotate(0) scale(1); opacity: 1; } 15% { transform: translate(0, 0) rotate(0) scale(1.15); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(.2); opacity: 0; } }
+.boom-msg { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; text-align: center; }
+.boom-msg span { font-size: 46px; font-weight: 900; color: var(--bad); animation: boompop .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+.boom-msg small { display: block; font-size: 20px; font-weight: 800; }
+@keyframes boompop { 0% { opacity: 0; transform: scale(0); } 100% { opacity: 1; transform: scale(1); } }
