@@ -105,3 +105,11 @@ Intestazione con avatar, nome, classe, ⚙️ e il pulsante grande che legge la 
 - Il tasto indietro non deve chiudere l'app: deve tornare alla pagina precedente.
 - Il nome dell'app è «Gioca e Impara» (mai «Studia e Gioca»).
 - Linguaggio: italiano, diretto; Massi si arrabbia se si fa il pigro o si ripete.
+## Aggiornamento 1 ottobre 2026 (sera)
+- Blocco telefono: PROVATO da Massi sul telefono vero, FUNZIONA. Con l'APK installato a mano Android 13+ chiede "Consenti impostazioni con restrizioni" (Info app → ⋮). Da Play Store non succede. Idea: schermata guida nell'app (non fatta).
+- Splash nativo e omino fluttuante: ancora da verificare sul telefono.
+- Jingle funky originale (Sfx.ok in app.js) per la risposta giusta. Niente musica protetta da copyright.
+- Fatte 3 presentazioni (Slides): bambini https://claude.ai/artifact/U2TG5YEQw2EKR1YfkhPc8e, genitori https://claude.ai/artifact/22Auu4mteZyDwkwbgjHuQL, famiglia https://claude.ai/artifact/81sLhXSsipAzfUH3wMXFnC (private, da condividere a mano).
+- Valutazione critica: app solida; mancano prova di una settimana con un bambino vero, informativa privacy, controllo a campione domande, parere professionale (Play Families Policy, eventuale autorizzazione attività secondaria se dipendente pubblico, partita IVA).
+- Play Store: non prima di un mese; account sviluppatore circa 25 $ una tantum (da verificare), test chiuso richiesto ai nuovi account personali.
+- Prossima app: "Avvocato in tasca" (da discutere).
