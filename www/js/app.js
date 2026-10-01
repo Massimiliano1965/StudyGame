@@ -260,6 +260,12 @@
     return toSpeech(q.q) + ". " + q.a.map((a, i) => `${ord[i]}: ${toSpeech(a)}.`).join(" ");
   }
 
+  // testo letto dopo la risposta: esito, risposta giusta (se sbagliata) e spiegazione
+  function feedbackSpeech() {
+    const q = game.q, fb = game.fb, wrong = game.chosen !== q.c;
+    return fb.title + "." + (wrong ? " La risposta giusta era: " + toSpeech(q.a[q.c]) + "." : "") + (fb.text ? " " + toSpeech(fb.text) : "");
+  }
+
   function readQuestion() {
     Voice.speak(questionSpeech(), msg => toast(msg, 6000));
   }
@@ -314,6 +320,7 @@
     if (hero) hero.classList.add(ok ? "hop" : "shake");
     if (ok) { Sfx.ok(); sparks(hero); } else { Sfx.no(); }
     window.scrollTo(0, document.body.scrollHeight);
+    if (profile.autoRead) Voice.speak(feedbackSpeech(), msg => toast(msg, 6000));
   }
 
   function listenForAnswer() {
@@ -360,7 +367,7 @@
       "Che classe fai? Così ti preparo le sfide giuste.",
       "Scegli il tuo compagno. Crescerà con te, classe dopo classe!",
       "Vuoi metterci la tua foto? È facoltativa e resta solo su questo telefono."][wiz.step] || "";
-    if (game) return game.answered && game.fb ? game.fb.title + ". " + toSpeech(game.fb.text) : questionSpeech();
+    if (game) return game.answered && game.fb ? feedbackSpeech() : questionSpeech();
     if (profile) return `Ciao ${profile.nick}! Oggi hai ${Credit.format(Credit.get())} di telefono. Scegli le sfide che vuoi e tocca Gioca.`;
     return "";
   }
