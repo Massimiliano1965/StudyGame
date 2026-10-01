@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  id="cordova-plugin-studylock"
+  version="1.0.0">
+
+  <name>StudyLock</name>
+  <description>Blocco morbido del telefono per Gioca e Impara: copertura sopra le altre app finche non ci sono minuti guadagnati. Nessun amministratore del dispositivo, sempre disinstallabile, con sblocco di emergenza.</description>
+  <license>MIT</license>
+
+  <js-module src="www/studylock.js" name="StudyLock">
+    <clobbers target="StudyLock" />
+  </js-module>
+
+  <platform name="android">
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="StudyLock">
+        <param name="android-package" value="it.massi.studylock.StudyLock" />
+      </feature>
+    </config-file>
+
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+      <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+      <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+      <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+      <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+      <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    </config-file>
+
+    <config-file target="AndroidManifest.xml" parent="/manifest/application">
+      <service android:name="it.massi.studylock.LockService" android:exported="false" android:foregroundServiceType="specialUse">
+        <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="parental_screen_time_lock" />
+      </service>
+      <receiver android:name="it.massi.studylock.BootReceiver" android:exported="true">
+        <intent-filter>
+          <action android:name="android.intent.action.BOOT_COMPLETED" />
+          <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+        </intent-filter>
+      </receiver>
+    </config-file>
+
+    <source-file src="src/android/StudyLock.java" target-dir="src/it/massi/studylock" />
+    <source-file src="src/android/LockService.java" target-dir="src/it/massi/studylock" />
+    <source-file src="src/android/BootReceiver.java" target-dir="src/it/massi/studylock" />
+  </platform>
+</plugin>

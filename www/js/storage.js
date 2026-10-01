@@ -23,7 +23,7 @@ const Storage = (() => {
   function loadDay() {
     const s = read(K_DAY);
     if (s && s.day === today()) return s;
-    return { day: today(), minutes: CONFIG.MIN_MINUTES, correct: 0, wrong: 0 };
+    return { day: today(), minutes: CONFIG.MIN_MINUTES, correct: 0, wrong: 0, granted: 0 };
   }
   const saveDay = s => write(K_DAY, s);
 

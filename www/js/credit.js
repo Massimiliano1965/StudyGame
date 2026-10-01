@@ -20,6 +20,13 @@ const Credit = (() => {
   }
 
   const get = () => state.minutes;
+  // minuti guadagnati ma non ancora usati per sbloccare il telefono (granted = già consegnati al blocco)
+  const available = () => Math.max(0, state.minutes - (state.granted || 0));
+  function claim() {
+    const n = available();
+    if (n > 0) { state.granted = state.minutes; Storage.saveDay(state); notify(); }
+    return n;
+  }
   // quanta parte della barra è riempita (0..1) tra minimo e tetto
   const progress = () => (state.minutes - CONFIG.MIN_MINUTES) / (CONFIG.MAX_MINUTES - CONFIG.MIN_MINUTES);
   const onChange = fn => listeners.push(fn);
@@ -29,5 +36,5 @@ const Credit = (() => {
     return h > 0 ? `${h} h ${String(m).padStart(2, "0")} min` : `${m} min`;
   }
 
-  return { answer, get, progress, onChange, refresh, format };
+  return { answer, get, available, claim, progress, onChange, refresh, format };
 })();

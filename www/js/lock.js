@@ -1,25 +1,33 @@
-// ===== Blocco / sblocco dispositivo =====
-// In HTML/JS puro NON è possibile bloccare le altre app del telefono.
-// Questo modulo è il punto unico dove collegare la parte nativa.
-// Finché non c'è un plugin nativo, le funzioni non fanno nulla (no errori).
-//
-// Opzioni reali per il blocco:
-//  1) Google Family Link (gratis, già esistente): il genitore gestisce i limiti,
-//     questa app serve solo a "guadagnare" il tempo.
-//  2) Plugin Cordova custom in Java/Kotlin con Device Owner / Lock Task Mode
-//     (startLockTask / stopLockTask): richiede un telefono dedicato configurato
-//     come dispositivo aziendale via ADB.
-//  3) App nativa Kotlin con UsageStatsManager + AccessibilityService.
+// ===== Blocco morbido del telefono (parte web) =====
+// La parte nativa è il plugin StudyLock (plugins-local/studylock): copre le altre app finché non ci sono
+// minuti sbloccati. Nessun amministratore del dispositivo: si può sempre disinstallare. In un browser
+// (senza plugin) tutte le funzioni non fanno nulla e non danno errori.
 const Lock = (() => {
-  const native = () => window.cordova && window.StudyLock; // plugin futuro
+  const nat = () => (window.cordova && window.StudyLock) || null;
+  let st = { overlay: false, usage: false, enabled: false, running: false, leftMin: 0, emergencyLeftMin: 0, emergencyToday: 0 };
 
-  function lock() {
-    if (native()) window.StudyLock.lock();
+  function call(name, args) {
+    return new Promise(res => {
+      const n = nat();
+      if (!n || typeof n[name] !== "function") return res(st);
+      const done = r => { if (r && typeof r === "object") st = Object.assign({}, st, r); res(st); };
+      try { n[name](...(args || []), done, () => res(st)); } catch (e) { res(st); }
+    });
   }
 
-  function unlock(minutes) {
-    if (native()) window.StudyLock.unlock(minutes);
-  }
+  const available = () => !!nat();
+  // blocco pronto = attivo e con entrambi i permessi Android concessi
+  const ready = () => available() && st.enabled && st.overlay && st.usage;
 
-  return { lock, unlock };
+  return {
+    available, ready,
+    get: () => st,
+    status: () => call("status"),
+    setEnabled: on => call("setEnabled", [!!on]),
+    unlock: min => call("unlock", [min]),
+    emergency: () => call("emergency"),
+    lockNow: () => call("lockNow"),
+    openOverlaySettings: () => call("openOverlaySettings"),
+    openUsageSettings: () => call("openUsageSettings")
+  };
 })();

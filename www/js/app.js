@@ -250,6 +250,7 @@
         <div class="row"><span class="num">${esc(Credit.format(min))}</span></div>
         <div class="bar" role="img" aria-label="${min} minuti su ${CONFIG.MAX_MINUTES}"><i style="width:${pct}%"></i><b style="left:${mark}%"></b></div>
         <div class="bar-labels"><span>${CONFIG.MIN_MINUTES} min garantiti</span><span>massimo ${esc(Credit.format(CONFIG.MAX_MINUTES))}</span></div>
+        ${lockHomeHtml()}
       </div>
       <div class="sel-head"><h2>Scegli le sfide</h2>
         <span class="sel-btns"><button class="btn ghost small" data-act="sel-all">✔ Tutte</button><button class="btn ghost small" data-act="sel-none">✖ Nessuna</button></span></div>
@@ -521,7 +522,26 @@
     if (hero) animateHero(hero, ok);
     if (ok) { Sfx.ok(); sparks(hero); } else { Sfx.no(); }
     window.scrollTo(0, document.body.scrollHeight);
+    // se scorrendo in basso l'omino è uscito dallo schermo, la sua reazione appare un attimo al centro (non blocca i tocchi)
+    requestAnimationFrame(() => showHeroFx(ok, hero));
     if (profile.autoRead) Voice.speak(feedbackSpeech(), msg => toast(msg, 6000));
+  }
+
+  function showHeroFx(ok, hero) {
+    const old = document.getElementById("hero-fx");
+    if (old) old.remove();
+    if (hero) {
+      const r = hero.getBoundingClientRect();
+      if (r.bottom > 40 && r.top < innerHeight - 40) return;   // si vede già: basta quello
+    }
+    if (!game) return;
+    const fx = document.createElement("div");
+    fx.id = "hero-fx"; fx.className = "hero fx";
+    fx.innerHTML = charSvg(profile, game.mood || (ok ? "cheer" : "happy"));
+    document.body.appendChild(fx);
+    animateHero(fx, ok);
+    if (ok) sparks(fx);
+    setTimeout(() => { if (fx.parentNode) fx.remove(); }, 2800);
   }
 
   function answer(i) {
@@ -645,9 +665,50 @@
       <button class="btn alt" data-act="editphoto">📷 Cambia foto</button>
       <div class="row-set l2-set"><span class="set-label">Seconda lingua</span><div class="l2-pick">${L2.codes().map(c => `<button class="switch ${(p.l2 || L2.DEFAULT) === c ? "on" : ""}" data-act="set-l2" data-id="${c}" aria-pressed="${(p.l2 || L2.DEFAULT) === c}"><span class="fl">${L2.LANGS[c].flag}</span><span>${L2.LANGS[c].name}</span></button>`).join("")}</div></div>
       <div class="row-set"><span>Suoni</span><button class="switch ${p.sound !== false ? "on" : ""}" data-act="toggle-sound" aria-pressed="${p.sound !== false}">${p.sound !== false ? "Sì" : "No"}</button></div>
+      ${lockBoxHtml()}
       <button class="btn ghost" data-act="info">ℹ️ Avvertenze</button>
       <button class="btn ghost" data-act="reset">🗑 Ricomincia da zero</button>
       <button class="btn" data-act="close">Chiudi</button>`);
+    if (Lock.available()) refreshLockBox();
+  }
+
+  // ---------- blocco telefono ----------
+  function lockHomeHtml() {
+    if (!Lock.ready()) return "";
+    const av = Credit.available(), left = Lock.get().leftMin;
+    return `<div class="lock-home"><div class="lock-state">${left > 0 ? "🔓 Telefono sbloccato: ancora " + left + " min" : "🔒 Telefono in pausa"}</div>
+      <button class="btn alt small" data-act="lock-claim" ${av > 0 ? "" : "disabled"}>📱 Usa i miei minuti (${av})</button></div>`;
+  }
+
+  function lockBoxHtml() {
+    if (!Lock.available()) return "";
+    const s = Lock.get();
+    let body = `<p class="muted lock-note">Le altre app si aprono solo con i minuti guadagnati qui. Chiamate e sveglia non si bloccano mai. L'app si può sempre disinstallare.</p>`;
+    if (s.enabled && !s.overlay) body += `<button class="btn alt small" data-act="lock-perm-overlay">1 · Permetti «Mostra sopra le altre app»</button>`;
+    if (s.enabled && !s.usage) body += `<button class="btn alt small" data-act="lock-perm-usage">2 · Permetti «Accesso all'uso»</button>`;
+    if (s.enabled && s.overlay && s.usage) body += `<p class="lock-ok">✅ Blocco attivo${s.emergencyToday ? " · sblocchi di emergenza oggi: " + s.emergencyToday : ""}</p>
+      <button class="btn ghost small" data-act="lock-emergency">🆘 Emergenza: sblocca 10 minuti</button>`;
+    return `<div class="lock-box" id="lockbox"><div class="row-set"><span>🔒 Blocco telefono</span><button class="switch ${s.enabled ? "on" : ""}" data-act="lock-toggle" aria-pressed="${!!s.enabled}">${s.enabled ? "Sì" : "No"}</button></div>${body}</div>`;
+  }
+
+  // rilegge lo stato dal telefono e aggiorna riquadro nelle impostazioni e home
+  function refreshLockBox() {
+    return Lock.status().then(() => {
+      const el = document.getElementById("lockbox");
+      if (el && !$modal.hidden) el.outerHTML = lockBoxHtml();
+      if (profile && !wiz && !game && !askCb) renderHome();
+    });
+  }
+
+  // spegnere il blocco richiede un piccolo calcolo da adulti
+  let adultAnswer = 0;
+  function askAdultOff() {
+    const a = 12 + Math.floor(Math.random() * 18), b = 6 + Math.floor(Math.random() * 8);
+    adultAnswer = a * b;
+    openModal(`<h2>Solo per adulti</h2><p>Per spegnere il blocco risolvi: <b>${a} × ${b}</b></p>
+      <input id="adult-ans" class="adult-in" type="number" inputmode="numeric" autocomplete="off" placeholder="Risultato">
+      <button class="btn" data-act="lock-off-go">Spegni il blocco</button>
+      <button class="btn ghost" data-act="settings">Annulla</button>`);
   }
 
   function openInfo() {
@@ -737,6 +798,23 @@
     "photo-gal": () => takePhoto(false),
     "set-l2": el => { profile.l2 = L2.use(el.dataset.id); Storage.saveProfile(profile); openSettings(); },
     "toggle-sound": () => { profile.sound = profile.sound === false; Storage.saveProfile(profile); openSettings(); renderHome(); },
+    "lock-toggle": () => {
+      if (Lock.get().enabled) { askAdultOff(); return; }
+      Lock.setEnabled(true).then(() => { openSettings(); });
+    },
+    "lock-perm-overlay": () => { Lock.openOverlaySettings(); },
+    "lock-perm-usage": () => { Lock.openUsageSettings(); },
+    "lock-emergency": () => { Lock.emergency().then(() => { toast("Telefono sbloccato per 10 minuti", 4000); refreshLockBox(); }); },
+    "lock-off-go": () => {
+      const el = document.getElementById("adult-ans");
+      if (!el || parseInt(el.value, 10) !== adultAnswer) { toast("Risposta sbagliata."); return; }
+      Lock.setEnabled(false).then(() => { toast("Blocco spento"); openSettings(); renderHome(); });
+    },
+    "lock-claim": () => {
+      const n = Credit.claim();
+      if (!n) return;
+      Lock.unlock(n).then(() => { toast("📱 Telefono sbloccato per " + n + " minuti. Buon divertimento!", 4000); renderHome(); });
+    },
     reset: () => confirmReset(),
     "reset-yes": () => { Storage.resetAll(); profile = null; closeModal(); Credit.refresh(); askNarration(yes => { pendingAuto = yes; startWizard(false); }); }
   };
@@ -758,6 +836,7 @@
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) { Voice.stopSpeaking(); return; }
     Credit.refresh();
+    if (Lock.available()) { refreshLockBox(); return; }
     if (profile && !wiz && !game && !askCb) renderHome();
   });
 
@@ -765,6 +844,7 @@
   function boot() {
     Splash.done();
     refreshNarrate();
+    if (Lock.available()) refreshLockBox();
     const first = yes => { pendingAuto = yes; startWizard(false); };
     if (profile && typeof profile.classId !== "number") { Storage.resetAll(); profile = null; }
     if (!profile) { askNarration(first); return; }

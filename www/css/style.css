@@ -564,3 +564,15 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 .lk-item.m { background: var(--c, #E8E8F0); }
 .lk-item.bad { background: var(--bad); color: #fff; animation: ltshake .4s; }
 .lk-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+
+/* reazione dell'omino sempre visibile: appare al centro un attimo e non blocca i tocchi */
+.hero.fx { position: fixed; left: 0; right: 0; top: calc(20% + env(safe-area-inset-top)); width: 150px; margin: 0 auto; z-index: 22; pointer-events: none; animation: none; }
+
+/* blocco telefono */
+.lock-home { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+.lock-state { font-weight: 700; text-align: center; }
+.lock-box { display: flex; flex-direction: column; gap: 8px; padding: 6px 0; }
+.lock-note { margin: 0; font-size: 14px; }
+.lock-ok { margin: 0; font-weight: 700; }
+.adult-in { width: 100%; box-sizing: border-box; min-height: 52px; font-size: 22px; text-align: center; border: 3px solid var(--edge); border-radius: 14px; background: var(--card-soft); color: var(--ink); }
+.btn:disabled { opacity: .5; }
