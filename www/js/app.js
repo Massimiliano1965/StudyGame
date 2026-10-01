@@ -46,10 +46,14 @@
     };
   })();
 
+  // Voce OFF = non parla niente, in nessuna schermata, finché non si riaccende dal pulsante in cima
+  const _speak = Voice.speak;
+  Voice.speak = function (...a) { if (profile && !profile.autoRead) return; return _speak.apply(Voice, a); };
+
   Games.setTap(() => Sfx.tap());
   Games.setBoom(() => Sfx.no());
   Games.setAvatar(() => charSvg(profile, "happy"));
-  Games.setSpeak(card => Voice.speak(fin(card.words ? oddSegs(card) : vfSegs(card)), msg => toast(msg, 6000)), () => !!(profile && profile.autoRead), () => Voice.canSpeak());
+  Games.setSpeak(card => Voice.speak(fin(card.words ? oddSegs(card) : vfSegs(card)), msg => toast(msg, 6000)), () => !!(profile && profile.autoRead), () => Voice.canSpeak() && !!(profile && profile.autoRead));
 
   // ---------- utilità interfaccia ----------
   function toast(msg, ms) {
@@ -640,7 +644,7 @@
     "voice-toggle": () => {
       profile.autoRead = !profile.autoRead; Storage.saveProfile(profile);
       Voice.stopSpeaking(); refreshVoiceToggle();
-      toast(profile.autoRead ? "🔊 Voce accesa" : "🔇 Voce spenta");
+      if (profile.autoRead) { const t = getNarration(); if (t) Voice.speak(t, msg => toast(msg, 6000)); }
     },
     "photo-cam": () => takePhoto(true),
     "photo-gal": () => takePhoto(false),
