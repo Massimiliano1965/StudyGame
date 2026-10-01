@@ -216,7 +216,6 @@
       <div class="top">
         <button class="avatar-btn" data-act="settings" aria-label="Il mio profilo" style="border:0;background:none;padding:0">${avatarHtml(p)}</button>
         <div class="who"><h2>Ciao, ${esc(p.nick)}!</h2><span class="pill">${classLabel(p.classId)}</span></div>
-        <button class="icon-btn" data-act="sound" aria-label="${p.sound === false ? "Attiva i suoni" : "Spegni i suoni"}">${p.sound === false ? "🔇" : "🔊"}</button>
         <button class="icon-btn" data-act="settings" aria-label="Impostazioni">⚙️</button>
       </div>
       <div class="bubble">${esc(pick(GREET[th]))}</div>
