@@ -33,8 +33,17 @@ jobs:
       - name: Aggiungi plugin voce e microfono
         run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 ./plugins-local/speechrecognition
 
+      - name: Numero di versione che cresce a ogni build
+        run: sed -i "s/<widget /<widget android-versionCode=\"$((100000 + ${{ github.run_number }}))\" /" config.xml
+
+      - name: Configura la firma fissa (stessa chiave a ogni build)
+        run: |
+          cat > build.json <<EOF
+          {"android": {"debug": {"keystore": "$GITHUB_WORKSPACE/signing/studygame.keystore", "storePassword": "studygame", "alias": "studygame", "password": "studygame", "keystoreType": "pkcs12"}}}
+          EOF
+
       - name: Build APK
-        run: cordova build android --debug
+        run: cordova build android --debug --buildConfig=build.json
 
       - name: Carica APK
         uses: actions/upload-artifact@v4
