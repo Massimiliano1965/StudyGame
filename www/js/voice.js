@@ -89,32 +89,64 @@ const Voice = (() => {
   const isSpeaking = () => speaking;
   const onState = fn => stateFns.push(fn);
 
+  // Il testo può essere una stringa (tutta in italiano) oppure una lista di pezzi
+  // { t: "testo", l: "en" } — i pezzi con l:"en" vengono letti con voce inglese.
+  const LANG_EN = "en-US";
+  const hasWord = s => /[A-Za-z0-9À-ÿ]/.test(s);
+
+  function toSegments(input) {
+    const raw = Array.isArray(input) ? input : [{ t: String(input) }];
+    const out = [];
+    raw.forEach(s => {
+      if (!s || !String(s.t).length) return;
+      const seg = { t: String(s.t).replace(/_{2,}/g, ", "), l: s.l === "en" ? "en" : "" };
+      const prev = out[out.length - 1];
+      if (!hasWord(seg.t) && prev) { prev.t += seg.t; return; }   // solo punteggiatura: la attacco al pezzo prima
+      if (prev && prev.l === seg.l) { prev.t += seg.t; return; }  // stessa lingua: un pezzo solo
+      out.push(seg);
+    });
+    return out.filter(s => hasWord(s.t));
+  }
+
   // onFail(messaggio) viene chiamata se la voce non parte, così l'app può avvisare
-  function speak(text, onFail) {
+  function speak(input, onFail) {
     const my = ++token;
     setSpeaking(true);
+    const segs = toSegments(input);
     const fail = why => {
       if (!onFail || my !== token) return;
       const detail = why ? " (" + String(why && why.message || why).slice(0, 80) + ")" : "";
-      onFail("La voce non parte: controlla che il telefono abbia la sintesi vocale con l'italiano." + detail);
+      const needEn = segs.some(s => s.l === "en");
+      onFail("La voce non parte: controlla che il telefono abbia la sintesi vocale con l'italiano" + (needEn ? " e l'inglese" : "") + "." + detail);
     };
     return new Promise(resolve => {
       const done = () => { if (my === token) setSpeaking(false); resolve(); };
+      if (!segs.length) { done(); return; }
       try {
         if (window.TTS) {
-          const r = window.TTS.speak({ text, locale: LANG, rate: 0.95 });
-          if (r && r.then) r.then(done, err => { fail(err); done(); }); else done();
+          let chain = Promise.resolve();
+          segs.forEach(s => {
+            chain = chain.then(() => my !== token ? undefined :
+              window.TTS.speak({ text: s.t, locale: s.l === "en" ? LANG_EN : LANG, rate: 0.95 }));
+          });
+          chain.then(done, err => { fail(err); done(); });
           return;
         }
         if (window.speechSynthesis) {
           window.speechSynthesis.cancel();
-          const u = new SpeechSynthesisUtterance(text);
-          u.lang = LANG; u.rate = 0.92; u.pitch = 1.1;
-          const vc = (window.speechSynthesis.getVoices() || []).find(x => /^it/i.test(x.lang));
-          if (vc) u.voice = vc;
-          u.onend = () => done();
-          u.onerror = e => { fail(e && e.error); done(); };
-          window.speechSynthesis.speak(u);
+          const voices = window.speechSynthesis.getVoices() || [];
+          segs.forEach((s, i) => {
+            const en = s.l === "en";
+            const u = new SpeechSynthesisUtterance(s.t);
+            u.lang = en ? LANG_EN : LANG; u.rate = 0.92; u.pitch = 1.1;
+            const vc = en
+              ? (voices.find(x => /^en[-_]US/i.test(x.lang)) || voices.find(x => /^en/i.test(x.lang)))
+              : voices.find(x => /^it/i.test(x.lang));
+            if (vc) u.voice = vc;
+            u.onerror = e => { fail(e && e.error); done(); };
+            if (i === segs.length - 1) u.onend = () => done();
+            window.speechSynthesis.speak(u);
+          });
           return;
         }
       } catch (e) { fail(e); }

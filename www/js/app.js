@@ -264,26 +264,82 @@
     if (profile.autoRead) readQuestion();
   }
 
+  // ---- voce inglese: spezza il testo in pezzi italiani e inglesi ----
+  const ALN = "A-Za-zÀ-ÿ0-9";
+  function langSegs(text, en) {
+    const t = toSpeech(text);
+    const list = (en || []).filter(Boolean).sort((a, b) => b.length - a.length)
+      .map(x => x.replace(/[.*+?^${}()|[\]\\\/]/g, "\\$&").replace(/\s+/g, "\\s+"));
+    if (!list.length) return [{ t }];
+    const re = new RegExp("(^|[^" + ALN + "])(" + list.join("|") + ")(?=$|[^" + ALN + "])", "gi");
+    const out = []; let last = 0, m;
+    while ((m = re.exec(t))) {
+      const start = m.index + m[1].length;
+      if (start > last) out.push({ t: t.slice(last, start) });
+      out.push({ t: m[2], l: "en" });
+      last = start + m[2].length;
+    }
+    if (last < t.length) out.push({ t: t.slice(last) });
+    return out;
+  }
+  // una risposta: tutta inglese se la domanda ha ae, altrimenti solo le parole segnate
+  const ansSegs = (q, t) => q && q.ae ? [{ t: toSpeech(t), l: "en" }] : langSegs(t, q && q.en);
+  // se è tutto italiano torna una semplice stringa
+  function fin(segs) {
+    const out = [];
+    segs.forEach(s => {
+      const p = out[out.length - 1];
+      if (p && (p.l || "") === (s.l || "")) p.t += s.t; else out.push({ t: s.t, l: s.l });
+    });
+    return out.length === 1 && !out[0].l ? out[0].t : out;
+  }
+
   const OPS = { "+": "più", "−": "meno", "×": "per", ":": "diviso", "=": "uguale a", "(": "apri parentesi", ")": "chiudi parentesi" };
   function roundSpeech(r) {
     if (r.kind === "frase") return "Metti le parole in ordine per fare una frase. Le parole sono: " + r.items.map(w => w.replace(/[.,;:!?]/g, "")).join(", ") + ".";
     if (r.kind === "operazione") return (r.problem ? toSpeech(r.prompt) + " " : "") + "Metti in ordine numeri e segni per fare l'operazione. Ci sono: " +
       r.items.map(t => OPS[t] || (/^−\d/.test(t) ? "meno " + t.slice(1) : t)).join(", ") + ".";
-    if (r.kind === "corsa") return "Premi Via e porta il personaggio nella corsia giusta. " + toSpeech(r.prompt) + " A sinistra: " + toSpeech(r.opts[0]) + ". Al centro: " + toSpeech(r.opts[1]) + ". A destra: " + toSpeech(r.opts[2]) + ".";
+    if (r.kind === "corsa") {
+      const q = r.q, pos = ["A sinistra: ", "Al centro: ", "A destra: "], segs = [{ t: "Premi Via e porta il personaggio nella corsia giusta. " }, ...langSegs(r.prompt, q && q.en)];
+      r.opts.forEach((o, i) => segs.push({ t: " " + pos[i] }, ...ansSegs(q, o), { t: "." }));
+      return fin(segs);
+    }
+    if (r.kind === "incastro" && r.eng) {
+      const segs = [{ t: toSpeech(r.prompt) + " Da collegare: " }];
+      r.pairs.forEach((p, i) => segs.push({ t: toSpeech(p.l) + (i < r.pairs.length - 1 ? ", " : ""), l: "en" }));
+      segs.push({ t: ". I pezzi sono: " });
+      r.order.forEach((k, i) => segs.push({ t: toSpeech(r.pairs[k].r) + (i < r.order.length - 1 ? ", " : ""), l: r.rEn ? "en" : "" }));
+      segs.push({ t: "." });
+      return fin(segs);
+    }
     if (r.kind === "incastro") return toSpeech(r.prompt) + " Da collegare: " + r.pairs.map(p => toSpeech(p.l)).join(", ") + ". I pezzi sono: " + r.order.map(i => toSpeech(r.pairs[i].r)).join(", ") + ".";
-    return "Colpisci il bersaglio con la risposta giusta. " + toSpeech(r.prompt) + " Le risposte sono: " + r.q.a.map(toSpeech).join(", ") + ".";
+    const q = r.q, segs = [{ t: "Colpisci il bersaglio con la risposta giusta. " }, ...langSegs(r.prompt, q && q.en), { t: " Le risposte sono: " }];
+    q.a.forEach((a, i) => segs.push(...ansSegs(q, a), { t: i < q.a.length - 1 ? ", " : "." }));
+    return fin(segs);
   }
 
   function questionSpeech() {
     const q = game.q;
     const ord = ["Prima", "Seconda", "Terza", "Quarta"];
-    return toSpeech(q.q) + ". " + q.a.map((a, i) => `${ord[i]}: ${toSpeech(a)}.`).join(" ");
+    const segs = [...langSegs(q.q, q.en), { t: ". " }];
+    q.a.forEach((a, i) => segs.push({ t: ord[i] + ": " }, ...ansSegs(q, a), { t: ". " }));
+    return fin(segs);
   }
 
   // testo letto dopo la risposta: esito, risposta giusta (se sbagliata) e spiegazione
   function feedbackSpeech() {
-    const fb = game.fb;
-    return fb.title + "." + (fb.correct ? " La risposta giusta era: " + toSpeech(fb.correct) + "." : "") + (fb.text ? " " + toSpeech(fb.text) : "");
+    const fb = game.fb, r = game.round, q = game.q || (r && r.q) || null;
+    const segs = [{ t: fb.title + "." }];
+    if (fb.correct) {
+      segs.push({ t: " La risposta giusta era: " });
+      if (r && r.kind === "incastro" && r.eng) {
+        r.pairs.forEach((p, i) => {
+          segs.push({ t: toSpeech(p.l), l: "en" }, { t: ", " }, { t: toSpeech(p.r) + ". ", l: r.rEn ? "en" : "" });
+        });
+      } else segs.push(...ansSegs(q, fb.correct), { t: "." });
+    }
+    if (fb.text) segs.push({ t: " " }, ...langSegs(fb.text, q && q.en));
+    return fin(segs);
   }
 
   function readQuestion() {
