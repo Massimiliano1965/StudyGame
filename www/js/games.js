@@ -493,7 +493,8 @@ const Games = (() => {
       <div class="sc-words">${pairs.map(p => `<span>${esc(p.l)} = ${esc(p.r)}</span>`).join("")}</div>`;
   }
 
-  function makeIncastro(classId, subjectId) {
+  // coppie per i giochi di collegamento (Incastro, Memory, Palloncini)
+  function pairsFor(classId, subjectId) {
     let prompt, pairs, eng = false, rEn = false;
     if (subjectId === "matematica") {
       pairs = mathPairs(classId);
@@ -508,11 +509,16 @@ const Games = (() => {
       pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
       prompt = theme.prompt;
     }
+    return { prompt, pairs, eng, rEn, scene: sceneKey(subjectId, prompt) };
+  }
+
+  function makeIncastro(classId, subjectId) {
+    const { prompt, pairs, eng, rEn, scene } = pairsFor(classId, subjectId);
     if (pairs.length < 3) return null;
     let order = shuffle(pairs.map((_, i) => i)), g = 0;
     while (order.every((v, i) => v === i) && g++ < 20) order = shuffle(order);
     return { kind: "incastro", title: "Incastro", eng, rEn, prompt, hint: "Trascina ogni pezzo al suo posto, oppure toccalo e poi tocca il posto. Un errore si perdona, al secondo il puzzle esplode!", pairs, order,
-      scene: sceneKey(subjectId, prompt), solution: pairs.map(p => `${p.l} → ${p.r}`).join(" · ") };
+      scene, solution: pairs.map(p => `${p.l} → ${p.r}`).join(" · ") };
   }
 
   function mountIncastro(el, r, onDone) {
@@ -612,6 +618,208 @@ const Games = (() => {
   }
 
   // ====================================================================
+  // MEMORY: gira le carte e trova le coppie
+  // ====================================================================
+  function makeMemory(classId, subjectId) {
+    const g = pairsFor(classId, subjectId);
+    if (g.pairs.length < 3) return null;
+    return { kind: "memory", title: "Memory", eng: g.eng, rEn: g.rEn, prompt: "Gira le carte e trova le coppie!",
+      hint: g.prompt.replace(/^Collega/, "Abbina") + " Le coppie trovate restano scoperte.", pairs: g.pairs, scene: g.scene,
+      solution: g.pairs.map(p => `${p.l} → ${p.r}`).join(" · ") };
+  }
+
+  function mountMemory(el, r, onDone) {
+    const P = r.pairs;
+    const cards = shuffle(P.flatMap((p, i) => [{ id: i, t: p.l }, { id: i, t: p.r }]));
+    el.innerHTML = `<div class="mem">${cards.map((c, i) => {
+      const fs = c.t.length > 18 ? 13 : c.t.length > 11 ? 16 : 20;
+      return `<button class="mcard" data-i="${i}" style="font-size:${fs}px"><span class="mback">❓</span><span class="mface">${esc(c.t)}</span></button>`;
+    }).join("")}</div>`;
+    const els = [...el.querySelectorAll(".mcard")];
+    let first = null, lock = false, found = 0, mistakes = 0, done = false;
+    function finish() {
+      done = true;
+      const ok = mistakes <= 5;
+      if (ok) { el.innerHTML = `<div class="inc">${sceneHtml(r.scene, P)}</div>`; }
+      onDone(ok, r.solution, ok ? (mistakes === 0 ? "Memoria perfetta: nessun errore!" : "Tutte le coppie trovate!") : `Troppi errori (${mistakes}).`);
+    }
+    els.forEach((card, i) => card.addEventListener("click", () => {
+      if (done || lock || card.classList.contains("up") || card.classList.contains("match")) return;
+      tapFn(); card.classList.add("up");
+      if (first === null) { first = i; return; }
+      const a = first; first = null;
+      if (cards[a].id === cards[i].id) {
+        els[a].classList.add("match"); card.classList.add("match"); found++;
+        if (found === P.length) setTimeout(finish, 450);
+      } else {
+        mistakes++; lock = true;
+        els[a].classList.add("miss"); card.classList.add("miss");
+        setTimeout(() => { [els[a], card].forEach(c => c.classList.remove("up", "miss")); lock = false; }, 850);
+      }
+    }));
+  }
+
+  // ====================================================================
+  // PALLONCINI: salgono dal basso, scoppia solo quelli giusti
+  // ====================================================================
+  const BCOL = ["#FF8FB1", "#7ED9FF", "#FFD23F", "#B9F27A", "#C9A8FF", "#FFB26B"];
+
+  function makePalloncini(classId, subjectId) {
+    const g = pairsFor(classId, subjectId);
+    if (g.pairs.length < 4) return null;
+    const targets = shuffle(g.pairs).slice(0, 3);
+    return { kind: "palloncino", title: "Palloncini", eng: g.eng, rEn: g.rEn, prompt: "Scoppia i palloncini giusti!",
+      hint: "In alto c'è una parola: scoppia il palloncino che le corrisponde. Un errore si perdona, al secondo i palloncini scappano!",
+      pairs: targets, pool: g.pairs, speed: classId <= 2 ? 62 : classId <= 4 ? 85 : 110, scene: g.scene,
+      solution: targets.map(p => `${p.l} → ${p.r}`).join(" · ") };
+  }
+
+  function mountPalloncini(el, r, onDone) {
+    const T = r.pairs, pool = r.pool, H = 330;
+    el.innerHTML = `<div class="baltarget"><span class="bt-n"></span><span class="bt-l"></span></div><div class="sky" style="height:${H}px"></div>`;
+    const sky = el.querySelector(".sky"), $l = el.querySelector(".bt-l"), $n = el.querySelector(".bt-n");
+    let ti = 0, mistakes = 0, done = false, last = 0, spawnT = 0;
+    const B = [];
+    const showTarget = () => { $n.textContent = `${ti + 1}/${T.length}`; $l.textContent = T[ti].l; };
+    showTarget();
+
+    function place(b) { b.el.style.transform = `translate(${Math.round(b.x)}px, ${Math.round(b.y)}px)`; }
+    function spawn(y0) {
+      if (B.length >= 4) return;
+      const cur = T[ti], nRight = B.filter(b => b.p === cur).length;
+      const right = nRight === 0 || (nRight < 2 && Math.random() < 0.2);
+      const others = pool.filter(x => x !== cur), free = others.filter(x => !B.some(b => b.p === x));
+      const p = right ? cur : pick(free.length ? free : others);
+      const el2 = document.createElement("button");
+      el2.className = "balloon";
+      el2.style.setProperty("--bc", pick(BCOL));
+      const fs = p.r.length > 14 ? 12 : p.r.length > 9 ? 14 : 18;
+      el2.innerHTML = `<span class="bal-t" style="font-size:${fs}px">${esc(p.r)}</span>`;
+      sky.appendChild(el2);
+      const W = sky.clientWidth, w = 108;
+      const b = { el: el2, p, x: rnd(2, Math.max(3, W - w - 2)), y: y0 === undefined ? H + 10 : y0, v: r.speed * (0.8 + Math.random() * 0.5) };
+      place(b); B.push(b);
+      el2.addEventListener("pointerdown", e => { e.preventDefault(); pop(b); });
+    }
+    function drop(b) { const i = B.indexOf(b); if (i >= 0) B.splice(i, 1); b.el.remove(); }
+    function effect(b, txt, cls) {
+      const f = document.createElement("div");
+      f.className = "bal-fx " + cls; f.textContent = txt;
+      f.style.transform = `translate(${Math.round(b.x + 30)}px, ${Math.round(b.y + 30)}px)`;
+      sky.appendChild(f); setTimeout(() => f.remove(), 600);
+    }
+    function finish(ok) {
+      done = true; stop();
+      B.forEach(b => { b.el.disabled = true; });
+      onDone(ok, r.solution, ok ? (mistakes === 0 ? "Nemmeno un palloncino sbagliato!" : "Palloncini scoppiati!") : "Due palloncini sbagliati: gli altri sono volati via.");
+    }
+    function pop(b) {
+      if (done || !B.includes(b)) return;
+      tapFn();
+      if (b.p === T[ti]) {
+        effect(b, "💥", "good"); drop(b); ti++;
+        if (ti >= T.length) { finish(true); return; }
+        showTarget();
+      } else {
+        mistakes++; effect(b, "✖", "bad"); drop(b); boomFn();
+        if (mistakes > 1) finish(false);
+      }
+    }
+    function frame(now) {
+      if (done) return;
+      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+      last = now; spawnT += dt;
+      if (spawnT > 0.85) { spawnT = 0; spawn(); }
+      for (const b of B.slice()) {
+        b.y -= b.v * dt; place(b);
+        if (b.y < -130) drop(b);
+      }
+      raf = requestAnimationFrame(frame);
+    }
+    spawn(H * 0.55); spawn(H * 0.8); spawn(H * 0.3);
+    raf = requestAnimationFrame(frame);
+  }
+
+  // ====================================================================
+  // PESCA: pesca solo il pesce con la risposta giusta
+  // ====================================================================
+  const FISH = ["🐟", "🐠", "🐡", "🦈"];
+
+  function makePesca(classId, subjectId) {
+    if (typeof Questions === "undefined") return null;
+    const q = Questions.next(subjectId, classId);
+    if (!q || q.a.length < 3) return null;
+    const speed = classId <= 2 ? 40 : classId <= 4 ? 65 : 90;
+    return { kind: "pesca", title: "Pesca", prompt: q.q, hint: "Tocca il pesce con la risposta giusta per pescarlo! Un errore si perdona.", q, speed };
+  }
+
+  function mountPesca(el, r, onDone) {
+    const q = r.q, FL = 82;
+    el.innerHTML = `<div class="sea" style="height:${q.a.length * FL + 40}px"><div class="shore">🎣</div>${q.a.map((t, i) => {
+      const fs = t.length > 18 ? 14 : t.length > 11 ? 17 : 21;
+      return `<button class="fish" data-i="${i}" style="top:${34 + i * FL}px;--tc:${TCOL[i % 4]};font-size:${fs}px"><span class="fe">${FISH[i % 4]}</span><span class="ftxt">${esc(t)}</span></button>`;
+    }).join("")}</div>`;
+    const sea = el.querySelector(".sea");
+    const fs = [...sea.querySelectorAll(".fish")];
+    const S = fs.map(f => ({ el: f, fe: f.querySelector(".fe"), x: 0, w: 0, ph: Math.random() * 6, live: true, v: (Math.random() < 0.5 ? -1 : 1) * r.speed * (0.7 + Math.random() * 0.6) }));
+    let done = false, last = 0, mistakes = 0, t = 0;
+
+    function place(s) { s.el.style.transform = `translate(${Math.round(s.x)}px, ${Math.round(Math.sin(t * 2 + s.ph) * 6)}px)`; s.fe.style.transform = s.v > 0 ? "scaleX(-1)" : "none"; }
+    function frame(now) {
+      if (done) return;
+      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+      last = now; t += dt;
+      const W = sea.clientWidth;
+      for (const s of S) {
+        if (!s.live) continue;
+        s.w = s.el.offsetWidth || s.w;
+        const max = Math.max(0, W - s.w);
+        s.x += s.v * dt;
+        if (s.x < 0) { s.x = 0; s.v = Math.abs(s.v); }
+        if (s.x > max) { s.x = max; s.v = -Math.abs(s.v); }
+        place(s);
+      }
+      raf = requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(() => {
+      const W = sea.clientWidth;
+      for (const s of S) { s.w = s.el.offsetWidth; s.x = Math.random() * Math.max(0, W - s.w); place(s); }
+    });
+    raf = requestAnimationFrame(frame);
+
+    function lineTo(s) {
+      const ln = document.createElement("div");
+      ln.className = "fline";
+      const cx = s.x + s.w / 2, top = parseFloat(s.el.style.top);
+      ln.style.left = Math.round(cx) + "px";
+      sea.appendChild(ln);
+      requestAnimationFrame(() => { ln.style.height = Math.round(top + 10) + "px"; });
+    }
+    function catchIt(i) {
+      if (done) return;
+      const s = S[i];
+      tapFn();
+      if (i === q.c) {
+        done = true; stop();
+        lineTo(s); s.el.classList.add("ok"); s.fe.textContent = "🎣";
+        fs.forEach((f, k) => { f.disabled = true; if (k !== i) f.classList.add("dim"); });
+        onDone(true, q.a[q.c], q.e || "");
+      } else {
+        mistakes++; s.live = false; boomFn();
+        s.el.classList.add("bad"); s.el.disabled = true; s.fe.textContent = "✖";
+        if (mistakes > 1) {
+          done = true; stop();
+          fs.forEach((f, k) => { f.disabled = true; if (k === q.c) f.classList.add("ok"); else if (S[k].live) f.classList.add("dim"); });
+          onDone(false, q.a[q.c], q.e || "");
+        }
+      }
+    }
+    fs.forEach((f, i) => {
+      f.addEventListener("pointerdown", e => { e.preventDefault(); catchIt(i); });
+    });
+  }
+
+  // ====================================================================
   // SCELTA E COLLEGAMENTO CON L'APP
   // ====================================================================
   const GAMES = {
@@ -619,7 +827,10 @@ const Games = (() => {
     operazione: { subjects: ["matematica"], make: c => makeOperazione(c) },
     bersaglio:  { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makeBersaglio(c, s) },
     corsa:      { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makeCorsa(c, s) },
-    incastro:   { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makeIncastro(c, s) }
+    incastro:   { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makeIncastro(c, s) },
+    memory:     { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makeMemory(c, s) },
+    palloncino: { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makePalloncini(c, s) },
+    pesca:      { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makePesca(c, s) }
   };
 
   // Un giro di gioco per la materia e la classe, oppure null (allora si fa una domanda normale).
@@ -644,6 +855,12 @@ const Games = (() => {
       mountCorsa(el, r, onDone);
     } else if (r.kind === "incastro") {
       mountIncastro(el, r, onDone);
+    } else if (r.kind === "memory") {
+      mountMemory(el, r, onDone);
+    } else if (r.kind === "palloncino") {
+      mountPalloncini(el, r, onDone);
+    } else if (r.kind === "pesca") {
+      mountPesca(el, r, onDone);
     }
   }
 

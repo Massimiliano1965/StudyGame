@@ -305,6 +305,16 @@
       r.opts.forEach((o, i) => segs.push({ t: " " + pos[i] }, ...ansSegs(q, o), { t: "." }));
       return fin(segs);
     }
+    if (r.kind === "memory") {
+      const segs = [{ t: toSpeech(r.prompt) + " Le coppie sono: " }];
+      r.pairs.forEach((p, i) => segs.push({ t: toSpeech(p.l), l: r.eng ? "en" : "" }, { t: " con " }, { t: toSpeech(p.r) + (i < r.pairs.length - 1 ? ", " : "."), l: r.rEn ? "en" : "" }));
+      return fin(segs);
+    }
+    if (r.kind === "palloncino") {
+      const segs = [{ t: toSpeech(r.prompt) + " Le parole sono: " }];
+      r.pairs.forEach((p, i) => segs.push({ t: toSpeech(p.l) + (i < r.pairs.length - 1 ? ", " : "."), l: r.eng ? "en" : "" }));
+      return fin(segs);
+    }
     if (r.kind === "incastro" && r.eng) {
       const segs = [{ t: toSpeech(r.prompt) + " Da collegare: " }];
       r.pairs.forEach((p, i) => segs.push({ t: toSpeech(p.l) + (i < r.pairs.length - 1 ? ", " : ""), l: "en" }));
@@ -314,7 +324,7 @@
       return fin(segs);
     }
     if (r.kind === "incastro") return toSpeech(r.prompt) + " Da collegare: " + r.pairs.map(p => toSpeech(p.l)).join(", ") + ". I pezzi sono: " + r.order.map(i => toSpeech(r.pairs[i].r)).join(", ") + ".";
-    const q = r.q, segs = [{ t: "Colpisci il bersaglio con la risposta giusta. " }, ...langSegs(r.prompt, q && q.en), { t: " Le risposte sono: " }];
+    const q = r.q, segs = [{ t: r.kind === "pesca" ? "Pesca il pesce con la risposta giusta. " : "Colpisci il bersaglio con la risposta giusta. " }, ...langSegs(r.prompt, q && q.en), { t: " Le risposte sono: " }];
     q.a.forEach((a, i) => segs.push(...ansSegs(q, a), { t: i < q.a.length - 1 ? ", " : "." }));
     return fin(segs);
   }
@@ -333,7 +343,7 @@
     const segs = [{ t: fb.title + "." }];
     if (fb.correct) {
       segs.push({ t: " La risposta giusta era: " });
-      if (r && r.kind === "incastro" && r.eng) {
+      if (r && r.pairs && r.eng) {
         r.pairs.forEach((p, i) => {
           segs.push({ t: toSpeech(p.l), l: "en" }, { t: ", " }, { t: toSpeech(p.r) + ". ", l: r.rEn ? "en" : "" });
         });

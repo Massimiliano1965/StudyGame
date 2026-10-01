@@ -346,3 +346,40 @@ body[data-theme="teen"] .inc-drop.ok { color: #0D0C33; }
 .boom-msg span { font-size: 46px; font-weight: 900; color: var(--bad); animation: boompop .5s cubic-bezier(.3, 1.6, .5, 1) both; }
 .boom-msg small { display: block; font-size: 20px; font-weight: 800; }
 @keyframes boompop { 0% { opacity: 0; transform: scale(0); } 100% { opacity: 1; transform: scale(1); } }
+
+/* ---------- memory ---------- */
+.mem { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mcard { position: relative; min-height: 72px; padding: 6px 10px; font-family: inherit; font-weight: 700; line-height: 1.1; color: #2B2D52; overflow-wrap: anywhere; touch-action: manipulation;
+  background: #7ED9FF; border: 3px solid var(--edge); border-radius: 18px; box-shadow: 0 4px 0 var(--edge); }
+.mcard .mback { font-size: 30px; }
+.mcard .mface { display: none; }
+.mcard.up { background: #FFE066; animation: scpop2 .25s ease-out; }
+.mcard.up .mback { display: none; }
+.mcard.up .mface { display: inline; }
+.mcard.match { background: var(--good); color: #fff; animation: none; }
+.mcard.miss { animation: shake .4s; background: #FFB3B3; }
+body[data-theme="teen"] .mcard.match { color: #0D0C33; }
+
+/* ---------- palloncini ---------- */
+.baltarget { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px; padding: 8px 14px; background: var(--card-soft); border: 3px solid var(--edge); border-radius: 18px; }
+.bt-n { font-weight: 800; font-size: 16px; color: var(--muted); }
+.bt-l { font-weight: 900; font-size: 30px; line-height: 1.1; text-align: center; overflow-wrap: anywhere; }
+.sky { position: relative; overflow: hidden; border: 3px solid var(--edge); border-radius: 22px; background: linear-gradient(#BEE9FF, #EAF8FF); touch-action: manipulation; }
+.balloon { position: absolute; left: 0; top: 0; width: 108px; height: 124px; padding: 0; background: none; border: 0; will-change: transform; touch-action: manipulation; }
+.balloon::before { content: ""; position: absolute; left: 4px; top: 0; width: 100px; height: 100px; border-radius: 50% 50% 46% 46%; background: var(--bc, #FF8FB1); border: 3px solid rgba(0,0,0,.18); box-shadow: inset -8px -8px 0 rgba(0,0,0,.08), inset 8px 8px 0 rgba(255,255,255,.35); }
+.balloon::after { content: ""; position: absolute; left: 53px; top: 100px; width: 2px; height: 24px; background: rgba(0,0,0,.35); }
+.bal-t { position: absolute; left: 10px; right: 10px; top: 0; height: 100px; display: grid; place-items: center; text-align: center; font-weight: 800; line-height: 1.05; color: #2B2D52; overflow-wrap: anywhere; }
+.bal-fx { position: absolute; left: 0; top: 0; font-size: 44px; pointer-events: none; animation: balfx .6s ease-out forwards; }
+@keyframes balfx { 0% { opacity: 1; scale: .5; } 100% { opacity: 0; scale: 1.6; } }
+
+/* ---------- pesca ---------- */
+.sea { position: relative; overflow: hidden; border: 3px solid var(--edge); border-radius: 22px; background: linear-gradient(#BEE9FF 0 28px, #4FB6E8 28px, #1E7FC0); }
+.shore { position: absolute; left: 8px; top: -2px; font-size: 26px; z-index: 2; }
+.fline { position: absolute; top: 24px; width: 3px; height: 0; background: #fff; transition: height .35s ease-in; z-index: 3; }
+.fish { position: absolute; left: 0; display: flex; align-items: center; gap: 8px; min-height: 58px; max-width: 66%; padding: 6px 16px 6px 10px; font-family: inherit; font-weight: 700; line-height: 1.1; text-align: left; color: #2B2D52;
+  background: var(--tc, #FFD23F); border: 3px solid var(--edge); border-radius: 999px; box-shadow: 0 4px 0 var(--edge); will-change: transform; touch-action: manipulation; }
+.fish .fe { flex: none; font-size: 30px; }
+.fish.ok { background: var(--good); color: #fff; }
+.fish.bad { background: var(--bad); color: #fff; opacity: .7; }
+.fish.dim { opacity: .5; }
+body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D0C33; }

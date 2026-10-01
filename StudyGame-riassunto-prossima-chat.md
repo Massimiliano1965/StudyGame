@@ -21,6 +21,11 @@ Progetto: Studia e Gioca (repo GitHub Massimiliano1965/StudyGame, app Android Co
 - Secondo errore: il puzzle esplode (BOOM) e ricomincia da capo con pezzi rimescolati; nessun minuto perso. Il primo errore si perdona. `Games.setBoom` suona Sfx.no.
 - NON ancora provato su telefono: scene ed esplosione.
 
+## Giochi nuovi (1/10 pomeriggio)
+- Aggiunti Memory (carte da girare), Palloncini (scoppia solo i giusti, un errore si perdona) e Pesca (pesca il pesce giusto) per Italiano, Matematica e Inglese. Tiro a segno e Corsa attivi anche in Inglese. Scene del puzzle dalle parole giocate (EMO).
+- Tasto indietro Android: torna alla pagina prima, esce solo dalla home. Voce: nuovi tentativi + voce locale.
+- Provati da me in browser headless (54 partite simulate, vinte e perse, tutte le materie): ok.
+
 ## Da fare
 - Provare la voce inglese sul telefono (una domanda "Come si dice «gatto» in inglese?" e un Incastro dei colori). Se non parte, dirlo e si guarda.
 - Poi la prossima materia/gioco: la decide Massi.
