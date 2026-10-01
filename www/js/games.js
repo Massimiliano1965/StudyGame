@@ -635,16 +635,26 @@ const Games = (() => {
     safe: "🛡️", dangerous: "⚠️", go: "🚶", see: "👀", eat: "🍽️", buy: "🛒", take: "🤲", write: "✍️", have: "🤝",
     gatto: "🐱", fiore: "🌸", penna: "🖊️", libro: "📖", casa: "🏠", albero: "🌳", bambino: "🧒", sedia: "🪑", mela: "🍎",
     cane: "🐶", mucca: "🐄", pecora: "🐑", asino: "🐴", leone: "🦁", rana: "🐸", cavallo: "🐴", maiale: "🐷",
-    alto: "🦒", basso: "🐭", caldo: "🔥", freddo: "❄️", grande: "🐘", piccolo: "🐭", giorno: "☀️", notte: "🌙",
+    alto: "🦒", caldo: "🔥", freddo: "❄️", grande: "🐘", piccolo: "🐭", giorno: "☀️", notte: "🌙",
     mare: "🌊", lago: "🏞️", montagna: "⛰️", fiume: "🏞️", pianura: "🌾", isola: "🏝️", Colosseo: "🏟️", colosseo: "🏟️", vesuvio: "🌋", piramidi: "🔺", partenone: "🏛️",
     inverno: "❄️", primavera: "🌸", estate: "☀️", autunno: "🍂", candela: "🕯️", lampadina: "💡", lettera: "✉️", telefono: "☎️", computer: "💻", automobile: "🚗", carrozza: "🐎",
     gattino: "🐱", cucciolo: "🐶", vitello: "🐮", agnello: "🐑", puledro: "🐴", pulcino: "🐥", occhi: "👀", orecchie: "👂", naso: "👃", pelle: "🖐️",
-    radice: "🌱", foglia: "🍃", fiore: "🌸", seme: "🌰", tronco: "🪵", mercurio: "☿️", giove: "🪐", marte: "🔴", saturno: "🪐", terra: "🌍",
+    radice: "🌱", foglia: "🍃", fiore: "🌸", seme: "🌰", tronco: "🪵", mercurio: "☿️", giove: "🟠", marte: "🔴", saturno: "🪐", terra: "🌍",
     delfino: "🐬", aquila: "🦅", rana: "🐸", serpente: "🐍", squalo: "🦈", ape: "🐝", cuore: "❤️", polmoni: "🫁", cervello: "🧠", ossa: "🦴",
     darwin: "🐢", newton: "🍎", galileo: "🔭", "marie curie": "☢️", mendel: "🌱", pasteur: "🧫", metro: "📏", secondo: "⏱️", joule: "⚡", kelvin: "🌡️",
     aperto: "🔓", chiuso: "🔒", veloce: "⚡", lento: "🐌", felice: "😀", triste: "😢", dolce: "🍬", amaro: "🍋", nuovo: "✨", vecchio: "👴"
   };
-  const emojiFor = p => EMO[String(p.l).toLowerCase()] || EMO[String(p.r).toLowerCase()] || "";
+  // rOnly: seconda lingua (a sinistra c'è una parola straniera che potrebbe somigliare a una parola di altre lingue: si guarda solo l'italiano)
+  function emojiFor(p, rOnly) {
+    const l = String(p.l).toLowerCase().trim(), r = String(p.r).toLowerCase().trim();
+    const sides = rOnly ? [r] : [l, r];
+    for (const k of sides) if (EMO[k] || EMO_WORDS[k] || (rOnly && EMO_WORDS_L2[k])) return EMO[k] || EMO_WORDS[k] || EMO_WORDS_L2[k];
+    if (!rOnly) {
+      for (const [re, e] of EMO_RULES) if (re.test(l)) return e;
+      for (const [re, e] of EMO_RULES_R) if (re.test(r)) return e;
+    }
+    return "";
+  }
 
   // ogni volta una scena diversa: colori, posizioni, specchio e figure a caso
   function sceneHtml(key, pairs) {
@@ -663,13 +673,22 @@ const Games = (() => {
       } else sc = pick(sc);
     }
     const flip = Math.random() < 0.5, hue = rnd(0, 359), jit = n => n + rnd(-5, 5);
-    let decor = shuffle(sc[1].slice());
-    if (decor.length > 5) decor = decor.slice(0, rnd(5, decor.length));
-    const words = pairs.map(emojiFor).filter(Boolean);
-    const items = decor.map(it => [it[0], jit(flip ? 100 - it[1] : it[1]), Math.min(words.length ? 70 : 90, jit(it[2])), Math.round(it[3] * (0.9 + Math.random() * 0.25))]);
-    shuffle(["✨", "⭐", "🎈", "💫", "🌟"]).slice(0, 2).forEach(e => items.push([e, rnd(8, 92), rnd(10, 40), rnd(24, 36)]));
+    const words = [];
+    pairs.forEach(p => { const e = emojiFor(p, key === "lingue"); if (e && !words.includes(e)) words.push(e); });
+    let items, strip = "";
+    if (words.length >= 3) {
+      // almeno tre parole hanno la loro figurina: la scena mostra SOLO quelle (più qualche stellina), così ogni immagine c'entra con ciò che si è giocato
+      const slots = words.length >= 4 ? [[22, 34], [78, 32], [30, 76], [72, 74]] : [[24, 36], [76, 36], [50, 74]];
+      items = shuffle(words.slice()).slice(0, slots.length).map((e, i) => [e, jit(flip ? 100 - slots[i][0] : slots[i][0]), jit(slots[i][1]), rnd(64, 78)]);
+      shuffle(["✨", "⭐", "💫", "🌟"]).slice(0, 3).forEach((e, i) => items.push([e, [10, 90, 50][i] + rnd(-4, 4), [14, 16, 10][i] + rnd(-3, 3), rnd(22, 30)]));
+    } else {
+      let decor = shuffle(sc[1].slice());
+      if (decor.length > 5) decor = decor.slice(0, rnd(5, decor.length));
+      items = decor.map(it => [it[0], jit(flip ? 100 - it[1] : it[1]), Math.min(words.length ? 70 : 90, jit(it[2])), Math.round(it[3] * (0.9 + Math.random() * 0.25))]);
+      shuffle(["✨", "⭐", "🎈", "💫", "🌟"]).slice(0, 2).forEach(e => items.push([e, rnd(8, 92), rnd(10, 40), rnd(24, 36)]));
+      if (words.length) strip = `<div class="sc-strip">${shuffle(words.slice()).map((e, i) => `<span style="animation-delay:${(items.length * 0.16 + i * 0.2).toFixed(2)}s">${e}</span>`).join("")}</div>`;
+    }
     const dark = /#1B1F4B/.test(sc[0]);
-    const strip = words.length ? `<div class="sc-strip">${shuffle(words.slice()).map((e, i) => `<span style="animation-delay:${(items.length * 0.16 + i * 0.2).toFixed(2)}s">${e}</span>`).join("")}</div>` : "";
     return `<div class="scene"><div class="sc-bg" style="background:${sc[0]};${dark ? "" : `filter:hue-rotate(${hue}deg)`}"></div>${items.map((it, i) =>
       `<span class="sc-it" style="left:${it[1]}%;top:${it[2]}%;font-size:${it[3]}px;animation-delay:${(i * 0.16).toFixed(2)}s">${it[0]}</span>`).join("")}${strip}</div>
       <div class="sc-cap">🎉 ${esc(sc[2])}</div>

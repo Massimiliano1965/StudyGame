@@ -7,6 +7,10 @@
   <preference name="Orientation" value="portrait" />
   <preference name="android-minSdkVersion" value="24" />
   <platform name="android">
+    <preference name="AndroidWindowSplashScreenBackground" value="#9B6BFF" />
+    <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/splash-icon.png" />
+    <preference name="AndroidWindowSplashScreenIconBackgroundColor" value="#9B6BFF" />
+    <preference name="FadeSplashScreenDuration" value="300" />
     <icon density="mdpi" src="res/android/icon-mdpi.png" foreground="res/android/fg-mdpi.png" background="res/android/bg-mdpi.png" />
     <icon density="hdpi" src="res/android/icon-hdpi.png" foreground="res/android/fg-hdpi.png" background="res/android/bg-hdpi.png" />
     <icon density="xhdpi" src="res/android/icon-xhdpi.png" foreground="res/android/fg-xhdpi.png" background="res/android/bg-xhdpi.png" />
