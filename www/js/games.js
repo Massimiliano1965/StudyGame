@@ -251,12 +251,242 @@ const Games = (() => {
   }
 
   // ====================================================================
+  // CORSA (italiano e matematica): il personaggio corre, scegli la corsia giusta
+  // ====================================================================
+  let avatarFn = null;
+  const setAvatar = fn => { avatarFn = fn; };
+
+  function makeCorsa(classId, subjectId) {
+    if (typeof Questions === "undefined") return null;
+    const q = Questions.next(subjectId, classId);
+    if (!q || q.a.length < 3) return null;
+    const wrong = shuffle(q.a.map((t, i) => i).filter(i => i !== q.c)).slice(0, 2);
+    const idx = shuffle([q.c, ...wrong]);
+    return { kind: "corsa", title: "Corsa", prompt: q.q, hint: "Premi Via! e porta il personaggio nella corsia della risposta giusta.",
+      q, opts: idx.map(i => q.a[i]), lane: idx.indexOf(q.c), travel: classId <= 2 ? 5.5 : classId <= 4 ? 4.5 : 3.8 };
+  }
+
+  // carattere in base alla parola più lunga, così le parole non si spezzano a metà
+  function gateFont(tx) {
+    const lw = Math.max(...String(tx).split(/\s+/).map(w => w.length));
+    const base = lw >= 12 ? 11 : lw >= 10 ? 12 : lw >= 8 ? 14 : lw >= 6 ? 17 : 20;
+    return String(tx).length > 24 ? Math.min(base, 12) : String(tx).length > 14 ? Math.min(base, 14) : base;
+  }
+
+  function mountCorsa(el, r, onDone) {
+    const H = 340, GH = 74, CH = 64, Y0 = 6, Y1 = (H - 8 - CH) + CH * 0.5 - GH;
+    let lane = 1, started = false, done = false, t = 0, last = 0;
+    const laneLeft = l => ((l + 0.5) * 100 / 3) + "%";
+    el.innerHTML = `<div class="runwrap">
+      <div class="track" style="height:${H}px">
+        ${[0, 1, 2].map(i => `<div class="lane" data-l="${i}"></div>`).join("")}
+        ${r.opts.map((tx, i) => `<div class="gate" style="left:${i * 100 / 3}%;top:${Y0}px;--tc:${TCOL[i]};font-size:${gateFont(tx)}px"><span>${esc(tx)}</span></div>`).join("")}
+        <div class="runner" style="left:${laneLeft(lane)}">${avatarFn ? avatarFn() : "🏃"}</div>
+        <button class="btn big gostart">▶ Via!</button>
+      </div>
+      <div class="runctl"><button class="btn alt" data-mv="-1" aria-label="Sinistra">◀</button><button class="btn alt" data-mv="1" aria-label="Destra">▶</button></div>
+    </div>`;
+    const track = el.querySelector(".track"), runner = el.querySelector(".runner"), gates = [...el.querySelectorAll(".gate")];
+    function setLane(n) { if (done) return; lane = Math.max(0, Math.min(2, n)); runner.style.left = laneLeft(lane); tapFn(); }
+    el.querySelectorAll(".lane").forEach(l => l.addEventListener("pointerdown", e => { e.preventDefault(); setLane(+l.dataset.l); }));
+    el.querySelectorAll(".lane").forEach(l => l.addEventListener("click", () => setLane(+l.dataset.l)));
+    el.querySelectorAll("[data-mv]").forEach(b => b.addEventListener("click", () => setLane(lane + +b.dataset.mv)));
+
+    function finish() {
+      done = true; stop();
+      const ok = lane === r.lane;
+      gates.forEach((g, i) => g.classList.add(i === r.lane ? "ok" : i === lane ? "bad" : "dim"));
+      el.querySelectorAll("[data-mv]").forEach(b => { b.disabled = true; });
+      onDone(ok, r.q.a[r.q.c], r.q.e || "");
+    }
+    function frame(now) {
+      if (done) return;
+      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+      last = now; t += dt;
+      const p = Math.min(1, t / r.travel), y = Y0 + (Y1 - Y0) * p;
+      gates.forEach(g => { g.style.top = Math.round(y) + "px"; });
+      if (p >= 1) { finish(); return; }
+      raf = requestAnimationFrame(frame);
+    }
+    el.querySelector(".gostart").addEventListener("click", e => {
+      if (started) return;
+      started = true; e.currentTarget.remove(); tapFn();
+      raf = requestAnimationFrame(frame);
+    });
+  }
+
+  // ====================================================================
+  // INCASTRO (italiano e matematica): collega ogni pezzo al suo posto
+  // ====================================================================
+  function mathPairs(c) {
+    const gen = () => {
+      switch (c) {
+        case 0: {
+          if (Math.random() < 0.6) { const a = rnd(1, 9), b = rnd(1, 10); return { l: `${a} + ${b}`, r: N(a + b) }; }
+          const a = rnd(1, 9), b = rnd(1, 9); return { l: `${a + b} − ${b}`, r: N(a) };
+        }
+        case 1: {
+          const k = rnd(0, 2);
+          if (k === 0) { const a = rnd(11, 59), b = rnd(10, 40); return { l: `${a} + ${b}`, r: N(a + b) }; }
+          if (k === 1) { const a = rnd(40, 99), b = rnd(10, 39); return { l: `${a} − ${b}`, r: N(a - b) }; }
+          const t = pick([2, 5, 10]), n = rnd(2, 10); return { l: `${t} × ${n}`, r: N(t * n) };
+        }
+        case 2: {
+          if (Math.random() < 0.6) { const a = rnd(2, 10), b = rnd(2, 10); return { l: `${a} × ${b}`, r: N(a * b) }; }
+          const b = rnd(2, 9), x = rnd(2, 10); return { l: `${b * x} : ${b}`, r: N(x) };
+        }
+        case 3: {
+          const k = rnd(0, 2);
+          if (k === 0) { const a = rnd(12, 48), b = rnd(2, 9); return { l: `${a} × ${b}`, r: N(a * b) }; }
+          if (k === 1) { const d = pick([2, 3, 4, 5]), n = rnd(2, 8) * d; return { l: `1/${d} di ${n}`, r: N(n / d) }; }
+          const a = rnd(3, 9), b = rnd(3, 9), x = rnd(1, 20); return { l: `${a} × ${b} + ${x}`, r: N(a * b + x) };
+        }
+        case 4: {
+          const k = rnd(0, 2);
+          if (k === 0) { const p = pick([10, 25, 50]), n = rnd(2, 10) * 20; return { l: `${p}% di ${n}`, r: N(n * p / 100) }; }
+          if (k === 1) { const l = rnd(3, 15), h = rnd(2, 12); return { l: `Area ${l} × ${h} cm`, r: `${l * h} cm²` }; }
+          const a = rnd(2, 9), b = rnd(2, 9), x = rnd(2, 6); return { l: `(${a} + ${b}) × ${x}`, r: N((a + b) * x) };
+        }
+        case 5: {
+          const k = rnd(0, 2);
+          if (k === 0) { const b = rnd(2, 9); return { l: `${b}²`, r: N(b * b) }; }
+          if (k === 1) { const b = rnd(2, 5); return { l: `${b}³`, r: N(b * b * b) }; }
+          const a = rnd(2, 6), b = rnd(7, 12); return { l: `${a * b} : ${a} + ${b}`, r: N(b + b) };
+        }
+        case 6: {
+          if (Math.random() < 0.55) { const a = rnd(2, 12), b = rnd(2, 15); return { l: `${N(-a)} + ${b}`, r: N(b - a) }; }
+          const x = rnd(3, 15); return { l: `√${x * x}`, r: N(x) };
+        }
+        default: {
+          const x = rnd(2, 14);
+          if (Math.random() < 0.5) { const b = rnd(1, 20); return { l: `x + ${b} = ${x + b}`, r: `x = ${x}` }; }
+          const a = rnd(2, 9); return { l: `${a}x = ${a * x}`, r: `x = ${x}` };
+        }
+      }
+    };
+    const out = []; let g = 0;
+    while (out.length < 4 && g++ < 300) { const p = gen(); if (!out.some(o => o.r === p.r || o.l === p.l)) out.push(p); }
+    return out;
+  }
+
+  const ITA_PAIRS = {
+    A: [
+      { prompt: "Collega ogni parola al suo contrario.", pairs: [["alto", "basso"], ["caldo", "freddo"], ["grande", "piccolo"], ["giorno", "notte"], ["aperto", "chiuso"], ["veloce", "lento"], ["pieno", "vuoto"], ["felice", "triste"], ["dolce", "amaro"], ["nuovo", "vecchio"]] },
+      { prompt: "Collega ogni parola al suo plurale.", pairs: [["gatto", "gatti"], ["fiore", "fiori"], ["penna", "penne"], ["libro", "libri"], ["casa", "case"], ["albero", "alberi"], ["bambino", "bambini"], ["sedia", "sedie"], ["mela", "mele"]] },
+      { prompt: "Collega ogni animale al suo verso.", pairs: [["cane", "abbaia"], ["gatto", "miagola"], ["mucca", "muggisce"], ["pecora", "bela"], ["asino", "raglia"], ["leone", "ruggisce"], ["rana", "gracida"], ["cavallo", "nitrisce"], ["maiale", "grugnisce"]] }
+    ],
+    B: [
+      { prompt: "Collega ogni parola al suo contrario.", pairs: [["generoso", "avaro"], ["antico", "moderno"], ["rumoroso", "silenzioso"], ["coraggioso", "pauroso"], ["ricco", "povero"], ["lontano", "vicino"], ["ampio", "stretto"], ["pesante", "leggero"]] },
+      { prompt: "Collega le parole che significano la stessa cosa.", pairs: [["felice", "contento"], ["veloce", "rapido"], ["bello", "grazioso"], ["stanco", "esausto"], ["arrabbiato", "furioso"], ["strano", "bizzarro"], ["gentile", "cortese"]] },
+      { prompt: "Collega ogni parola al suo plurale.", pairs: [["uomo", "uomini"], ["uovo", "uova"], ["dito", "dita"], ["braccio", "braccia"], ["lago", "laghi"], ["medico", "medici"], ["bue", "buoi"], ["ala", "ali"]] },
+      { prompt: "Collega ogni verbo al suo passato prossimo.", pairs: [["mangiare", "ho mangiato"], ["partire", "sono partito"], ["bere", "ho bevuto"], ["andare", "sono andato"], ["vedere", "ho visto"], ["scrivere", "ho scritto"], ["fare", "ho fatto"], ["venire", "sono venuto"]] }
+    ],
+    C: [
+      { prompt: "Collega ogni figura retorica al suo esempio.", pairs: [["Metafora", "Sei una roccia"], ["Similitudine", "Veloce come il vento"], ["Onomatopea", "Din don"], ["Iperbole", "Ho aspettato un secolo"], ["Personificazione", "Il vento sussurra"]] },
+      { prompt: "Collega ogni autore alla sua opera.", pairs: [["Manzoni", "I promessi sposi"], ["Dante", "Divina Commedia"], ["Collodi", "Pinocchio"], ["Boccaccio", "Decameron"], ["Verga", "I Malavoglia"], ["Petrarca", "Canzoniere"], ["Calvino", "Il barone rampante"], ["Leopardi", "L'infinito"]] },
+      { prompt: "Collega ogni parola alla sua categoria.", pairs: [["veloce", "aggettivo"], ["correre", "verbo"], ["perché", "congiunzione"], ["Roma", "nome proprio"], ["lentamente", "avverbio"], ["di", "preposizione"], ["io", "pronome"]] }
+    ]
+  };
+
+  function makeIncastro(classId, subjectId) {
+    let prompt, pairs;
+    if (subjectId === "matematica") {
+      pairs = mathPairs(classId);
+      prompt = classId >= 7 ? "Collega ogni equazione alla sua soluzione." : "Collega ogni operazione al suo risultato.";
+    } else {
+      const theme = pick(ITA_PAIRS[classId <= 1 ? "A" : classId <= 4 ? "B" : "C"]);
+      pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
+      prompt = theme.prompt;
+    }
+    if (pairs.length < 3) return null;
+    let order = shuffle(pairs.map((_, i) => i)), g = 0;
+    while (order.every((v, i) => v === i) && g++ < 20) order = shuffle(order);
+    return { kind: "incastro", title: "Incastro", prompt, hint: "Trascina ogni pezzo al suo posto, oppure toccalo e poi tocca il posto.", pairs, order,
+      solution: pairs.map(p => `${p.l} → ${p.r}`).join(" · ") };
+  }
+
+  function mountIncastro(el, r, onDone) {
+    const P = r.pairs;
+    el.innerHTML = `<div class="inc">
+      <div class="inc-rows">${P.map((p, i) => `<div class="inc-row"><span class="inc-label">${esc(p.l)}</span><div class="inc-drop" data-s="${i}"><span class="inc-q">?</span></div></div>`).join("")}</div>
+      <div class="inc-tray">${r.order.map(i => `<button class="piece" data-p="${i}"><span class="pz">🧩</span>${esc(P[i].r)}</button>`).join("")}</div>
+    </div>`;
+    const drops = [...el.querySelectorAll(".inc-drop")], tray = el.querySelector(".inc-tray");
+    let mistakes = 0, placed = 0, sel = null, done = false, justDragged = false;
+
+    function clearSel() { if (sel) sel.classList.remove("sel"); sel = null; }
+    function attempt(pc, s) {
+      if (done) return;
+      const pid = +pc.dataset.p;
+      if (pid === s) {
+        const drop = drops[s];
+        drop.classList.add("ok"); drop.innerHTML = `<span>${esc(P[s].r)}</span>`;
+        pc.classList.add("gone"); clearSel(); placed++; tapFn();
+        if (placed === P.length) {
+          done = true;
+          const ok = mistakes <= 1;
+          onDone(ok, r.solution, ok ? (mistakes === 0 ? "Tutto incastrato al primo colpo!" : "Incastrato!") : `Hai sbagliato ${mistakes} volte.`);
+        }
+      } else {
+        mistakes++; clearSel();
+        const d = drops[s];
+        d.classList.add("nope"); pc.classList.add("nope");
+        setTimeout(() => { d.classList.remove("nope"); pc.classList.remove("nope"); }, 450);
+      }
+    }
+
+    // trascinamento (mouse o dito)
+    tray.addEventListener("pointerdown", e => {
+      const pc = e.target.closest(".piece");
+      if (!pc || done || pc.classList.contains("gone")) return;
+      const x0 = e.clientX, y0 = e.clientY;
+      let dragging = false;
+      try { pc.setPointerCapture(e.pointerId); } catch (err) {}
+      const move = ev => {
+        const dx = ev.clientX - x0, dy = ev.clientY - y0;
+        if (!dragging && Math.hypot(dx, dy) > 8) { dragging = true; pc.classList.add("drag"); }
+        if (dragging) pc.style.transform = `translate(${dx}px, ${dy}px)`;
+      };
+      const end = ev => {
+        pc.removeEventListener("pointermove", move);
+        pc.removeEventListener("pointerup", end);
+        pc.removeEventListener("pointercancel", end);
+        if (!dragging) return;
+        justDragged = true; setTimeout(() => { justDragged = false; }, 50);
+        pc.style.visibility = "hidden";
+        const under = document.elementFromPoint(ev.clientX, ev.clientY);
+        pc.style.visibility = ""; pc.style.transform = ""; pc.classList.remove("drag");
+        const drop = under && under.closest && under.closest(".inc-drop");
+        if (drop && !drop.classList.contains("ok")) attempt(pc, +drop.dataset.s);
+      };
+      pc.addEventListener("pointermove", move);
+      pc.addEventListener("pointerup", end);
+      pc.addEventListener("pointercancel", end);
+    });
+
+    // tocco: scegli il pezzo, poi tocca il suo posto
+    tray.addEventListener("click", e => {
+      const pc = e.target.closest(".piece");
+      if (!pc || done || justDragged || pc.classList.contains("gone")) return;
+      const was = sel === pc;
+      clearSel();
+      if (!was) { sel = pc; pc.classList.add("sel"); tapFn(); }
+    });
+    drops.forEach(d => d.addEventListener("click", () => {
+      if (done || !sel || d.classList.contains("ok")) return;
+      attempt(sel, +d.dataset.s);
+    }));
+  }
+
+  // ====================================================================
   // SCELTA E COLLEGAMENTO CON L'APP
   // ====================================================================
   const GAMES = {
     frase:      { subjects: ["italiano"], make: c => makeFrase(c) },
     operazione: { subjects: ["matematica"], make: c => makeOperazione(c) },
-    bersaglio:  { subjects: ["italiano", "matematica"], make: (c, s) => makeBersaglio(c, s) }
+    bersaglio:  { subjects: ["italiano", "matematica"], make: (c, s) => makeBersaglio(c, s) },
+    corsa:      { subjects: ["italiano", "matematica"], make: (c, s) => makeCorsa(c, s) },
+    incastro:   { subjects: ["italiano", "matematica"], make: (c, s) => makeIncastro(c, s) }
   };
 
   // Un giro di gioco per la materia e la classe, oppure null (allora si fa una domanda normale).
@@ -277,8 +507,12 @@ const Games = (() => {
       mountBuilder(el, { kind: "operazione", items: r.items, solution: r.solution, onDone, okText: "L'operazione torna!", check: isTrue });
     } else if (r.kind === "bersaglio") {
       mountBersaglio(el, r, onDone);
+    } else if (r.kind === "corsa") {
+      mountCorsa(el, r, onDone);
+    } else if (r.kind === "incastro") {
+      mountIncastro(el, r, onDone);
     }
   }
 
-  return { pick: pickRound, mount, stop, setTap, isTrue, calc };
+  return { pick: pickRound, mount, stop, setTap, setAvatar, isTrue, calc };
 })();

@@ -47,6 +47,7 @@
   })();
 
   Games.setTap(() => Sfx.tap());
+  Games.setAvatar(() => charSvg(profile, "happy"));
 
   // ---------- utilità interfaccia ----------
   function toast(msg, ms) {
@@ -88,6 +89,8 @@
       .replace(/\^(\d)/g, " alla $1 ").replace(/(\d+)\s*%/g, "$1 per cento")
       .replace(/(\d+)\/(\d+)/g, "$1 fratto $2")
       .replace(/km\/h/g, " chilometri all'ora")
+      .replace(/√(\d+)/g, "radice di $1").replace(/(\d)²/g, "$1 alla seconda").replace(/(\d)³/g, "$1 alla terza")
+      .replace(/→/g, ", ").replace(/·/g, ". ")
       .replace(/cm²/g, " centimetri quadrati").replace(/\bcm\b/g, " centimetri");
   }
 
@@ -266,6 +269,8 @@
     if (r.kind === "frase") return "Metti le parole in ordine per fare una frase. Le parole sono: " + r.items.map(w => w.replace(/[.,;:!?]/g, "")).join(", ") + ".";
     if (r.kind === "operazione") return (r.problem ? toSpeech(r.prompt) + " " : "") + "Metti in ordine numeri e segni per fare l'operazione. Ci sono: " +
       r.items.map(t => OPS[t] || (/^−\d/.test(t) ? "meno " + t.slice(1) : t)).join(", ") + ".";
+    if (r.kind === "corsa") return "Premi Via e porta il personaggio nella corsia giusta. " + toSpeech(r.prompt) + " A sinistra: " + toSpeech(r.opts[0]) + ". Al centro: " + toSpeech(r.opts[1]) + ". A destra: " + toSpeech(r.opts[2]) + ".";
+    if (r.kind === "incastro") return toSpeech(r.prompt) + " Da collegare: " + r.pairs.map(p => toSpeech(p.l)).join(", ") + ". I pezzi sono: " + r.order.map(i => toSpeech(r.pairs[i].r)).join(", ") + ".";
     return "Colpisci il bersaglio con la risposta giusta. " + toSpeech(r.prompt) + " Le risposte sono: " + r.q.a.map(toSpeech).join(", ") + ".";
   }
 
