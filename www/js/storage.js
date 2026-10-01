@@ -1,28 +1,35 @@
-// ===== Salvataggio stato (sopravvive alla chiusura dell'app) =====
+// ===== Salvataggio sul telefono (nessun invio in rete) =====
 const Storage = (() => {
-  const KEY = "studyplay_state_v1";
+  const K_PROFILE = "sg2_profile";
+  const K_DAY = "sg2_day";
 
-  const today = () => new Date().toISOString().slice(0, 10);
+  const today = () => {
+    const d = new Date();
+    const p = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  };
 
-  const fresh = () => ({
-    credit: CONFIG.START_CREDIT,
-    day: today(),
-    phase: "study",      // study | win | play | end
-    playEndsAt: null     // timestamp ms di fine gioco
-  });
-
-  function load() {
-    let s;
-    try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) { s = null; }
-    if (!s) return fresh();
-    // Reset giornaliero (non interrompe un gioco in corso)
-    if (CONFIG.DAILY_RESET && s.day !== today() && s.phase !== "play") return fresh();
-    return s;
+  function read(key) {
+    try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
+  }
+  function write(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch (e) { return false; }
   }
 
-  function save(s) {
-    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {}
+  const loadProfile = () => read(K_PROFILE);
+  const saveProfile = p => write(K_PROFILE, p);
+
+  // Stato del giorno: ogni giorno si riparte dai minuti garantiti
+  function loadDay() {
+    const s = read(K_DAY);
+    if (s && s.day === today()) return s;
+    return { day: today(), minutes: CONFIG.MIN_MINUTES, correct: 0, wrong: 0 };
+  }
+  const saveDay = s => write(K_DAY, s);
+
+  function resetAll() {
+    try { localStorage.removeItem(K_PROFILE); localStorage.removeItem(K_DAY); } catch (e) {}
   }
 
-  return { load, save, fresh };
+  return { loadProfile, saveProfile, loadDay, saveDay, resetAll, today };
 })();

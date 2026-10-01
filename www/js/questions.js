@@ -1,54 +1,143 @@
-// ===== Banca domande =====
-// Campi: q (testo), a (4 opzioni), c (indice risposta giusta, 0 = prima),
-//        e (spiegazione mostrata dopo la risposta).
-// Facoltativi: bonus, malus (se assenti valgono quelli di CONFIG).
-const QUESTIONS = {
-  matematica: [
-    { q: "Quanto fa 7 × 8?", a: ["54", "56", "64", "48"], c: 1, e: "7 per 8 fa 56." },
-    { q: "Se hai 15 mele e ne regali 6, quante te ne restano?", a: ["8", "9", "10", "7"], c: 1, e: "15 meno 6 fa 9." },
-    { q: "Qual è la metà di 90?", a: ["40", "45", "50", "35"], c: 1, e: "90 diviso 2 fa 45." },
-    { q: "Quanto fa 81 : 9?", a: ["8", "7", "9", "11"], c: 2, e: "9 per 9 fa 81, quindi 81 diviso 9 fa 9." },
-    { q: "Quanti lati ha un esagono?", a: ["5", "6", "7", "8"], c: 1, e: "Esa- vuol dire sei: l'esagono ha 6 lati." },
-    { q: "Quanto fa 125 − 48?", a: ["77", "87", "73", "83"], c: 0, e: "125 meno 50 fa 75, più 2 fa 77.", bonus: 5, malus: 3 },
-    { q: "Quanto fa 3/4 di 20?", a: ["12", "15", "16", "10"], c: 1, e: "Un quarto di 20 è 5, tre quarti sono 15.", bonus: 5, malus: 3 },
-    { q: "Un'ora quanti minuti ha?", a: ["100", "30", "60", "24"], c: 2, e: "Un'ora dura 60 minuti." }
-  ],
-  italiano: [
-    { q: "Qual è il plurale di «lupo»?", a: ["Lupi", "Lupe", "Lupetti", "Lupo"], c: 0, e: "I nomi maschili in -o fanno il plurale in -i: lupo, lupi." },
-    { q: "Qual è il verbo in «Il gatto dorme sul divano»?", a: ["Gatto", "Dorme", "Divano", "Sul"], c: 1, e: "«Dorme» è l'azione che fa il gatto: è il verbo." },
-    { q: "Qual è un sinonimo di «felice»?", a: ["Triste", "Stanco", "Contento", "Veloce"], c: 2, e: "«Contento» vuol dire quasi la stessa cosa di «felice»." },
-    { q: "Qual è il plurale di «uovo»?", a: ["Uovi", "Uove", "Uova", "Uovo"], c: 2, e: "«Uovo» è irregolare: al plurale diventa «uova»." },
-    { q: "Quale articolo va con «zaino»?", a: ["Il", "Lo", "La", "L'"], c: 1, e: "Davanti a parole che iniziano con z si usa «lo»." },
-    { q: "Come si scrive correttamente?", a: ["Cè", "C'é", "C'è", "Ce'"], c: 2, e: "«C'è» è «ci è» con l'apostrofo, e la è ha l'accento grave." },
-    { q: "Qual è il contrario di «alto»?", a: ["Grande", "Basso", "Lungo", "Largo"], c: 1, e: "Il contrario di alto è basso." },
-    { q: "Completa: «Ieri ___ al parco.»", a: ["vado", "andrò", "sono andato", "andiamo"], c: 2, e: "«Ieri» è passato, quindi serve un verbo al passato." }
-  ],
-  inglese: [
-    { q: "Come si dice «cane» in inglese?", a: ["Cat", "Dog", "Bird", "Rabbit"], c: 1, e: "«Dog» significa cane." },
-    { q: "Che colore è «yellow»?", a: ["Rosso", "Blu", "Giallo", "Verde"], c: 2, e: "«Yellow» significa giallo." },
-    { q: "Completa: «I ___ a student.»", a: ["is", "are", "am", "be"], c: 2, e: "Con «I» si usa sempre «am»: I am." },
-    { q: "Come si dice «dieci»?", a: ["Ten", "Two", "Twelve", "Tree"], c: 0, e: "«Ten» è dieci." },
-    { q: "Il plurale di «child» è…", a: ["Childs", "Children", "Childes", "Childrens"], c: 1, e: "«Child» è irregolare: il plurale è «children».", bonus: 5, malus: 3 },
-    { q: "Quando si dice «good morning»?", a: ["Di mattina", "Di sera", "Di notte", "A pranzo"], c: 0, e: "«Morning» vuol dire mattina." },
-    { q: "Come si dice «mela»?", a: ["Pear", "Apple", "Orange", "Banana"], c: 1, e: "«Apple» significa mela." },
-    { q: "Completa: «She ___ a dog.»", a: ["have", "has", "having", "haves"], c: 1, e: "Con he, she, it si usa «has»." }
-  ],
-  storia_geo: [
-    { q: "Qual è la capitale dell'Italia?", a: ["Milano", "Roma", "Napoli", "Torino"], c: 1, e: "Roma è la capitale d'Italia." },
-    { q: "Dove si trovano le grandi piramidi?", a: ["In Italia", "In Egitto", "In Grecia", "In Spagna"], c: 1, e: "Le grandi piramidi sono in Egitto, vicino al fiume Nilo." },
-    { q: "Qual è il fiume più lungo d'Italia?", a: ["Tevere", "Arno", "Po", "Adige"], c: 2, e: "Il Po è lungo circa 650 km." },
-    { q: "Quanti sono i continenti?", a: ["5", "6", "7", "4"], c: 2, e: "Di solito se ne contano 7: Europa, Asia, Africa, America del Nord, America del Sud, Oceania, Antartide." },
-    { q: "Chi viveva nelle caverne e scopriva il fuoco?", a: ["Gli uomini preistorici", "I Romani", "Gli Egizi", "I cavalieri"], c: 0, e: "Gli uomini della preistoria impararono a usare il fuoco." },
-    { q: "Qual è il monte più alto d'Italia?", a: ["Etna", "Monte Bianco", "Vesuvio", "Cervino"], c: 1, e: "Il Monte Bianco supera i 4800 metri." },
-    { q: "Il mare che bagna Venezia è…", a: ["Tirreno", "Ligure", "Adriatico", "Ionio"], c: 2, e: "Venezia si affaccia sul mare Adriatico." },
-    { q: "In quale città c'è il Colosseo?", a: ["Firenze", "Roma", "Pisa", "Verona"], c: 1, e: "Il Colosseo fu costruito dagli antichi Romani a Roma." }
-  ]
+// ===== Domande =====
+// Formato: { q, a: [4 risposte], c: indice giusta (0 = prima), e: spiegazione }
+// Le risposte vengono mescolate quando la domanda viene mostrata.
+// La matematica è generata dal programma (infinita) in base alla classe.
+
+const QBANK = {
+  italiano: {
+    // 1ª–2ª elementare
+    A: [
+      { q: "Quale parola comincia con la sillaba «SO»?", a: ["Sole", "Luna", "Mare", "Pane"], c: 0, e: "SO-le comincia proprio con SO." },
+      { q: "Quante sillabe ha la parola «farfalla»?", a: ["2", "3", "4", "5"], c: 1, e: "Far-fal-la: tre colpi di tamburo, quindi 3 sillabe." },
+      { q: "Qual è il plurale di «gatto»?", a: ["Gatti", "Gatte", "Gatto", "Gattini"], c: 0, e: "Un gatto, tanti gatti." },
+      { q: "Quale parola è scritta bene?", a: ["Scuola", "Squola", "Scola", "Scuolla"], c: 0, e: "Si scrive SCUOLA, con la C." },
+      { q: "Completa: «Il cane ___ nel giardino.»", a: ["corre", "correre", "corrono", "corsa"], c: 0, e: "Il cane è uno solo, quindi «corre»." },
+      { q: "Quale parola ha una lettera doppia?", a: ["Pizza", "Pane", "Sole", "Luna"], c: 0, e: "Pizza ha due Z: z-z." }
+    ],
+    // 3ª–5ª elementare
+    B: [
+      { q: "Qual è il contrario di «generoso»?", a: ["Avaro", "Gentile", "Ricco", "Forte"], c: 0, e: "Chi è generoso dona, chi è avaro tiene tutto per sé." },
+      { q: "Quale parola è un aggettivo?", a: ["Veloce", "Correre", "Tavolo", "Ieri"], c: 0, e: "«Veloce» dice com'è qualcosa: è un aggettivo." },
+      { q: "Nella frase «Luca mangia una mela», chi è il soggetto?", a: ["Luca", "Mangia", "Mela", "Una"], c: 0, e: "Il soggetto è chi compie l'azione: Luca." },
+      { q: "Quale verbo racconta qualcosa già successo?", a: ["Ho mangiato", "Mangerò", "Mangio", "Mangiando"], c: 0, e: "«Ho mangiato» è passato." },
+      { q: "Quale si scrive correttamente?", a: ["Un'amica", "Un'amico", "Un'zaino", "Un'albero"], c: 0, e: "Davanti a un nome femminile si usa un'. Per «amico» e «albero» basta un." },
+      { q: "Quale parola è un nome proprio?", a: ["Roma", "Città", "Fiume", "Montagna"], c: 0, e: "I nomi propri indicano qualcuno o qualcosa di unico e hanno la maiuscola." }
+    ],
+    // medie
+    C: [
+      { q: "Quale di queste è una congiunzione?", a: ["Perché", "Sotto", "Bello", "Correre"], c: 0, e: "«Perché» unisce due frasi." },
+      { q: "In «Il cane di Marco abbaia forte», «di Marco» è un complemento di…", a: ["Specificazione", "Luogo", "Tempo", "Mezzo"], c: 0, e: "Dice a chi appartiene il cane: specificazione." },
+      { q: "Chi ha scritto «I promessi sposi»?", a: ["Alessandro Manzoni", "Dante Alighieri", "Giovanni Pascoli", "Italo Calvino"], c: 0, e: "Lo scrisse Alessandro Manzoni nell'Ottocento." },
+      { q: "Che modo verbale è «venissi» in «Se venissi, sarei felice»?", a: ["Congiuntivo", "Indicativo", "Imperativo", "Infinito"], c: 0, e: "«Venissi» è congiuntivo imperfetto." },
+      { q: "Quale figura retorica c'è in «Sei una roccia»?", a: ["Metafora", "Similitudine", "Onomatopea", "Iperbole"], c: 0, e: "Non c'è «come»: è una metafora." },
+      { q: "In «Maria è più alta di Luca» l'aggettivo è di grado…", a: ["Comparativo di maggioranza", "Superlativo assoluto", "Positivo", "Superlativo relativo"], c: 0, e: "Si confrontano due persone con «più … di»." }
+    ]
+  }
 };
 
-// Aspetto delle materie: nome, icona FontAwesome, colore
-const SUBJECT_META = {
-  matematica: { label: "Matematica", icon: "fa-calculator", color: "#3b82f6" },
-  italiano:   { label: "Italiano",   icon: "fa-book",       color: "#10b981" },
-  inglese:    { label: "Inglese",    icon: "fa-language",   color: "#a855f7" },
-  storia_geo: { label: "Storia/Geo", icon: "fa-globe",      color: "#f59e0b" }
-};
+const Questions = (() => {
+  const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+  const pick = arr => arr[rnd(0, arr.length - 1)];
+
+  function shuffleWithAnswer(q) {
+    const items = q.a.map((t, i) => ({ t, ok: i === q.c }));
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = rnd(0, i);
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    return { q: q.q, a: items.map(x => x.t), c: items.findIndex(x => x.ok), e: q.e || "" };
+  }
+
+  // 4 risposte numeriche diverse tra loro, vicine alla giusta
+  function numericOptions(correct, spread) {
+    const set = new Set([correct]);
+    let guard = 0;
+    while (set.size < 4 && guard++ < 200) {
+      const d = rnd(1, spread) * (Math.random() < 0.5 ? -1 : 1);
+      const v = correct + d;
+      if (v >= 0) set.add(v);
+    }
+    let extra = 1;
+    while (set.size < 4) set.add(correct + extra++);
+    return [...set].map(String);
+  }
+
+  function build(q, correct, spread, expl) {
+    const opts = numericOptions(correct, spread);
+    return shuffleWithAnswer({ q, a: [String(correct), ...opts.filter(o => o !== String(correct))].slice(0, 4), c: 0, e: expl });
+  }
+
+  // ---------- matematica generata per classe ----------
+  function math(classId) {
+    switch (classId) {
+      case 0: { // 1ª el.: fino a 20
+        if (Math.random() < 0.5) {
+          const a = rnd(1, 9), b = rnd(1, 10);
+          return build(`Quanto fa ${a} + ${b}?`, a + b, 3, `${a} più ${b} fa ${a + b}.`);
+        }
+        const a = rnd(6, 18), b = rnd(1, 5);
+        return build(`Hai ${a} biglie e ne regali ${b}. Quante ne restano?`, a - b, 3, `${a} meno ${b} fa ${a - b}.`);
+      }
+      case 1: { // 2ª el.: fino a 100, tabelline 2-5-10
+        const r = Math.random();
+        if (r < 0.34) { const a = rnd(11, 59), b = rnd(10, 40); return build(`Quanto fa ${a} + ${b}?`, a + b, 10, `${a} più ${b} fa ${a + b}.`); }
+        if (r < 0.67) { const a = rnd(40, 99), b = rnd(10, 39); return build(`Quanto fa ${a} − ${b}?`, a - b, 10, `${a} meno ${b} fa ${a - b}.`); }
+        const t = pick([2, 5, 10]), n = rnd(2, 10);
+        return build(`Quanto fa ${t} × ${n}?`, t * n, 6, `${t} per ${n} fa ${t * n}.`);
+      }
+      case 2: { // 3ª el.: tabelline complete, divisioni
+        const r = Math.random();
+        if (r < 0.5) { const a = rnd(2, 10), b = rnd(2, 10); return build(`Quanto fa ${a} × ${b}?`, a * b, 8, `${a} per ${b} fa ${a * b}.`); }
+        if (r < 0.8) { const b = rnd(2, 9), x = rnd(2, 10); return build(`Quanto fa ${b * x} : ${b}?`, x, 3, `${x} per ${b} fa ${b * x}, quindi ${b * x} diviso ${b} fa ${x}.`); }
+        const a = rnd(120, 480), b = rnd(100, 390); return build(`Quanto fa ${a} + ${b}?`, a + b, 20, `${a} più ${b} fa ${a + b}.`);
+      }
+      case 3: { // 4ª el.: moltiplicazioni a più cifre, frazioni di quantità, perimetro
+        const r = Math.random();
+        if (r < 0.34) { const a = rnd(12, 48), b = rnd(2, 9); return build(`Quanto fa ${a} × ${b}?`, a * b, 12, `${a} per ${b} fa ${a * b}.`); }
+        if (r < 0.67) { const d = pick([2, 3, 4, 5]), n = rnd(2, 8) * d; return build(`Quanto è 1/${d} di ${n}?`, n / d, 3, `Si divide ${n} in ${d} parti uguali: ogni parte è ${n / d}.`); }
+        const l = rnd(3, 12), h = rnd(2, 9); return build(`Un rettangolo ha i lati di ${l} cm e ${h} cm. Quanto misura il perimetro?`, 2 * (l + h), 4, `Perimetro = 2 × (${l} + ${h}) = ${2 * (l + h)} cm.`);
+      }
+      case 4: { // 5ª el.: area, percentuali semplici
+        const r = Math.random();
+        if (r < 0.4) { const l = rnd(3, 15), h = rnd(2, 12); return build(`Quanto misura l'area di un rettangolo di ${l} cm per ${h} cm?`, l * h, 8, `Area = base × altezza = ${l} × ${h} = ${l * h} cm².`); }
+        if (r < 0.75) { const p = pick([10, 50, 25]), n = rnd(2, 10) * 20; const v = n * p / 100; return build(`Quanto è il ${p}% di ${n}?`, v, Math.max(3, Math.round(v / 4)), `Il ${p}% di ${n} è ${v}.`); }
+        const a = rnd(130, 890), b = rnd(130, 890); return build(`Quanto fa ${a} + ${b}?`, a + b, 30, `${a} più ${b} fa ${a + b}.`);
+      }
+      case 5: { // 1ª media: potenze, MCD/mcm, multipli
+        const r = Math.random();
+        if (r < 0.34) { const b = rnd(2, 9), e = pick([2, 3]); return build(`Quanto fa ${b} elevato alla ${e === 2 ? "seconda" : "terza"} (${b}^${e})?`, Math.pow(b, e), Math.max(3, b), `${b}^${e} = ${Array(e).fill(b).join(" × ")} = ${Math.pow(b, e)}.`); }
+        if (r < 0.67) { const g = pick([2, 3, 4, 5, 6]), a = g * pick([2, 3]), b = g * pick([5, 7]); return build(`Qual è il MCD (massimo comun divisore) di ${a} e ${b}?`, g, 2, `Il numero più grande che divide sia ${a} che ${b} è ${g}.`); }
+        const a = rnd(2, 6), b = rnd(7, 12); return build(`Quanto fa ${a * b} : ${a} + ${b}?`, b + b, 4, `${a * b} : ${a} = ${b}, poi ${b} + ${b} = ${b + b}.`);
+      }
+      case 6: { // 2ª media: numeri relativi, radici
+        const r = Math.random();
+        if (r < 0.5) {
+          const a = rnd(2, 12), b = rnd(2, 15), ans = -a + b;
+          const opts = [...new Set([ans, ans + 2, ans - 2, -ans, ans + 1, ans - 1].map(v => String(v).replace("-", "−")))];
+          const right = String(ans).replace("-", "−");
+          return shuffleWithAnswer({ q: `Quanto fa −${a} + ${b}?`, a: [right, ...opts.filter(o => o !== right)].slice(0, 4), c: 0, e: `Parti da −${a} e sali di ${b}: ottieni ${right}.` });
+        }
+        const x = rnd(3, 15); return build(`Quanto vale la radice quadrata di ${x * x}?`, x, 3, `${x} × ${x} = ${x * x}, quindi la radice è ${x}.`);
+      }
+      default: { // 3ª media: equazioni
+        const x = rnd(2, 14), a = rnd(2, 9), b = rnd(1, 20);
+        if (Math.random() < 0.5) return build(`Risolvi: x + ${b} = ${x + b}. Quanto vale x?`, x, 3, `x = ${x + b} − ${b} = ${x}.`);
+        return build(`Risolvi: ${a}x = ${a * x}. Quanto vale x?`, x, 3, `x = ${a * x} : ${a} = ${x}.`);
+      }
+    }
+  }
+
+  function italian(classId) {
+    const band = classId <= 1 ? "A" : classId <= 4 ? "B" : "C";
+    return shuffleWithAnswer(pick(QBANK.italiano[band]));
+  }
+
+  // Una domanda per la materia e la classe scelte
+  function next(subjectId, classId) {
+    if (subjectId === "matematica") return math(classId);
+    if (subjectId === "italiano") return italian(classId);
+    return null;
+  }
+
+  return { next };
+})();

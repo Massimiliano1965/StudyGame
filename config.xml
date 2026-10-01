@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="it.massi.studygame" version="1.0.0" xmlns="http://www.w3.org/ns/widgets">
-  <name>StudyGame</name>
-  <description>Guadagna tempo di gioco studiando.</description>
+<widget id="it.massi.studygame" version="2.0.0" xmlns="http://www.w3.org/ns/widgets">
+  <name>Studia e Gioca</name>
+  <description>Studia, gioca e guadagna tempo di telefono.</description>
   <content src="index.html" />
-  <access origin="*" />
+  <allow-intent href="market:*" />
   <preference name="Orientation" value="portrait" />
   <preference name="android-minSdkVersion" value="24" />
-  <preference name="StatusBarBackgroundColor" value="#ffffff" />
+  <preference name="BackgroundColor" value="0xFFBFE8FF" />
 </widget>
