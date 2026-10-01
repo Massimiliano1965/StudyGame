@@ -39,14 +39,10 @@ jobs:
       - name: Riepilogo errori
         if: failure()
         run: |
-          {
-            echo '### Errori della build'
-            echo '```'
-            grep -n -i -E "error|failed|went wrong|exception|cannot|not found|invalid" build.log | head -40
-            echo '--- ultime righe ---'
-            tail -n 40 build.log
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          E=$(grep -i -E "error|went wrong|failed|exception|cannot|not found|invalid" build.log | head -12 | tr '\n' '|' | tr -d '%' | cut -c1-1500)
+          echo "::error title=Errori build::$E"
+          T=$(tail -n 12 build.log | tr '\n' '|' | tr -d '%' | cut -c1-1500)
+          echo "::error title=Ultime righe::$T"
 
       - name: Carica APK
         uses: actions/upload-artifact@v4
