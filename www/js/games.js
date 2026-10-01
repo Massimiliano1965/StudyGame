@@ -580,8 +580,8 @@ const Games = (() => {
   const GAMES = {
     frase:      { subjects: ["italiano"], make: c => makeFrase(c) },
     operazione: { subjects: ["matematica"], make: c => makeOperazione(c) },
-    bersaglio:  { subjects: ["italiano", "matematica"], make: (c, s) => makeBersaglio(c, s) },
-    corsa:      { subjects: ["italiano", "matematica"], make: (c, s) => makeCorsa(c, s) },
+    bersaglio:  { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makeBersaglio(c, s) },
+    corsa:      { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makeCorsa(c, s) },
     incastro:   { subjects: ["italiano", "matematica", "inglese"], make: (c, s) => makeIncastro(c, s) }
   };
 
