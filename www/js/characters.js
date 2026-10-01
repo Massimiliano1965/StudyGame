@@ -15,9 +15,9 @@ const Characters = (() => {
   ];
 
   const FAMILIES = [
-    { id: "creatura",    name: "Creature fantasy",  pet: "Pufo" },
-    { id: "robot",       name: "Robot e spazio",    pet: "Bip" },
-    { id: "esploratore", name: "Hip hop",       pet: "Rudy" }
+    { id: "creatura",    name: "Creature fantasy",  pet: "Pufo", hi: "Ciao! Sono Pufo. Giochiamo insieme?" },
+    { id: "robot",       name: "Robot e spazio",    pet: "Bip",  hi: "Bip bip! Sono Bip. Sono pronto a giocare!" },
+    { id: "esploratore", name: "Hip hop",           pet: "Rudy", hi: "Hey Bro! Sono Rudy. Facciamo il botto!" }
   ];
 
   // ---------- utilità colore ----------

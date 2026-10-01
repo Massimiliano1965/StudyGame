@@ -582,3 +582,11 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 .rudy-say::after { content: ""; position: absolute; left: 14px; bottom: -11px; width: 12px; height: 12px; background: #fff; border-right: 3px solid #2B2D52; border-bottom: 3px solid #2B2D52; transform: rotate(45deg); }
 .hero.xs .rudy-say { font-size: 14px; padding: 2px 9px; top: -26px; }
 @keyframes rudySay { 0% { opacity: 0; transform: scale(.2) rotate(-8deg); } 12% { opacity: 1; transform: scale(1.15) rotate(3deg); } 22% { transform: scale(1) rotate(0); } 86% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(.9) translateY(-6px); } }
+
+/* presentazione dei compagni */
+.choice.family span { display: block; line-height: 1.15; }
+.choice.family b { display: block; font-size: 20px; }
+.choice.family small { display: block; font-size: 12px; font-weight: 600; opacity: .8; }
+.bubble.intro { animation: introPop .4s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes introPop { 0% { opacity: 0; transform: scale(.6); } 100% { opacity: 1; transform: scale(1); } }
+.bubble.intro::after { left: var(--tail, 50%); }

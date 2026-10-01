@@ -146,8 +146,9 @@
     } else if (s === 2) {
       const st = d.classId == null ? 0 : d.classId;
       body = `<div class="center"><h1>Scegli il tuo compagno</h1><p class="muted" style="margin-top:6px">Crescerà con te, classe dopo classe!</p></div>
+        ${wiz.say ? `<div id="intro" class="bubble intro" style="--tail:${[17, 50, 83][Math.max(0, Characters.FAMILIES.findIndex(f => f.id === d.family))]}%">${esc(wiz.say)}</div>` : ""}
         <div class="grid2" style="grid-template-columns:repeat(3,1fr);gap:10px">${Characters.FAMILIES.map(f =>
-          `<button class="choice family ${d.family === f.id ? "sel" : ""}" data-act="family" data-id="${f.id}" aria-label="${f.name}">${Characters.svg({ family: f.id, color: d.color, stage: st, mood: "happy" })}<span>${f.name}</span></button>`).join("")}</div>
+          `<button class="choice family ${d.family === f.id ? "sel" : ""}" data-act="family" data-id="${f.id}" aria-label="${f.name}">${Characters.svg({ family: f.id, color: d.color, stage: st, mood: "happy" })}<span><b>${f.pet}</b><small>${f.name}</small></span></button>`).join("")}</div>
         <div class="colors" role="group" aria-label="Colore">${Characters.COLORS.map(c =>
           `<button class="dot ${d.color === c.hex ? "sel" : ""}" data-act="color" data-hex="${c.hex}" style="background:${c.hex}" aria-label="${c.name}"></button>`).join("")}</div>`;
     } else {
@@ -249,7 +250,7 @@
         <button class="icon-btn" data-act="settings" aria-label="Impostazioni">⚙️</button>
       </div>
       <div class="bubble">${esc(pick(GREET[th]))}</div>
-      <div id="hero" class="hero">${charSvg(p, "happy")}</div>
+      <div id="hero" class="hero" data-act="intro">${charSvg(p, "happy")}</div>
       <div class="card time">
         <div class="row"><h3>Tempo di telefono</h3><span class="muted">oggi</span></div>
         <div class="row"><span class="num">${esc(Credit.format(min))}</span></div>
@@ -536,6 +537,19 @@
     hero.appendChild(b);
     setTimeout(() => { if (b.parentNode) b.remove(); }, 2700);
   }
+  function heroIntro(hero) {
+    const f = profile && Characters.FAMILIES.find(x => x.id === profile.family);
+    if (!f) return;
+    const greet = document.querySelector(".bubble:not(.intro)");
+    if (greet) {
+      if (!greet.dataset.old) greet.dataset.old = greet.textContent;
+      greet.textContent = f.hi;
+      greet.classList.remove("intro"); void greet.offsetWidth; greet.classList.add("intro");
+      clearTimeout(heroIntro.t);
+      heroIntro.t = setTimeout(() => { greet.textContent = greet.dataset.old; delete greet.dataset.old; greet.classList.remove("intro"); }, 4500);
+    }
+    Voice.speak(f.hi);
+  }
   setInterval(() => {
     if (document.hidden) return;
     const h = document.getElementById("hero");
@@ -770,7 +784,17 @@
   const actions = {
     // creazione profilo
     class: el => { wiz.d.classId = +el.dataset.id; setTheme(wiz.d.classId); renderWizard(); },
-    family: el => { wiz.d.family = el.dataset.id; renderWizard(); },
+    family: el => {
+      wiz.d.family = el.dataset.id;
+      const f = Characters.FAMILIES.find(x => x.id === wiz.d.family);
+      wiz.say = f ? f.hi : "";
+      clearTimeout(wiz.sayT);
+      wiz.sayT = setTimeout(() => { if (wiz) wiz.say = ""; const i = document.getElementById("intro"); if (i) i.remove(); }, 4500);
+      renderWizard();
+      if (f) Voice.speak(f.hi);
+    },
+    // tocco sul personaggio in home: si presenta
+    intro: el => heroIntro(el),
     color: el => { wiz.d.color = el.dataset.hex; renderWizard(); },
     nophoto: () => { wiz.d.photo = null; renderWizard(); },
     back: () => { wiz.step = Math.max(0, wiz.step - 1); renderWizard(); },
