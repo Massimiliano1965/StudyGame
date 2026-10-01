@@ -31,7 +31,7 @@ jobs:
         run: cordova platform add android@13.0.0
 
       - name: Aggiungi plugin voce e microfono
-        run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 cordova-plugin-speechrecognition@1.2.0
+        run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 ./plugins-local/speechrecognition
 
       - name: Build APK
         run: cordova build android --debug
