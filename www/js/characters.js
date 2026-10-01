@@ -1,5 +1,5 @@
 // ===== Personaggi originali disegnati in SVG =====
-// Tre famiglie: creatura fantasy, robot, esploratore (volpe).
+// Tre famiglie: creatura fantasy, robot, hip hop (volpe).
 // Ogni personaggio cresce con la classe: stage = 0..7 (1ª elementare ... 3ª media).
 // Nessun personaggio esistente è usato come modello.
 const Characters = (() => {
@@ -17,7 +17,7 @@ const Characters = (() => {
   const FAMILIES = [
     { id: "creatura",    name: "Creature fantasy",  pet: "Pufo" },
     { id: "robot",       name: "Robot e spazio",    pet: "Bip" },
-    { id: "esploratore", name: "Esploratori",       pet: "Rudy" }
+    { id: "esploratore", name: "Hip hop",       pet: "Rudy" }
   ];
 
   // ---------- utilità colore ----------
@@ -251,78 +251,42 @@ const Characters = (() => {
     return s;
   }
 
-  // ---------- 3) Esploratore: la volpe Rudy ----------
+  // ---------- 3) Hip hop: la volpe Rudy (cuffie, cappellino di traverso, jeans larghissimi) ----------
   function esploratore(c, st, mood, sty) {
-    const hard = sty !== "kawaii", teen = sty === "teen";
-    const d = shade(c, -0.22), l = shade(c, 0.55);
-    const khaki = "#D9B26F", khakiD = "#B88A44";
+    const hard = sty !== "kawaii";
+    const d = shade(c, -0.22);
     let s = "";
     // coda
     s += `<path d="M138 164 C186 168 200 120 176 100 C176 128 154 142 134 146 Z" fill="${c}"/>` +
          `<path d="M176 100 C170 108 170 116 176 124 C190 116 190 106 176 100 Z" fill="#fff"/>`;
-    // zaino
-    if (st >= 1) s += `<rect x="124" y="118" width="34" height="48" rx="12" fill="#3D7BFF"/><rect x="130" y="130" width="22" height="14" rx="5" fill="#2F62CC"/>`;
-    // gambe e corpo
-    s += `<ellipse cx="80" cy="176" rx="17" ry="9" fill="${d}"/><ellipse cx="120" cy="176" rx="17" ry="9" fill="${d}"/>`;
-    s += `<ellipse cx="100" cy="144" rx="42" ry="38" fill="${c}"/>`;
-    s += `<ellipse cx="100" cy="152" rx="26" ry="26" fill="#FFF3DD"/>`;
-    // felpa (medie)
-    if (teen) {
-      s += `<path d="M58 128 Q100 112 142 128 L148 172 Q100 188 52 172 Z" fill="${HOOD}"/>` +
-           `<path d="M92 124 L90 150 M108 124 L110 150" stroke="${LIME}" stroke-width="3.5" stroke-linecap="round"/>` +
-           `<rect x="78" y="156" width="44" height="14" rx="6" fill="${HOOD2}"/>`;
-    }
-    // gilet
-    if (st >= 6 && !teen) {
-      s += `<path d="M62 132 Q70 176 96 180 L96 120 Z" fill="${khaki}" stroke="${khakiD}" stroke-width="2.5"/>` +
-           `<path d="M138 132 Q130 176 104 180 L104 120 Z" fill="${khaki}" stroke="${khakiD}" stroke-width="2.5"/>` +
-           `<circle cx="92" cy="150" r="2.6" fill="${khakiD}"/><circle cx="108" cy="150" r="2.6" fill="${khakiD}"/>`;
-    }
-    // braccia
-    const arm = teen ? HOOD : d;
-    s += `<ellipse cx="60" cy="146" rx="9" ry="17" transform="rotate(16 60 146)" fill="${arm}"/>` +
-         `<ellipse cx="140" cy="146" rx="9" ry="17" transform="rotate(-16 140 146)" fill="${arm}"/>`;
-    if (hard) s += sneaker(80, 177, c) + sneaker(120, 177, c);
-    // mappa in mano
-    if (st >= 4) {
-      s += `<g transform="rotate(-18 150 152)"><rect x="140" y="132" width="18" height="34" rx="4" fill="#FFF3DD" stroke="${khakiD}" stroke-width="2.5"/>` +
-           `<path d="M144 142 L154 146 M144 152 L154 150 M146 160 L152 158" stroke="#FF5C8A" stroke-width="2.4" stroke-linecap="round"/></g>`;
-    }
-    // sciarpa
-    if (st >= 2 && !hard) s += `<path d="M66 124 Q100 144 134 124 L132 112 Q100 130 68 112 Z" fill="#FF5C8A"/>`;
-    // binocolo
-    if (st >= 3 && !teen) {
-      s += `<rect x="80" y="134" width="40" height="8" rx="3" fill="${NAVY}" opacity=".0"/>` +
-           `<circle cx="88" cy="146" r="9" fill="#5B5F97"/><circle cx="112" cy="146" r="9" fill="#5B5F97"/>` +
-           `<rect x="92" y="142" width="16" height="8" rx="3" fill="#5B5F97"/><circle cx="88" cy="146" r="4.5" fill="#BDEBFF"/><circle cx="112" cy="146" r="4.5" fill="#BDEBFF"/>`;
-    }
-    // medaglia bussola
-    if (st >= 7) s += `<circle cx="100" cy="164" r="9" fill="#FFD23F" stroke="#E0A800" stroke-width="2.5"/><path d="M100 157 L103 164 L100 171 L97 164 Z" fill="#FF5C8A"/>`;
+    // maglia larga gialla + catena d'oro
+    s += `<path d="M54 124 Q100 108 146 124 L152 160 Q100 170 48 160 Z" fill="#FFD23F" stroke="${NAVY}" stroke-width="3" stroke-linejoin="round"/>`;
+    s += `<path d="M80 122 Q100 146 120 122" fill="none" stroke="#E0A800" stroke-width="4" stroke-linecap="round"/><circle cx="100" cy="142" r="7" fill="#FFD23F" stroke="#E0A800" stroke-width="2.5"/>`;
+    // braccio sinistro giù, destro che saluta
+    s += `<ellipse cx="54" cy="146" rx="9" ry="17" transform="rotate(16 54 146)" fill="${d}"/>`;
+    s += `<path d="M144 130 Q172 126 176 96" fill="none" stroke="${d}" stroke-width="16" stroke-linecap="round"/><circle cx="176" cy="90" r="10" fill="${c}"/>`;
+    // boxer in vista + jeans larghissimi a vita bassa, orlo sulle scarpe
+    s += `<rect x="50" y="152" width="100" height="10" rx="4" fill="#FF5C8A" stroke="${NAVY}" stroke-width="2.5"/>`;
+    s += `<path d="M48 160 Q32 172 22 184 L98 184 L100 172 Z" fill="#3D7BFF" stroke="${NAVY}" stroke-width="3" stroke-linejoin="round"/>` +
+         `<path d="M152 160 Q168 172 178 184 L102 184 L100 172 Z" fill="#3D7BFF" stroke="${NAVY}" stroke-width="3" stroke-linejoin="round"/>` +
+         `<path d="M44 174 Q62 182 86 174" fill="none" stroke="#2F62CC" stroke-width="3"/><path d="M114 174 Q138 182 156 174" fill="none" stroke="#2F62CC" stroke-width="3"/>`;
+    s += `<g transform="translate(-14 0)">` + sneaker(80, 180, c) + `</g><g transform="translate(14 0)">` + sneaker(120, 180, c) + `</g>`;
     // orecchie
     s += `<path d="M58 70 L56 28 L86 52 Z" fill="${c}"/><path d="M64 62 L63 40 L78 54 Z" fill="${NAVY}" opacity=".85"/>` +
          `<path d="M142 70 L144 28 L114 52 Z" fill="${c}"/><path d="M136 62 L137 40 L122 54 Z" fill="${NAVY}" opacity=".85"/>`;
-    // testa
+    // testa con musetto piccolo
     s += `<ellipse cx="100" cy="88" rx="52" ry="44" fill="${c}"/>`;
-    s += `<path d="M48 100 Q60 134 100 134 Q140 134 152 100 Q130 112 100 112 Q70 112 48 100 Z" fill="#fff"/>`;
-    s += eyes(80, 120, 88, 10.5, mood, sty) + cheeks(66, 134, 108, 7, sty);
+    s += `<ellipse cx="100" cy="110" rx="22" ry="14" fill="#FFF3DD"/>`;
+    s += eyes(80, 120, 88, 10.5, mood, sty);
+    if (!hard) s += cheeks(66, 134, 108, 7, sty);
     s += `<ellipse cx="100" cy="102" rx="7" ry="5" fill="${NAVY}"/>`;
     s += mouth(100, 114, mood, 8, sty);
-    // cappello
-    if (teen) {
-      s += `<path d="M58 68 Q58 28 100 26 Q142 28 142 68 Z" fill="${HOOD}" stroke="${NAVY}" stroke-width="3" stroke-linejoin="round"/>` +
-           `<path d="M58 62 Q100 72 142 62" fill="none" stroke="${LIME}" stroke-width="4.5"/>` +
-           `<path d="M120 64 Q154 56 172 70 Q146 80 120 72 Z" fill="${HOOD2}" stroke="${NAVY}" stroke-width="3" stroke-linejoin="round"/>` +
-           `<circle cx="100" cy="27" r="4.5" fill="${LIME}"/>`;
-    } else if (st < 5) {
-      s += `<path d="M58 62 Q100 22 142 62 Q100 54 58 62 Z" fill="${khaki}" stroke="${khakiD}" stroke-width="2.5" stroke-linejoin="round"/>` +
-           `<path d="M54 64 Q100 72 146 64 Q100 56 54 64 Z" fill="${khakiD}"/>`;
-    } else {
-      s += `<ellipse cx="100" cy="62" rx="62" ry="12" fill="${khaki}" stroke="${khakiD}" stroke-width="2.5"/>` +
-           `<path d="M66 60 Q68 24 100 22 Q132 24 134 60 Z" fill="${khaki}" stroke="${khakiD}" stroke-width="2.5" stroke-linejoin="round"/>` +
-           `<rect x="67" y="46" width="66" height="9" fill="#FF5C8A"/>` +
-           `<path d="M128 44 Q150 20 164 28 Q152 46 132 52 Z" fill="#3DDC97" stroke="#2A9E6B" stroke-width="2"/>`;
-    }
-    if (hard) s += headphones(c, 0, 52, 4, 88);
+    // cuffie stereo
+    s += headphones(c, 0, 52, 4, 88);
+    // cappellino di traverso
+    s += `<g transform="rotate(-24 100 52)"><path d="M62 62 Q62 24 100 22 Q138 24 138 62 Z" fill="#FF5C8A" stroke="${NAVY}" stroke-width="3" stroke-linejoin="round"/>` +
+         `<path d="M126 56 Q166 50 178 64 Q150 74 126 68 Z" fill="#C93F6C" stroke="${NAVY}" stroke-width="3" stroke-linejoin="round"/>` +
+         `<circle cx="100" cy="24" r="4" fill="#FFD23F"/></g>`;
     if (st >= 7) s += star(22, 60, 8, "#FFD23F") + star(180, 50, 7, "#FFD23F");
     return s;
   }

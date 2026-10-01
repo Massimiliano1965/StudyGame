@@ -522,9 +522,33 @@
     }
   }
 
+  // Rudy (famiglia hip hop): ogni tanto dice una frase in un fumetto animato
+  const SAY = {
+    ok: ["Bella Zio!", "Bro!", "Fra'!", "Hey Bro!", "Che figata!", "Sei un mito!", "Top, Bro!", "Spacchi!", "Daje!", "Tosto!", "Fico!", "Gallo!"],
+    no: ["Tranqui, Bro!", "Fra', riprova!", "Zero stress!", "Dai Bro!", "Capita, Fra'!"],
+    idle: ["Hey Bro!", "Fra'!", "Bro!", "Bella Zio!", "Si gioca?", "Andiamo, Fra'!"]
+  };
+  function heroSay(hero, kind) {
+    if (!hero || !profile || profile.family !== "esploratore") return;
+    hero.querySelectorAll(".rudy-say").forEach(n => n.remove());
+    const b = document.createElement("span");
+    b.className = "rudy-say"; b.setAttribute("aria-hidden", "true"); b.textContent = pick(SAY[kind]);
+    hero.appendChild(b);
+    setTimeout(() => { if (b.parentNode) b.remove(); }, 2700);
+  }
+  setInterval(() => {
+    if (document.hidden) return;
+    const h = document.getElementById("hero");
+    if (!h || h.classList.contains("squash") || h.classList.contains("dance") || document.querySelector(".bubble")) return;   // in home c'è già il saluto
+    const r = h.getBoundingClientRect();
+    if (r.bottom < 40 || r.top > innerHeight - 40) return;
+    if (Math.random() < 0.5) heroSay(h, "idle");
+  }, 16000);
+
   function afterResult(ok) {
     const hero = document.getElementById("hero");
     if (hero) animateHero(hero, ok);
+    if (hero && Math.random() < (ok ? 0.45 : 0.6)) heroSay(hero, ok ? "ok" : "no");
     if (ok) { Sfx.ok(); sparks(hero); } else { Sfx.no(); }
     window.scrollTo(0, document.body.scrollHeight);
     // se scorrendo in basso l'omino è uscito dallo schermo, la sua reazione appare un attimo al centro (non blocca i tocchi)
@@ -545,6 +569,7 @@
     fx.innerHTML = charSvg(profile, game.mood || (ok ? "cheer" : "happy"));
     document.body.appendChild(fx);
     animateHero(fx, ok);
+    if (Math.random() < 0.45) heroSay(fx, ok ? "ok" : "no");
     if (ok) sparks(fx);
     setTimeout(() => { if (fx.parentNode) fx.remove(); }, 2800);
   }

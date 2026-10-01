@@ -262,7 +262,7 @@ body[data-theme="teen"] .ans.right .shape::before, body[data-theme="teen"] .ans.
 @keyframes fly { 0% { opacity: 1; transform: translate(0, 0) scale(.6); } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.3) rotate(120deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero, .hop, .shake, .spark, .hero .char, .tear, .cry, .hat, .glove { animation: none !important; }
+  .hero, .hop, .shake, .spark, .hero .char, .tear, .cry, .hat, .glove, .rudy-say { animation: none !important; }
 }
 @media (max-width: 340px) { body { font-size: 16px; } .qtext { font-size: 21px; } }
 
@@ -576,3 +576,9 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 .lock-ok { margin: 0; font-weight: 700; }
 .adult-in { width: 100%; box-sizing: border-box; min-height: 52px; font-size: 22px; text-align: center; border: 3px solid var(--edge); border-radius: 14px; background: var(--card-soft); color: var(--ink); }
 .btn:disabled { opacity: .5; }
+
+/* fumetto di Rudy */
+.rudy-say { position: absolute; left: 56%; top: -30px; z-index: 5; background: #fff; color: #2B2D52; border: 3px solid #2B2D52; border-radius: 16px; padding: 3px 12px; font: 700 18px/1.25 "Fredoka", system-ui, sans-serif; white-space: nowrap; transform-origin: 18% 100%; animation: rudySay 2.7s ease both; pointer-events: none; }
+.rudy-say::after { content: ""; position: absolute; left: 14px; bottom: -11px; width: 12px; height: 12px; background: #fff; border-right: 3px solid #2B2D52; border-bottom: 3px solid #2B2D52; transform: rotate(45deg); }
+.hero.xs .rudy-say { font-size: 14px; padding: 2px 9px; top: -26px; }
+@keyframes rudySay { 0% { opacity: 0; transform: scale(.2) rotate(-8deg); } 12% { opacity: 1; transform: scale(1.15) rotate(3deg); } 22% { transform: scale(1) rotate(0); } 86% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(.9) translateY(-6px); } }
