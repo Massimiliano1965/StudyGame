@@ -44,10 +44,10 @@
   })();
 
   // ---------- utilità interfaccia ----------
-  function toast(msg) {
+  function toast(msg, ms) {
     $toast.textContent = msg; $toast.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { $toast.hidden = true; }, 2600);
+    toastTimer = setTimeout(() => { $toast.hidden = true; }, ms || 2600);
   }
 
   function charSvg(p, mood, viewBox) {
@@ -173,7 +173,7 @@
   function finishWizard() {
     const d = wiz.d;
     profile = { nick: d.nick.trim(), classId: d.classId, family: d.family, color: d.color, photo: d.photo || null,
-      autoRead: wiz.editing ? !!d.autoRead : d.classId <= 1,
+      autoRead: wiz.editing ? !!d.autoRead : true,
       sound: d.sound !== false };
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
     wiz = null;
@@ -255,7 +255,7 @@
     const q = game.q;
     const ord = ["Prima", "Seconda", "Terza", "Quarta"];
     const txt = toSpeech(q.q) + ". " + q.a.map((a, i) => `${ord[i]}: ${toSpeech(a)}.`).join(" ");
-    Voice.speak(txt);
+    Voice.speak(txt, msg => toast(msg, 6000));
   }
 
   function renderGame() {

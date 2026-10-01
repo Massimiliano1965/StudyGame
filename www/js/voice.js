@@ -83,12 +83,18 @@ const Voice = (() => {
   const hasSynth = () => !!(window.TTS || window.speechSynthesis);
   const canSpeak = hasSynth;
 
-  function speak(text) {
+  // onFail(messaggio) viene chiamata se la voce non parte, così l'app può avvisare
+  function speak(text, onFail) {
+    const fail = (why) => {
+      if (!onFail) return;
+      const detail = why ? " (" + String(why && why.message || why).slice(0, 80) + ")" : "";
+      onFail("La voce non parte: controlla che il telefono abbia la sintesi vocale con l'italiano." + detail);
+    };
     return new Promise(resolve => {
       try {
         if (window.TTS) {
           const r = window.TTS.speak({ text, locale: LANG, rate: 0.95 });
-          if (r && r.then) r.then(() => resolve(), () => resolve()); else resolve();
+          if (r && r.then) r.then(() => resolve(), err => { fail(err); resolve(); }); else resolve();
           return;
         }
         if (window.speechSynthesis) {
@@ -97,11 +103,12 @@ const Voice = (() => {
           u.lang = LANG; u.rate = 0.92; u.pitch = 1.1;
           const v = (window.speechSynthesis.getVoices() || []).find(x => /^it/i.test(x.lang));
           if (v) u.voice = v;
-          u.onend = () => resolve(); u.onerror = () => resolve();
+          u.onend = () => resolve();
+          u.onerror = e => { fail(e && e.error); resolve(); };
           window.speechSynthesis.speak(u);
           return;
         }
-      } catch (e) {}
+      } catch (e) { fail(e); }
       resolve();
     });
   }
