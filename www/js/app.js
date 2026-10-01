@@ -257,7 +257,7 @@
   function nextQuestion() {
     Games.stop();
     game.sid = pick(game.subjects);
-    game.round = Games.pick(game.sid, profile.classId, game.lastKind, CONFIG.GAME_SHARE);
+    game.round = Games.pick(game.sid, profile.classId, game.lastKind, themeFor(profile.classId) === "piccoli" ? CONFIG.GAME_SHARE_SMALL : CONFIG.GAME_SHARE);
     game.lastKind = game.round ? game.round.kind : "quiz";
     game.q = game.round ? null : Questions.next(game.sid, profile.classId);
     game.answered = false; game.chosen = -1; game.mood = "happy"; game.fb = null; game.listening = false;
