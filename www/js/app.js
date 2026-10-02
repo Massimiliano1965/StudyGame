@@ -63,7 +63,19 @@
 
   // Voce OFF = non parla niente, in nessuna schermata, finché non si riaccende dal pulsante in cima
   const _speak = Voice.speak;
-  Voice.speak = function (...a) { if (profile && !profile.autoRead) return; return _speak.apply(Voice, a); };
+  // Tono per personaggio, da piccolo a grandicello: Pufo (acuto) → Bip → Rudy (più grave). f = femmina, m = maschio.
+  const VOICE_TONES = {
+    creatura:    { f: { pitch: 1.5, rate: 1.0 },  m: { pitch: 1.3, rate: 1.0 } },
+    robot:       { f: { pitch: 1.25, rate: 0.97 }, m: { pitch: 1.08, rate: 0.97 } },
+    esploratore: { f: { pitch: 1.05, rate: 0.95 }, m: { pitch: 0.88, rate: 0.95 } }
+  };
+  function applyVoiceStyle() {
+    const g = profile && profile.voiceG === "m" ? "m" : "f";
+    const fam = profile ? profile.family : (typeof wiz !== "undefined" && wiz && wiz.d && wiz.d.family);
+    const t = (VOICE_TONES[fam] || VOICE_TONES.creatura)[g];
+    Voice.setStyle({ ...t, g });
+  }
+  Voice.speak = function (...a) { if (profile && !profile.autoRead) return; applyVoiceStyle(); return _speak.apply(Voice, a); };
 
   Music.init(() => !!profile && profile.music !== false);
   const JINGLE_GAP = 90000;   // dentro una sfida con tante materie, uno stacchetto al massimo ogni 90 secondi
@@ -831,6 +843,7 @@
       <button class="btn alt" data-act="edit">✏️ Cambia nome o classe</button>
       <button class="btn alt" data-act="editphoto">📷 Cambia foto</button>
       <div class="row-set l2-set"><span class="set-label">Seconda lingua</span><div class="l2-pick">${L2.codes().map(c => `<button class="switch ${(p.l2 || L2.DEFAULT) === c ? "on" : ""}" data-act="set-l2" data-id="${c}" aria-pressed="${(p.l2 || L2.DEFAULT) === c}"><span class="fl">${L2.LANGS[c].flag}</span><span>${L2.LANGS[c].name}</span></button>`).join("")}</div></div>
+      <div class="row-set voice-set"><span class="set-label">Voce di ${esc(((Characters.FAMILIES.find(f => f.id === p.family) || {}).pet) || "")}</span><div class="l2-pick"><button class="switch ${p.voiceG !== "m" ? "on" : ""}" data-act="set-voice" data-id="f" aria-pressed="${p.voiceG !== "m"}">👧 Femmina</button><button class="switch ${p.voiceG === "m" ? "on" : ""}" data-act="set-voice" data-id="m" aria-pressed="${p.voiceG === "m"}">👦 Maschio</button><button class="switch" data-act="test-voice">▶ Prova</button></div></div>
       <div class="row-set"><span>Suoni</span><button class="switch ${p.sound !== false ? "on" : ""}" data-act="toggle-sound" aria-pressed="${p.sound !== false}">${p.sound !== false ? "Sì" : "No"}</button></div>
       ${lockBoxHtml()}
       <button class="btn alt" data-act="report">📊 Resoconto per i genitori</button>
@@ -1032,6 +1045,8 @@
     "sel-all": () => { selected = subsNow(); Sfx.tap(); renderHome(); },
     "sel-none": () => { selected = []; Sfx.tap(); renderHome(); },
     info: () => openInfo(),
+    "set-voice": el => { profile.voiceG = el.dataset.id === "m" ? "m" : "f"; Storage.saveProfile(profile); openSettings(); applyVoiceStyle(); _speak.call(Voice, "Ciao! Questa è la mia voce.", msg => toast(msg, 6000)); },
+    "test-voice": () => { applyVoiceStyle(); const f = Characters.FAMILIES.find(x => x.id === profile.family); _speak.call(Voice, (f && f.hi) || "Ciao! Giochiamo insieme?", msg => toast(msg, 6000)); },
     "toggle-read": () => { profile.autoRead = !profile.autoRead; Storage.saveProfile(profile); refreshVoiceToggle(); openSettings(); },
     "voice-toggle": () => {
       profile.autoRead = !profile.autoRead; Storage.saveProfile(profile);

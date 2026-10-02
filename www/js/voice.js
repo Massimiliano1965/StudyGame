@@ -99,16 +99,24 @@ const Voice = (() => {
 
   // Il plugin sceglie da solo la prima voce della lingua, anche se è una voce "network"
   // che offline dà errore. Qui scelgo io una voce locale (se c'è) per ogni lingua.
+  // Stile della voce: tono (pitch), velocità e genere (f/m), scelti dal personaggio e dalle Impostazioni.
+  let STYLE = { pitch: 1, rate: 0.95, g: "f" };
+  const setStyle = s => { STYLE = { ...STYLE, ...s }; };
+  // Voci italiane di Google: ita/itd/ite sono femminili, itb/itc maschili (se non ci sono si usa la prima locale)
+  const GENDER_IDS = { f: ["-ita-", "-itd-", "-ite-"], m: ["-itb-", "-itc-"] };
   let voicesP = null;
   const voiceCache = {};
-  function pickVoice(loc) {
-    if (voiceCache[loc] !== undefined) return Promise.resolve(voiceCache[loc]);
+  function pickVoice(loc, g) {
+    const ck = loc + "|" + (g || "");
+    if (voiceCache[ck] !== undefined) return Promise.resolve(voiceCache[ck]);
     if (!voicesP) voicesP = window.TTS && window.TTS.getVoices ? window.TTS.getVoices().catch(() => []) : Promise.resolve([]);
     return voicesP.then(list => {
       const key = loc.toLowerCase();
       const names = (list || []).map(v => String(v && (v.identifier || v.name) || "")).filter(n => n.toLowerCase().includes(key));
-      const best = names.find(n => /local/i.test(n)) || names.find(n => !/network/i.test(n)) || "";
-      voiceCache[loc] = best;
+      const pref = g && loc.slice(0, 2) === "it" ? GENDER_IDS[g] : null;
+      const byGender = pref && (names.find(n => /local/i.test(n) && pref.some(k => n.toLowerCase().includes(k))) || names.find(n => pref.some(k => n.toLowerCase().includes(k)) && !/network/i.test(n)));
+      const best = byGender || names.find(n => /local/i.test(n)) || names.find(n => !/network/i.test(n)) || "";
+      voiceCache[ck] = best;
       return best;
     });
   }
@@ -149,8 +157,8 @@ const Voice = (() => {
           let failed = null;
           const say = async (s, i) => {
             const en = s.l === "en", loc = en ? LANG_EN : LANG;
-            const vid = await pickVoice(loc);
-            const opts = { text: s.t, locale: loc, rate: en ? 1.15 : 0.95 };
+            const vid = await pickVoice(loc, en ? "" : STYLE.g);
+            const opts = { text: s.t, locale: loc, rate: (en ? 1.15 : 0.95) * (STYLE.rate / 0.95), pitch: STYLE.pitch };
             if (vid) opts.identifier = vid;
             for (let k = 0; k < 3; k++) {
               if (my !== token) return;
@@ -178,7 +186,7 @@ const Voice = (() => {
           segs.forEach((s, i) => {
             const en = s.l === "en";
             const u = new SpeechSynthesisUtterance(s.t);
-            u.lang = en ? LANG_EN : LANG; u.rate = en ? 1.1 : 0.92; u.pitch = 1.1;
+            u.lang = en ? LANG_EN : LANG; u.rate = (en ? 1.1 : 0.92) * (STYLE.rate / 0.95); u.pitch = STYLE.pitch;
             const vc = en
               ? (voices.find(x => x.lang.replace("_", "-").toLowerCase() === LANG_EN.toLowerCase()) || voices.find(x => x.lang.toLowerCase().startsWith(LANG_EN.slice(0, 2).toLowerCase())))
               : voices.find(x => /^it/i.test(x.lang));
@@ -239,5 +247,5 @@ const Voice = (() => {
     });
   }
 
-  return { speak, stopSpeaking, isSpeaking, onState, listen, canSpeak, canListen, matchOption, numerify, setForeign };
+  return { speak, stopSpeaking, isSpeaking, onState, listen, canSpeak, canListen, matchOption, numerify, setForeign, setStyle };
 })();
