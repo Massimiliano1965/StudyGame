@@ -41,7 +41,20 @@ jobs:
       - name: Dedica personale (solo se indicata)
         env:
           DEDICA: ${{ inputs.dedica }}
-        run: node -e 'require("fs").writeFileSync("www/js/dedica.js", "const DEDICA = " + JSON.stringify(process.env.DEDICA || "") + ";\n")'
+        run: |
+          node -e '
+            const fs = require("fs"), d = process.env.DEDICA || "";
+            fs.writeFileSync("www/js/dedica.js", "const DEDICA = " + JSON.stringify(d) + ";\n");
+            if (d) {
+              // app separata: altro identificativo e nome, così sta sul telefono accanto a quella per tutti
+              const slug = d.toLowerCase().normalize("NFD").replace(/[^a-z0-9]/g, "") || "dedica";
+              const esc = d.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+              let x = fs.readFileSync("config.xml", "utf8");
+              x = x.replace("id=\"it.massi.studygame\"", "id=\"it.massi.studygame." + slug + "\"");
+              x = x.replace("<name>Gioca e Impara</name>", "<name>Gioca e Impara (" + esc + ")</name>");
+              fs.writeFileSync("config.xml", x);
+            }
+          '
 
       - name: Numero di versione che cresce a ogni build
         run: sed -i "s/<widget /<widget android-versionCode=\"$((100000 + ${{ github.run_number }}))\" /" config.xml
