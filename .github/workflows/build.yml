@@ -17,12 +17,17 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # a ogni modifica su main: versione per tutti + versione di Pietro; a mano: solo il nome indicato
+        dedica: ${{ fromJSON(github.event_name == 'workflow_dispatch' && format('["{0}"]', inputs.dedica) || '["", "Pietro"]') }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Dedica personale (solo se indicata)
         env:
-          DEDICA: ${{ inputs.dedica }}
+          DEDICA: ${{ matrix.dedica }}
           PIN: ${{ inputs.pin }}
         run: |
           node -e '
@@ -82,5 +87,5 @@ jobs:
       - name: Carica APK
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.dedica != '' && 'StudyGame-apk-dedica' || 'StudyGame-apk' }}
+          name: ${{ matrix.dedica != '' && format('StudyGame-apk-{0}', matrix.dedica) || 'StudyGame-apk' }}
           path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
