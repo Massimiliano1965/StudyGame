@@ -102,7 +102,7 @@
   }
 
   function sparks(fromEl) {
-    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (fxCalm()) return;
     const r = fromEl ? fromEl.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 3, width: 0, height: 0 };
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     for (let i = 0; i < 12; i++) {
@@ -645,15 +645,51 @@
     game.fb = { title: ok ? pick(PRAISE[th]) : pick(OOPS), delta: r.delta, text, correct: ok ? "" : (correct || "") };
   }
 
-  // sbagliato: il personaggio si schiaccia e piange; giusto: balla (moonwalk, giravolta, posa)
+  // ---- esultanze ----
+  const CHEERS = ["capriola", "pirouette", "saltoindietro", "ruota", "saltelli", "trottola", "dondolo", "razzo"];
+  // effetti luminosi ridotti: dal profilo (genitori) oppure dalle impostazioni del telefono
+  function fxCalm() {
+    return !!(profile && profile.calm) || !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+  function applyCalm() { document.body.classList.toggle("calm", !!(profile && profile.calm)); }
+  // contorno della festa: coriandoli, stelline oppure un alone morbido (uno solo per volta, lento, mai lampeggiante)
+  function cheerFx(hero) {
+    if (fxCalm() || !hero) return;
+    const kind = pick(["coriandoli", "stelline", "alone"]);
+    if (kind === "stelline") { sparks(hero); return; }
+    if (kind === "alone") {
+      const a = document.createElement("span");
+      a.className = "halo"; hero.appendChild(a);
+      setTimeout(() => a.remove(), 2000);
+      return;
+    }
+    const r = hero.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 3;
+    const cols = ["#ff5a8a", "#ffd23f", "#4cc9f0", "#7ed957", "#b085ff"];
+    for (let i = 0; i < 18; i++) {
+      const c = document.createElement("span");
+      c.className = "confetto"; c.style.left = cx + "px"; c.style.top = cy + "px";
+      c.style.background = pick(cols);
+      c.style.setProperty("--dx", (Math.random() * 280 - 140) + "px");
+      c.style.setProperty("--dy", (Math.random() * -160 - 20) + "px");
+      c.style.setProperty("--rot", (Math.random() * 720 - 360) + "deg");
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 1100);
+    }
+  }
+
+  // sbagliato: il personaggio si schiaccia e piange; giusto: una delle 8 esultanze (capriole, pirouette, ecc.)
   function animateHero(hero, ok) {
     hero.classList.remove("hop", "shake", "squash", "dance");
-    hero.querySelectorAll(".tear,.cry,.hat,.glove").forEach(n => n.remove());
+    hero.querySelectorAll(".tear,.cry,.halo").forEach(n => n.remove());
     void hero.offsetWidth;
     if (ok) {
-      hero.style.setProperty("--dance", pick(["moonwalk", "spin", "lean"]));
-      hero.insertAdjacentHTML("beforeend", '<span class="hat">🎩</span><span class="glove">🧤</span>');
+      // 8 esultanze diverse, mai la stessa due volte di fila; con gli effetti ridotti: un semplice salto
+      let d = pick(CHEERS), g = 0;
+      while (d === animateHero.last && g++ < 8) d = pick(CHEERS);
+      animateHero.last = d;
+      hero.style.setProperty("--dance", fxCalm() ? "cheerhop" : d);
       hero.classList.add("dance");
+      cheerFx(hero);
     } else {
       hero.insertAdjacentHTML("beforeend", '<span class="tear l"></span><span class="tear r"></span><span class="cry">😭</span>');
       hero.classList.add("squash");
@@ -900,6 +936,7 @@
       <div class="row-set l2-set"><span class="set-label">Seconda lingua</span><div class="l2-pick">${L2.codes().map(c => `<button class="switch ${(p.l2 || L2.DEFAULT) === c ? "on" : ""}" data-act="set-l2" data-id="${c}" aria-pressed="${(p.l2 || L2.DEFAULT) === c}"><span class="fl">${L2.LANGS[c].flag}</span><span>${L2.LANGS[c].name}</span></button>`).join("")}</div></div>
       <div class="row-set voice-set"><span class="set-label">Voce di ${esc(((Characters.FAMILIES.find(f => f.id === p.family) || {}).pet) || "")}</span><div class="l2-pick"><button class="switch ${p.voiceG !== "m" ? "on" : ""}" data-act="set-voice" data-id="f" aria-pressed="${p.voiceG !== "m"}">👧 Femmina</button><button class="switch ${p.voiceG === "m" ? "on" : ""}" data-act="set-voice" data-id="m" aria-pressed="${p.voiceG === "m"}">👦 Maschio</button><button class="switch" data-act="test-voice">▶ Prova</button></div></div>
       <div class="row-set"><span>Suoni</span><button class="switch ${p.sound !== false ? "on" : ""}" data-act="toggle-sound" aria-pressed="${p.sound !== false}">${p.sound !== false ? "Sì" : "No"}</button></div>
+      <div class="row-set"><span>Effetti e luci</span><button class="switch ${p.calm ? "" : "on"}" data-act="toggle-fx" aria-pressed="${!p.calm}">${p.calm ? "Ridotti" : "Sì"}</button></div>
       ${lockBoxHtml()}
       <button class="btn alt" data-act="report">📊 Resoconto per i genitori</button>
       <button class="btn ghost" data-act="change-pin">🔐 Cambia PIN dei genitori</button>
@@ -1006,14 +1043,15 @@
       <p><b>Non sostituisce la scuola.</b> Gioca e Impara non sostituisce l'insegnamento né l'aiuto dei genitori: è solo un piccolo aiuto per fissare in mente alcune cose divertendosi, perché la ripetizione è ciò che fa davvero imparare e diventare bravi in qualcosa.</p>
       <p><b>Da dove vengono le domande.</b> Si basano sui programmi ministeriali italiani, consultati su internet: le <i>Indicazioni nazionali per il curricolo della scuola dell'infanzia e del primo ciclo d'istruzione</i> (D.M. 254 del 16 novembre 2012, con il documento di aggiornamento «Indicazioni nazionali e nuovi scenari» del 2018), ancora in vigore nell'anno scolastico 2026/27 per quasi tutte le classi. Le nuove Indicazioni (D.M. 221 del 9 dicembre 2025, Gazzetta Ufficiale n. 21 del 27 gennaio 2026) dal 2026/27 si applicano solo alle classi prime di primaria e media e poi, anno dopo anno, alle altre. Le domande sono state scritte per questa app e possono contenere errori.</p>
       <p><b>Come si guadagnano i minuti.</b> La classe vera si sceglie all'inizio e si cambia solo con il PIN dei genitori. Gli esercizi della propria classe danno 2 minuti a risposta giusta; quelli di classi inferiori 1 minuto (e le risposte sbagliate costano di più); quelli di classi superiori ne danno 3 e le risposte sbagliate non tolgono niente. Il tetto di ogni giorno è di 1 ora per la 1ª–2ª elementare, 1 ora e mezza per la 3ª–5ª, 2 ore alle medie.</p>
+      <p><b>Luci ed effetti.</b> L'app usa colori vivaci, piccoli movimenti e qualche coriandolo, ma niente lampeggi rapidi. Alcune persone, anche bambini, sono sensibili alle luci intermittenti (fotosensibilità, epilessia fotosensibile): se è il vostro caso, o nel dubbio, spegnete gli effetti da <b>Impostazioni → Effetti e luci</b> e parlatene con il medico. Se durante il gioco il bambino ha disturbi (mal di testa, vista offuscata, capogiri), fermatelo subito.</p>
       <p><b>Genitori.</b> Si raccomanda a mamma e papà di tenere sotto controllo i figli quando usano il cellulare, soprattutto se sono piccoli, e di usare sempre buon senso e discrezione sul tempo davanti allo schermo.</p>
       <p><b>Un grazie speciale.</b> A Pietro: è per lui che papà ha pensato questa app, e sarà lui il primo a collaudarla.</p>
       <button class="btn" data-act="close">Ho capito</button>`);
   }
 
   function maybeShowInfo() {
-    if (!profile || profile.infoSeen || wiz || askCb) return;
-    profile.infoSeen = true; Storage.saveProfile(profile);
+    if (!profile || (profile.infoSeen && profile.fxSeen) || wiz || askCb) return;
+    profile.infoSeen = true; profile.fxSeen = true; Storage.saveProfile(profile);
     openInfo();
   }
 
@@ -1125,6 +1163,7 @@
     "photo-cam": () => takePhoto(true),
     "photo-gal": () => takePhoto(false),
     "set-l2": el => { profile.l2 = L2.use(el.dataset.id); Storage.saveProfile(profile); openSettings(); },
+    "toggle-fx": () => { profile.calm = !profile.calm; Storage.saveProfile(profile); applyCalm(); openSettings(); },
     "toggle-sound": () => { profile.sound = profile.sound === false; Storage.saveProfile(profile); openSettings(); renderHome(); },
     "lock-toggle": () => {
       if (Lock.get().enabled) { askPin("Spegni il blocco", () => Lock.setEnabled(false).then(() => { toast("Blocco spento"); openSettings(); renderHome(); })); return; }
@@ -1203,6 +1242,7 @@
     if (Lock.available()) refreshLockBox();
     if (profile && typeof profile.classId !== "number") { Storage.resetAll(); profile = null; }
     if (!profile) { showWelcome(); return; }
+    applyCalm();
     Credit.setClass(profile.classId); Credit.refresh();
     selected = subsNow();
     // profili senza PIN (creati prima): i genitori lo scelgono adesso
