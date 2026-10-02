@@ -169,7 +169,8 @@
       canNext = canNickNow;
       body = `
         <div class="hero small">${charSvg({ ...d, classId: d.classId == null ? 0 : d.classId }, "cheer")}</div>
-        <div class="center"><h1>Ciao! Come ti chiami?</h1><p class="muted" style="margin-top:6px">Scrivi il tuo nome o un soprannome inventato.</p></div>
+        <div class="center"><h1>Ciao! Come ti chiami?</h1><p class="muted" style="margin-top:6px">${smallKids() ? "Dì il tuo nome al microfono, oppure chiedi a mamma o papà di scriverlo." : "Scrivi il tuo nome o un soprannome inventato."}</p></div>
+        ${!wiz.editing && smallKids() && Voice.canListen() ? `<button class="btn big alt ${canNickNow || wiz.listening ? "" : "flash"}" data-act="name-mic">${wiz.listening ? "🎤 Ti ascolto…" : "🎤 Tocca e dì il tuo nome"}</button>` : ""}
         <input id="nick" class="field" type="text" inputmode="text" autocomplete="off" autocapitalize="words" maxlength="${CONFIG.NICK_MAX}" placeholder="Il tuo nome" value="${esc(d.nick)}" aria-label="Il tuo nome o soprannome">`;
     } else if (s === 1) {
       canNext = d.classId != null;
@@ -221,7 +222,7 @@
       wiz.said = wiz.said || {};
       if (!wiz.said[key]) {
         wiz.said[key] = true;
-        const t = wiz.pinFirst ? STEP_SAY.pin : STEP_SAY.steps[s];
+        const t = wiz.pinFirst ? STEP_SAY.pin : stepSay(s);
         if (t && pendingAuto !== false) Voice.speak(t, msg => toast(msg, 6000));
       }
     }
@@ -707,11 +708,40 @@
   // frasi lette a voce durante la creazione del profilo (per chi ancora non sa leggere)
   const STEP_SAY = {
     pin: "Adesso tocca a mamma e papà. Scegliete un PIN di quattro cifre.",
-    steps: ["Come ti chiami? Scrivi il tuo nome nella casella.",
+    steps: [null,
       "Che classe fai? Tocca il tuo numero. Se non lo sai, chiedi a mamma e papà.",
       "Scegli il tuo compagno: Pufo, Bip o Rudy. Tocca quello che ti piace di più.",
       "Vuoi mettere una fotografia? Tocca la macchina fotografica, oppure fatti aiutare da mamma e papà. Se non vuoi, tocca Ho finito."]
   };
+
+  // la versione con dedica (quella di Pietro, 10 anni) sa già scrivere: niente microfono né aiuto dei genitori per il nome
+  const smallKids = () => !(typeof DEDICA === "string" && DEDICA);
+  const nameSay = () => !smallKids() ? "Come ti chiami? Scrivi il tuo nome nella casella." : Voice.canListen()
+    ? "Come ti chiami? Tocca il microfono e dì il tuo nome. Oppure chiedi a mamma o papà di scrivere il tuo nome."
+    : "Come ti chiami? Chiedi a mamma o papà di scrivere il tuo nome.";
+  const stepSay = i => i === 0 ? nameSay() : STEP_SAY.steps[i];
+
+  // il nome a voce, per chi ancora non sa scrivere
+  function listenName() {
+    if (!wiz || wiz.listening || wiz.step !== 0) return;
+    Voice.stopSpeaking();
+    wiz.listening = true; renderWizard();
+    const done = () => { if (wiz) wiz.listening = false; };
+    Voice.listen().then(matches => {
+      if (!wiz) return;
+      done();
+      const raw = String((matches && matches[0]) || "").trim()
+        .replace(/^(ciao\s+)?(il mio nome è|mi chiamo|mi chiamano|io sono|sono)\s+/i, "");
+      let name = (raw.split(/\s+/)[0] || "").replace(/[^A-Za-zÀ-ÿ'\-]/g, "");
+      name = (name.charAt(0).toUpperCase() + name.slice(1)).slice(0, CONFIG.NICK_MAX);
+      renderWizard();
+      if (name.length >= 2) { wiz.d.nick = name; renderWizard(); Voice.speak("Piacere, " + name + "!"); }
+      else toast("Non ho capito bene. Riprova, oppure chiedi a mamma o papà di scrivere il tuo nome.", 5000);
+    }).catch(() => {
+      done(); if (wiz) renderWizard();
+      toast("Il microfono non è disponibile. Chiedi a mamma o papà di scrivere il tuo nome.", 5000);
+    });
+  }
 
   function askNarration(cb) {
     askCb = cb;
@@ -734,7 +764,7 @@
   function getNarration() {
     if (askCb) return "Vuoi che ti legga le domande? Tocca sì, leggimele, oppure no, grazie.";
     if (wiz && wiz.pinFirst) return STEP_SAY.pin;
-    if (wiz) return STEP_SAY.steps[wiz.step] || "";
+    if (wiz) return stepSay(wiz.step) || "";
     if (game) return game.answered && game.fb ? feedbackSpeech() : (game.round ? roundSpeech(game.round) : questionSpeech());
     if (!profile) return "Ciao! Benvenuto in Gioca e Impara! Io sono Pufo, lui è Bip e lui è Rudy. Giocheremo insieme! Tocca il pulsante che lampeggia.";
     if (profile) return `Ciao ${profile.nick}! Oggi hai ${Credit.format(Credit.get())} di telefono. Scegli le sfide che vuoi e tocca Gioca.`;
@@ -1018,6 +1048,7 @@
       const fb = document.querySelector(".feedback"); if (fb) { const b = fb.querySelector('[data-act="help"]'); if (b) b.remove(); }
     },
     "welcome-go": () => beginSetup(true),
+    "name-mic": () => listenName(),
     "reset-yes": () => { Storage.resetAll(); Stats.wipe(); profile = null; viewClass = null; closeModal(); Credit.refresh(); showWelcome(); }
   };
 
