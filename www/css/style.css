@@ -643,3 +643,18 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
   .avatar.xl { width: 110px; height: 110px; }
   h1 { font-size: 27px; }
 }
+
+/* ---------- narratore fisso (2/10/2026): pupazzetto sempre in un riquadro in alto a destra ---------- */
+.screen.play { padding-top: 58px; }
+.screen.play .gtop { position: fixed; left: 8px; top: calc(6px + env(safe-area-inset-top)); z-index: 26; width: calc(100% - 124px); gap: 6px; flex-wrap: nowrap; justify-content: flex-start; }
+.screen.play .gtop .icon-btn { width: 34px; height: 34px; min-height: 34px; font-size: 15px; }
+.screen.play .gtop .chip { font-size: 13px; padding: 2px 9px; white-space: nowrap; }
+.screen.play .hero.narr { position: fixed; right: 6px; top: calc(4px + env(safe-area-inset-top)); width: 104px; height: 104px; margin: 0; z-index: 30; animation: none; }
+.screen.play .hero.narr svg { width: 100%; height: 100%; }
+.screen.play:not(.quiz) { padding-top: 46px; }
+.screen.play .nbub { position: relative; margin-right: 120px; background: #fff; border: 3px solid var(--edge); border-radius: 18px; padding: 6px 10px; font-weight: 800; font-size: 15px; line-height: 1.2; box-shadow: 0 4px 0 var(--edge); display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.screen.play .nbub:after { content: ""; position: absolute; right: -14px; top: 16px; border: 8px solid transparent; border-left: 12px solid var(--edge); }
+.screen.play .nbub .bsub { padding: 0 8px; font-size: 12px; font-weight: 700; background: var(--sc); border: 2px solid var(--edge); border-radius: 999px; }
+body.playing .topctl { left: 8px; right: auto; top: calc(48px + env(safe-area-inset-top)); justify-content: flex-start; gap: 6px; }
+body.playing .voicetgl { min-height: 30px; padding: 0 10px; font-size: 12px; }
+.hero.fx { display: none; }

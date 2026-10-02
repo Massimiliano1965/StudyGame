@@ -515,21 +515,17 @@
   }
 
   // schermata di un gioco (puzzle o tiro a segno)
+  new MutationObserver(() => document.body.classList.toggle("playing", !!$app.querySelector(".screen.play"))).observe($app, { childList: true });
   function renderRound() {
     const r = game.round, sub = SUBJECTS.find(s => s.id === game.sid);
-    $app.innerHTML = `<section class="screen">
+    $app.innerHTML = `<section class="screen play">
       <div class="gtop">
         <button class="icon-btn" data-act="exit" aria-label="Esci dalla sfida">✕</button>
         <span class="chip" id="gmins" aria-label="Minuti di oggi">⏱ ${esc(Credit.format(Credit.get()))}</span>
-        <span class="space"></span>
         <span class="chip" id="gstreak" aria-label="Serie di risposte giuste">🔥 ${game.streak}</span>
       </div>
-      <div id="hero" class="hero xs">${charSvg(profile, game.mood)}</div>
-      <div class="card qcard">
-        <span class="qsub" style="--sc:${sub.color}">${sub.icon} ${esc(sub.name)} · ${esc(r.title)}</span>
-        <div class="qtext">${esc(r.prompt)}</div>
-        ${r.hint ? `<p class="muted">${esc(r.hint)}</p>` : ""}
-      </div>
+      <div id="hero" class="hero narr">${charSvg(profile, game.mood)}</div>
+      <div class="nbub" id="bubble"><span class="bsub" style="--sc:${sub.color}">${sub.icon} ${esc(sub.name)} · ${esc(r.title)}</span>${esc(r.prompt)}</div>
       <div id="gbox"></div>
       <div id="gfb"></div>
     </section>`;
@@ -541,14 +537,13 @@
     const q = game.q, sub = SUBJECTS.find(s => s.id === game.sid), fb = game.fb;
     const min = Credit.get();
     const canSpeak = Voice.canSpeak(), canListen = Voice.canListen();
-    $app.innerHTML = `<section class="screen">
+    $app.innerHTML = `<section class="screen play quiz">
       <div class="gtop">
         <button class="icon-btn" data-act="exit" aria-label="Esci dalla sfida">✕</button>
         <span class="chip" aria-label="Minuti di oggi">⏱ ${esc(Credit.format(min))}</span>
-        <span class="space"></span>
         <span class="chip" aria-label="Serie di risposte giuste">🔥 ${game.streak}</span>
       </div>
-      <div id="hero" class="hero small">${charSvg(profile, game.mood)}</div>
+      <div id="hero" class="hero narr">${charSvg(profile, game.mood)}</div>
       <div class="card qcard">
         <span class="qsub" style="--sc:${sub.color}">${sub.icon} ${esc(sub.name)}</span>
         <div class="qtext">${esc(q.q)}</div>
