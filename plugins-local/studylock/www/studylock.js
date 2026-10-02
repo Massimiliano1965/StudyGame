@@ -10,5 +10,6 @@ module.exports = {
   emergency: function (ok, err) { call("emergency")(ok, err); },
   lockNow: function (ok, err) { call("lockNow")(ok, err); },
   openOverlaySettings: function (ok, err) { call("openOverlaySettings")(ok, err); },
-  openUsageSettings: function (ok, err) { call("openUsageSettings")(ok, err); }
+  openUsageSettings: function (ok, err) { call("openUsageSettings")(ok, err); },
+  openAppInfo: function (ok, err) { call("openAppInfo")(ok, err); }
 };

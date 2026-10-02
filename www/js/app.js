@@ -593,17 +593,33 @@
     }
   }
 
-  // Rudy (famiglia hip hop): ogni tanto dice una frase in un fumetto animato
+  // Fumetto animato: ogni tanto il compagno dice una frase (ogni famiglia ha le sue, che cambiano)
   const SAY = {
-    ok: ["Bella Zio!", "Bro!", "Fra'!", "Hey Bro!", "Che figata!", "Sei un mito!", "Top, Bro!", "Spacchi!", "Daje!", "Tosto!", "Fico!", "Gallo!"],
-    no: ["Tranqui, Bro!", "Fra', riprova!", "Zero stress!", "Dai Bro!", "Capita, Fra'!"],
-    idle: ["Hey Bro!", "Fra'!", "Bro!", "Bella Zio!", "Si gioca?", "Andiamo, Fra'!"]
+    esploratore: {   // hip hop
+      ok: ["Bella Zio!", "Bro!", "Fra'!", "Hey Bro!", "Che figata!", "Sei un mito!", "Top, Bro!", "Spacchi!", "Daje!", "Tosto!", "Fico!", "Gallo!"],
+      no: ["Tranqui, Bro!", "Fra', riprova!", "Zero stress!", "Dai Bro!", "Capita, Fra'!"],
+      idle: ["Hey Bro!", "Fra'!", "Bro!", "Bella Zio!", "Si gioca?", "Andiamo, Fra'!"]
+    },
+    creatura: {      // creature fantasy, per i più piccoli
+      ok: ["Evviva!", "Che bravo!", "Bravissimo!", "Wow!", "Sei super!", "Magico!", "Urrà!", "Stupendo!", "Che forza!", "Hai fatto centro!"],
+      no: ["Non fa niente!", "Riprova, ce la fai!", "Quasi quasi!", "Coraggio!", "Ci riproviamo?"],
+      idle: ["Giochiamo?", "Che bello!", "Sono qui!", "Pronti, via!", "Ciao ciao!", "Che si fa?"]
+    },
+    robot: {         // robot e spazio
+      ok: ["Esatto!", "Calcolo perfetto!", "Missione compiuta!", "Beep, bravo!", "Sistemi al massimo!", "Dati corretti!", "Segnale forte!", "Che precisione!", "Motori accesi!"],
+      no: ["Errore, riproviamo!", "Ricalcolo...", "Beep! Riprova!", "Nessun problema!", "Ricarico le batterie!"],
+      idle: ["Beep beep!", "Sistemi attivi!", "Pronto a giocare!", "Si parte?", "Antenne alzate!", "Scansione in corso..."]
+    }
   };
   function heroSay(hero, kind) {
-    if (!hero || !profile || profile.family !== "esploratore") return;
+    const set = hero && profile && SAY[profile.family];
+    if (!set) return;
     hero.querySelectorAll(".rudy-say").forEach(n => n.remove());
     const b = document.createElement("span");
-    b.className = "rudy-say"; b.setAttribute("aria-hidden", "true"); b.textContent = pick(SAY[kind]);
+    b.className = "rudy-say"; b.setAttribute("aria-hidden", "true");
+    let t = pick(set[kind]), g = 0;
+    while (t === heroSay.last && g++ < 6) t = pick(set[kind]);   // non ripete mai la stessa frase due volte di fila
+    heroSay.last = t; b.textContent = t;
     hero.appendChild(b);
     setTimeout(() => { if (b.parentNode) b.remove(); }, 2700);
   }
@@ -839,9 +855,25 @@
     let body = `<p class="muted lock-note">Le altre app si aprono solo con i minuti guadagnati qui. Chiamate e sveglia non si bloccano mai. L'app si può sempre disinstallare.</p>`;
     if (s.enabled && !s.overlay) body += `<button class="btn alt small" data-act="lock-perm-overlay">1 · Permetti «Mostra sopra le altre app»</button>`;
     if (s.enabled && !s.usage) body += `<button class="btn alt small" data-act="lock-perm-usage">2 · Permetti «Accesso all'uso»</button>`;
+    if (s.enabled && (!s.overlay || !s.usage)) body += `<button class="btn ghost small" data-act="lock-guide">❓ Android non mi fa dare il permesso</button>`;
     if (s.enabled && s.overlay && s.usage) body += `<p class="lock-ok">✅ Blocco attivo${s.emergencyToday ? " · sblocchi di emergenza oggi: " + s.emergencyToday : ""}</p>
       <button class="btn ghost small" data-act="lock-emergency">🆘 Emergenza: sblocca 10 minuti</button>`;
     return `<div class="lock-box" id="lockbox"><div class="row-set"><span>🔒 Blocco telefono</span><button class="switch ${s.enabled ? "on" : ""}" data-act="lock-toggle" aria-pressed="${!!s.enabled}">${s.enabled ? "Sì" : "No"}</button></div>${body}</div>`;
+  }
+
+  // guida per «Consenti impostazioni con restrizioni» (Android 13+, app installate a mano)
+  function openLockGuide() {
+    openModal(`<h2>🔓 Come dare i permessi</h2>
+      <p class="muted">Se Android dice «Impostazione con restrizioni» o il permesso resta grigio, serve questo passaggio (una volta sola):</p>
+      <ol class="guide-steps">
+        <li><span class="gi">1️⃣</span><span>Tocca <b>«Apri Info app»</b> qui sotto.</span></li>
+        <li><span class="gi">2️⃣</span><span>In alto a destra tocca i <b>tre puntini ⋮</b>.</span></li>
+        <li><span class="gi">3️⃣</span><span>Tocca <b>«Consenti impostazioni con restrizioni»</b> e conferma con PIN o impronta del telefono. Se la voce non c'è, vai avanti.</span></li>
+        <li><span class="gi">4️⃣</span><span>Torna qui con la freccia indietro.</span></li>
+        <li><span class="gi">5️⃣</span><span>Tocca i due pulsanti <b>«1 · Mostra sopra le altre app»</b> e <b>«2 · Accesso all'uso»</b> e attiva Gioca e Impara.</span></li>
+      </ol>
+      <button class="btn" data-act="lock-appinfo">⚙️ Apri Info app</button>
+      <button class="btn alt" data-act="lock-guide-done">✅ Fatto, torna alle impostazioni</button>`);
   }
 
   // rilegge lo stato dal telefono e aggiorna riquadro nelle impostazioni e home
@@ -1017,8 +1049,11 @@
     "toggle-sound": () => { profile.sound = profile.sound === false; Storage.saveProfile(profile); openSettings(); renderHome(); },
     "lock-toggle": () => {
       if (Lock.get().enabled) { askPin("Spegni il blocco", () => Lock.setEnabled(false).then(() => { toast("Blocco spento"); openSettings(); renderHome(); })); return; }
-      Lock.setEnabled(true).then(() => { openSettings(); });
+      Lock.setEnabled(true).then(st => { if (st.overlay && st.usage) openSettings(); else openLockGuide(); });
     },
+    "lock-guide": () => openLockGuide(),
+    "lock-appinfo": () => { Lock.openAppInfo(); },
+    "lock-guide-done": () => { openSettings(); },
     "lock-perm-overlay": () => { Lock.openOverlaySettings(); },
     "lock-perm-usage": () => { Lock.openUsageSettings(); },
     "lock-emergency": () => { Lock.emergency().then(() => { toast("Telefono sbloccato per 10 minuti", 4000); refreshLockBox(); }); },

@@ -28,6 +28,7 @@ const Lock = (() => {
     emergency: () => call("emergency"),
     lockNow: () => call("lockNow"),
     openOverlaySettings: () => call("openOverlaySettings"),
-    openUsageSettings: () => call("openUsageSettings")
+    openUsageSettings: () => call("openUsageSettings"),
+    openAppInfo: () => call("openAppInfo")
   };
 })();

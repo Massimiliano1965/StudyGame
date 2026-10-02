@@ -708,12 +708,14 @@ const Games = (() => {
       prompt = theme.prompt;
       eng = true; rEn = !!theme.rEn;   // per la voce: parole a sinistra in inglese; a destra inglese solo se rEn
     } else if (OTHER_PAIRS[subjectId]) {
-      const theme = pick(Questions.inClass(OTHER_PAIRS[subjectId][classId <= 1 ? "A" : classId <= 4 ? "B" : "C"], classId));
+      let tl = Questions.inClass(OTHER_PAIRS[subjectId][classId <= 1 ? "A" : classId <= 4 ? "B" : "C"], classId);
+      if (subjectId !== "lingua2" && subjectId !== "latino") tl = Parole.themes(tl, classId);
+      const theme = pick(tl);
       pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
       prompt = theme.prompt;
       if (subjectId === "lingua2") eng = true;   // le parole a sinistra sono straniere: la voce le legge nella lingua scelta
     } else {
-      const theme = pick(Questions.inClass(ITA_PAIRS[classId <= 1 ? "A" : classId <= 4 ? "B" : "C"], classId));
+      const theme = pick(Parole.themes(Questions.inClass(ITA_PAIRS[classId <= 1 ? "A" : classId <= 4 ? "B" : "C"], classId), classId));
       pairs = shuffle(theme.pairs).slice(0, 4).map(p => ({ l: p[0], r: p[1] }));
       prompt = theme.prompt;
     }
@@ -838,7 +840,10 @@ const Games = (() => {
 
   function mountMemory(el, r, onDone) {
     const P = r.pairs;
-    const cards = shuffle(P.flatMap((p, i) => [{ id: i, t: p.l }, { id: i, t: p.r }]));
+    // 2 colonne: le due carte di una coppia stanno sempre su colonne opposte (una a sinistra, una a destra)
+    let colL = shuffle(P.map((p, i) => ({ id: i, t: p.l }))), colR = shuffle(P.map((p, i) => ({ id: i, t: p.r }))), g0 = 0;
+    while (P.length > 1 && colL.every((c, i) => c.id === colR[i].id) && g0++ < 30) colR = shuffle(colR);
+    const cards = colL.flatMap((c, i) => [c, colR[i]]);
     el.innerHTML = `<div class="mem">${cards.map((c, i) => {
       const fs = c.t.length > 18 ? 13 : c.t.length > 11 ? 16 : 20;
       return `<button class="mcard" data-i="${i}" style="font-size:${fs}px"><span class="mback">❓</span><span class="mface">${esc(c.t)}</span></button>`;
@@ -1701,7 +1706,7 @@ const Games = (() => {
   }
 
   function mountLinee(el, r, onDone) {
-    const P = r.pairs, n = P.length, COL = ["#FF9EC0", "#7ED9FF", "#B9F27A", "#FFD23F"];
+    const P = r.pairs, n = P.length, GREEN = "#34a847", COL = P.map(() => GREEN);   // corretto = sempre verde (linea, pallini e caselle)
     el.innerHTML = `<div class="lk">
       <div class="lk-col">${P.map((p, i) => `<button class="lk-item" data-s="l" data-p="${i}"><span>${esc(p.l)}</span><i class="lk-dot"></i></button>`).join("")}</div>
       <div class="lk-col">${r.order.map(i => `<button class="lk-item" data-s="r" data-p="${i}"><span>${esc(P[i].r)}</span><i class="lk-dot"></i></button>`).join("")}</div>
@@ -1723,7 +1728,7 @@ const Games = (() => {
         (tmp ? seg(tmp.a, tmp.b, tmp.color) : "");
     }
     function clearMarks() { box.querySelectorAll(".lk-item.act,.lk-item.hov").forEach(x => x.classList.remove("act", "hov")); }
-    function lock(p, color) { ["l", "r"].forEach(s => { const it = item(s, p); it.classList.add("m"); it.classList.remove("act", "hov"); it.style.setProperty("--c", color); }); }
+    function lock(p, color) { ["l", "r"].forEach(s => { const it = item(s, p); it.classList.add("m"); it.classList.toggle("ok", color === GREEN); it.classList.remove("act", "hov"); it.style.setProperty("--c", color); }); }
 
     function attempt(lp, rp) {
       sel = null; from = null; clearMarks();

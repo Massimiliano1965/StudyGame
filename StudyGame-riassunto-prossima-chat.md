@@ -113,3 +113,12 @@ Intestazione con avatar, nome, classe, ⚙️ e il pulsante grande che legge la 
 - Valutazione critica: app solida; mancano prova di una settimana con un bambino vero, informativa privacy, controllo a campione domande, parere professionale (Play Families Policy, eventuale autorizzazione attività secondaria se dipendente pubblico, partita IVA).
 - Play Store: non prima di un mese; account sviluppatore circa 25 $ una tantum (da verificare), test chiuso richiesto ai nuovi account personali.
 - Prossima app: "Avvocato in tasca" (da discutere).
+
+## Pacchetto del 2 ottobre sera (tutto su main)
+- Parole difficili: nuovo js/parole.js (liste di radici per fascia A = 1ª–2ª el. e B = 3ª–5ª el.). Toglie le domande che le contengono (banchi di storia, geografia, scienze, tecnologia, arte, musica, civica, italiano; non inglese, seconda lingua, latino) e le coppie dei giochi di collegamento (pairsFor in games.js usa `Parole.themes`). Per aggiungere una parola da escludere basta una radice nella lista HARD. Es. «ceramista» non compare più in 1ª–2ª.
+- «Collega con le linee»: quando una coppia è giusta, linea, pallini e caselle sono SEMPRE verde chiaro #34a847 (testo bianco); il rosso resta solo per il lampo dell'errore.
+- Memory: le due carte di una coppia stanno sempre su colonne opposte (una a sinistra, una a destra).
+- Fumetti animati (`heroSay` in app.js): ora anche per la creatura (frasi dolci) e il robot (frasi da robot), non solo per la volpe hip hop; la stessa frase non esce due volte di fila.
+- Guida permessi blocco: schermata «Come dare i permessi» (5 passi, «Consenti impostazioni con restrizioni») con pulsante «Apri Info app» (nuova azione nativa openAppInfo in StudyLock.java). Si apre da sola accendendo il blocco senza permessi e dal pulsante «Android non mi fa dare il permesso» nelle Impostazioni.
+- Provato in headless: 170+ partite Memory e 160+ Linee (vittoria, errore poi vittoria), 2125 giri su tutte le materie/classi senza errori JS, guida con plugin simulato. La parte Java (openAppInfo) la dice la build; il comportamento reale solo il telefono. NON provato da Massi sul telefono.
+- Resta da fare: prova sul telefono (decide Massi).

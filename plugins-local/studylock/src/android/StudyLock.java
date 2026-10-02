@@ -57,6 +57,13 @@ public class StudyLock extends CordovaPlugin {
         cb.success(status(c));
         return true;
       }
+      if (action.equals("openAppInfo")) {
+        Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + c.getPackageName()));
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        c.startActivity(i);
+        cb.success(status(c));
+        return true;
+      }
       if (action.equals("openUsageSettings")) {
         Intent i = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

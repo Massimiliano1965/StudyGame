@@ -562,6 +562,8 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 .lk-item.act, .lk-item.hov { background: #FFF3B0; }
 .lk-item.hov { transform: scale(1.04); }
 .lk-item.m { background: var(--c, #E8E8F0); }
+.lk-item.m.ok { color: #fff; border-color: #34a847; box-shadow: 0 4px 0 #2a8a3a; }
+.lk-item.m.ok .lk-dot { background: #34a847; }
 .lk-item.bad { background: var(--bad); color: #fff; animation: ltshake .4s; }
 .lk-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 
@@ -677,3 +679,8 @@ body.playing .topctl { gap: 4px; }
 .screen.play .gtop .icon-btn { width: 30px; height: 30px; min-height: 30px; font-size: 14px; }
 body.playing .voicetgl .tx { display: none; }
 body.playing .voicetgl { padding: 0 10px; font-size: 16px; }
+
+/* guida permessi blocco telefono */
+.guide-steps { list-style: none; margin: 8px 0 12px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.guide-steps li { display: flex; gap: 10px; align-items: flex-start; font-size: 16px; line-height: 1.25; text-align: left; }
+.guide-steps .gi { font-size: 26px; line-height: 1; flex: none; }
