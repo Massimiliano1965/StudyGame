@@ -26,6 +26,8 @@
   const relOf = c => c < profile.classId ? -1 : c > profile.classId ? 1 : 0;
   const subsNow = () => subjectsForClass(playClass()).filter(s => isReady(s.id)).map(s => s.id);
   const hashPin = v => { let h = 5381; const t = "gei|" + v + "|2026"; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return "p1" + (h >>> 0).toString(36); };
+  const presetPin = () => (typeof PIN_PRESET === "string" && PIN_PRESET) || "";
+  let pendingPin = "";    // PIN scelto nella prima schermata di una installazione nuova
   const pinValid = () => !!wiz && /^\d{4}$/.test(wiz.pin1 || "") && wiz.pin1 === wiz.pin2;
 
   // ---------- suoni ----------
@@ -120,6 +122,14 @@
   // ====================================================================
   // CREAZIONE / MODIFICA PROFILO
   // ====================================================================
+  // installazione nuova: prima il PIN dei genitori (a meno che sia già deciso dalla build), poi il profilo
+  function beginSetup(yes) {
+    pendingAuto = yes;
+    if (presetPin()) { startWizard(false); return; }
+    wiz = { step: 4, editing: false, pinOnly: true, pinForce: true, pinFirst: true, pin1: "", pin2: "", d: {} };
+    renderWizard();
+  }
+
   function startWizard(editing, step) {
     wiz = {
       step: step || 0, editing: !!editing,
@@ -131,7 +141,7 @@
 
   function dotsHtml(step) {
     if (wiz && wiz.pinOnly) return "";
-    const n = wiz && wiz.editing ? 4 : 5;
+    const n = 4;
     return `<div class="dots" aria-label="Passo ${step + 1} di ${n}">${Array.from({ length: n }, (_, i) => `<i class="${i === step ? "on" : ""}"></i>`).join("")}</div>`;
   }
 
@@ -162,7 +172,7 @@
         <div class="colors" role="group" aria-label="Colore">${Characters.COLORS.map(c =>
           `<button class="dot ${d.color === c.hex ? "sel" : ""}" data-act="color" data-hex="${c.hex}" style="background:${c.hex}" aria-label="${c.name}"></button>`).join("")}</div>`;
     } else if (s === 3) {
-      nextLabel = wiz.editing ? "Ho finito! ✔" : "Avanti ▶";
+      nextLabel = "Ho finito! ✔";
       body = `<div class="center"><h1>Vuoi metterci la tua foto?</h1><p class="muted" style="margin-top:6px">È facoltativa. La foto resta solo su questo telefono e non viene mai inviata.</p></div>
         ${avatarHtml(d, "xl")}
         ${navigator.camera ? `<div class="btn-row"><button class="btn alt big" data-act="photo-cam">📷 Scatta</button><button class="btn alt big" data-act="photo-gal">🖼️ Galleria</button></div>`
@@ -171,7 +181,7 @@
     } else {
       nextLabel = "Ho finito! ✔";
       canNext = pinValid();
-      body = `<div class="center"><h1>🔐 PIN dei genitori</h1><p class="muted" style="margin-top:6px">Genitori: scegliete un PIN di 4 cifre. Serve per cambiare nome o classe, spegnere il blocco e ricominciare da zero. Non ditelo ai bambini!</p></div>
+      body = `<div class="center"><h1>🔐 PIN dei genitori</h1><p class="muted" style="margin-top:6px">${wiz.pinFirst ? "Questa schermata è per i genitori. " : ""}Genitori: scegliete un PIN di 4 cifre. Serve per cambiare nome o classe, spegnere il blocco e ricominciare da zero. Non ditelo ai bambini!</p></div>
         <input id="pin1" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN (4 cifre)" value="${esc(wiz.pin1 || "")}" aria-label="PIN a 4 cifre">
         <input id="pin2" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Ripeti il PIN" value="${esc(wiz.pin2 || "")}" aria-label="Ripeti il PIN" style="margin-top:10px">
         <p class="muted center">Se lo dimenticate, bisogna reinstallare l'app.</p>`;
@@ -235,7 +245,8 @@
     profile = { ...old, nick: d.nick.trim(), classId: d.classId, family: d.family, color: d.color, photo: d.photo || null,
       autoRead: !!d.autoRead, narrAsked: true,
       sound: d.sound !== false, l2: d.l2 || undefined, infoSeen: seen,
-      pin: pinValid() ? hashPin(wiz.pin1) : old.pin };
+      pin: pinValid() ? hashPin(wiz.pin1) : (old.pin || pendingPin || presetPin()) };
+    pendingPin = "";
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
     wiz = null;
     viewClass = null;
@@ -840,7 +851,7 @@
       if (wiz.step === 0 && d.nick.trim().length < 2) return;
       if (wiz.step === 1 && d.classId == null) return;
       if (wiz.step < 3) { wiz.step++; renderWizard(); window.scrollTo(0, 0); }
-      else if (wiz.step === 3 && !wiz.editing) { wiz.step = 4; renderWizard(); window.scrollTo(0, 0); }
+      else if (wiz.pinFirst) { if (!pinValid()) return; pendingPin = hashPin(wiz.pin1); startWizard(false); }
       else { if (wiz.step === 4 && !pinValid()) return; finishWizard(); }
     },
     // home
@@ -919,7 +930,7 @@
       Lock.unlock(n).then(() => { toast("📱 Telefono sbloccato per " + n + " minuti. Buon divertimento!", 4000); renderHome(); });
     },
     reset: () => askPin("Ricominciare da zero", confirmReset),
-    "reset-yes": () => { Storage.resetAll(); profile = null; viewClass = null; closeModal(); Credit.refresh(); askNarration(yes => { pendingAuto = yes; startWizard(false); }); }
+    "reset-yes": () => { Storage.resetAll(); profile = null; viewClass = null; closeModal(); Credit.refresh(); askNarration(beginSetup); }
   };
 
   document.addEventListener("click", e => {
@@ -948,13 +959,14 @@
     Splash.done();
     refreshNarrate();
     if (Lock.available()) refreshLockBox();
-    const first = yes => { pendingAuto = yes; startWizard(false); };
+    const first = beginSetup;
     if (profile && typeof profile.classId !== "number") { Storage.resetAll(); profile = null; }
     if (!profile) { askNarration(first); return; }
     Credit.setClass(profile.classId); Credit.refresh();
     selected = subsNow();
     // profili senza PIN (creati prima): i genitori lo scelgono adesso
     const go = () => {
+      if (!profile.pin && presetPin()) { profile.pin = presetPin(); Storage.saveProfile(profile); }
       if (profile.pin) { showHome(); return; }
       wiz = { step: 4, editing: true, pinOnly: true, pinForce: true, pin1: "", pin2: "", d: { ...profile } };
       renderWizard();

@@ -9,6 +9,10 @@ on:
         description: "Nome per la dedica «Ideata per …» (vuoto = versione per tutti)"
         required: false
         default: ""
+      pin:
+        description: "PIN genitori a 4 cifre già deciso (vuoto = lo sceglie il genitore al primo avvio)"
+        required: false
+        default: ""
 
 jobs:
   build:
@@ -19,10 +23,17 @@ jobs:
       - name: Dedica personale (solo se indicata)
         env:
           DEDICA: ${{ inputs.dedica }}
+          PIN: ${{ inputs.pin }}
         run: |
           node -e '
             const fs = require("fs"), d = process.env.DEDICA || "";
-            fs.writeFileSync("www/js/dedica.js", "const DEDICA = " + JSON.stringify(d) + ";\n");
+            // stessa impronta di hashPin() in app.js
+            let pre = "";
+            if (/^[0-9]{4}$/.test(process.env.PIN || "")) {
+              let h = 5381; for (const ch of "gei|" + process.env.PIN + "|2026") h = ((h << 5) + h + ch.charCodeAt(0)) | 0;
+              pre = "p1" + (h >>> 0).toString(36);
+            }
+            fs.writeFileSync("www/js/dedica.js", "const DEDICA = " + JSON.stringify(d) + ";\nconst PIN_PRESET = " + JSON.stringify(pre) + ";\n");
             if (d) {
               // app separata: altro identificativo e nome, così sta sul telefono accanto a quella per tutti
               const slug = d.toLowerCase().normalize("NFD").replace(/[^a-z0-9]/g, "") || "dedica";
