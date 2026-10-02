@@ -11,7 +11,7 @@
     S("Quale parola è il nome di un animale?", ["Coniglio", "Tavolo", "Rosso", "Correre"], "Il coniglio è un animale."),
     S("Quale parola indica un'azione?", ["Saltare", "Sedia", "Rosso", "Piccolo"], "Saltare è qualcosa che si fa: è un'azione."),
     S("Quale parola con la Q è scritta bene?", ["Quadro", "Cuadro", "Qadro", "Quaddro"], "Si scrive QUADRO: la Q vuole sempre la U."),
-    S("Completa: «Luca ___ un gatto.»", ["ha", "a", "ah", "hà"], "Luca ha un gatto: «ha» è il verbo avere, con la H."),
+    S("Completa: «Luca ___ un gatto.»", ["ha", "a", "ah", "hà"], "Luca ha un gatto: «ha» (come «ho», «hai», «hanno») si scrive con la H."),
     S("Quale parola comincia con la sillaba «LU»?", ["Luna", "Sole", "Mare", "Casa"], "LU-na comincia proprio con LU."),
     S("Quante sillabe ha la parola «pane»?", ["2", "1", "3", "4"], "Pa-ne: due sillabe."),
     S("Qual è il femminile di «bambino»?", ["Bambina", "Bambini", "Bambine", "Bambinetto"], "Il maschile è bambino, il femminile bambina."),
