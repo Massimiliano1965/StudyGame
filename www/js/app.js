@@ -785,7 +785,7 @@
       $mt.hidden = !showM;
       if (showM) {
         const m = profile.music !== false;
-        $mt.textContent = m ? "🎵 Musica ON" : "🎵 Musica OFF";
+        $mt.innerHTML = m ? '🎵<span class="tx"> Musica ON</span>' : '🎵<span class="tx"> Musica OFF</span>';
         $mt.classList.toggle("off", !m);
         $mt.setAttribute("aria-pressed", String(m));
         $mt.setAttribute("aria-label", m ? "Musica accesa: tocca per spegnerla" : "Musica spenta: tocca per accenderla");
@@ -795,7 +795,7 @@
     $vt.hidden = !show;
     if (!show) return;
     const on = !!profile.autoRead;
-    $vt.textContent = on ? "🔊 Voce ON" : "🔇 Voce OFF";
+    $vt.innerHTML = on ? '🔊<span class="tx"> Voce ON</span>' : '🔇<span class="tx"> Voce OFF</span>';
     $vt.classList.toggle("off", !on);
     $vt.setAttribute("aria-pressed", String(on));
     $vt.setAttribute("aria-label", on ? "Voce accesa: tocca per spegnerla" : "Voce spenta: tocca per accenderla");

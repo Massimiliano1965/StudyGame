@@ -675,3 +675,5 @@ body.playing .topctl { gap: 4px; }
 .screen.play .gtop { gap: 4px; }
 .screen.play .gtop .chip { font-size: 12px; padding: 2px 7px; }
 .screen.play .gtop .icon-btn { width: 30px; height: 30px; min-height: 30px; font-size: 14px; }
+body.playing .voicetgl .tx { display: none; }
+body.playing .voicetgl { padding: 0 10px; font-size: 16px; }
