@@ -658,3 +658,20 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 body.playing .topctl { left: 8px; right: auto; top: calc(48px + env(safe-area-inset-top)); justify-content: flex-start; gap: 6px; }
 body.playing .voicetgl { min-height: 30px; padding: 0 10px; font-size: 12px; }
 .hero.fx { display: none; }
+
+/* ---------- narratore a sinistra (2/10/2026, richiesta di Massi) ---------- */
+.screen.play .gtop { left: auto; right: 8px; width: auto; justify-content: flex-end; }
+.screen.play .gtop .icon-btn { order: 3; }
+body.playing .topctl { left: 8px; right: auto; top: calc(8px + env(safe-area-inset-top)); }
+body.playing .voicetgl { min-height: 32px; padding: 0 9px; font-size: 12px; }
+.screen.play .hero.narr { right: auto; left: 4px; top: calc(52px + env(safe-area-inset-top)); }
+.screen.play { padding-top: 4px; }
+.screen.play:not(.quiz) { padding-top: 4px; }
+.screen.play.quiz { padding-top: 52px; }
+.screen.play .nbub { margin: 0 0 0 108px; min-height: 100px; justify-content: center; }
+.screen.play .nbub:after { right: auto; left: -14px; top: 40px; border-left: 0; border-right: 12px solid var(--edge); }
+body.playing .voicetgl { padding: 0 7px; font-size: 11px; gap: 3px; min-height: 30px; }
+body.playing .topctl { gap: 4px; }
+.screen.play .gtop { gap: 4px; }
+.screen.play .gtop .chip { font-size: 12px; padding: 2px 7px; }
+.screen.play .gtop .icon-btn { width: 30px; height: 30px; min-height: 30px; font-size: 14px; }
