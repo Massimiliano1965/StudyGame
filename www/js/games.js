@@ -636,7 +636,7 @@ const Games = (() => {
     gatto: "🐱", fiore: "🌸", penna: "🖊️", libro: "📖", casa: "🏠", albero: "🌳", bambino: "🧒", sedia: "🪑", mela: "🍎",
     cane: "🐶", mucca: "🐄", pecora: "🐑", asino: "🐴", leone: "🦁", rana: "🐸", cavallo: "🐴", maiale: "🐷",
     alto: "🦒", caldo: "🔥", freddo: "❄️", grande: "🐘", piccolo: "🐭", giorno: "☀️", notte: "🌙",
-    mare: "🌊", lago: "🏞️", montagna: "⛰️", fiume: "🏞️", pianura: "🌾", isola: "🏝️", Colosseo: "🏟️", colosseo: "🏟️", vesuvio: "🌋", piramidi: "🔺", partenone: "🏛️",
+    mare: "🌊", lago: "🏞️", montagna: "⛰️", fiume: "🏞️", pianura: "🌾", isola: "🏝️", Colosseo: "@colosseo", colosseo: "@colosseo", vesuvio: "🌋", piramidi: "🔺", partenone: "🏛️",
     inverno: "❄️", primavera: "🌸", estate: "☀️", autunno: "🍂", candela: "🕯️", lampadina: "💡", lettera: "✉️", telefono: "☎️", computer: "💻", automobile: "🚗", carrozza: "🐎",
     gattino: "🐱", cucciolo: "🐶", vitello: "🐮", agnello: "🐑", puledro: "🐴", pulcino: "🐥", occhi: "👀", orecchie: "👂", naso: "👃", pelle: "🖐️",
     radice: "🌱", foglia: "🍃", fiore: "🌸", seme: "🌰", tronco: "🪵", mercurio: "☿️", giove: "🟠", marte: "🔴", saturno: "🪐", terra: "🌍",
@@ -686,11 +686,11 @@ const Games = (() => {
       if (decor.length > 5) decor = decor.slice(0, rnd(5, decor.length));
       items = decor.map(it => [it[0], jit(flip ? 100 - it[1] : it[1]), Math.min(words.length ? 70 : 90, jit(it[2])), Math.round(it[3] * (0.9 + Math.random() * 0.25))]);
       shuffle(["✨", "⭐", "🎈", "💫", "🌟"]).slice(0, 2).forEach(e => items.push([e, rnd(8, 92), rnd(10, 40), rnd(24, 36)]));
-      if (words.length) strip = `<div class="sc-strip">${shuffle(words.slice()).map((e, i) => `<span style="animation-delay:${(items.length * 0.16 + i * 0.2).toFixed(2)}s">${e}</span>`).join("")}</div>`;
+      if (words.length) strip = `<div class="sc-strip">${shuffle(words.slice()).map((e, i) => `<span style="animation-delay:${(items.length * 0.16 + i * 0.2).toFixed(2)}s">${iconHtml(e)}</span>`).join("")}</div>`;
     }
     const dark = /#1B1F4B/.test(sc[0]);
     return `<div class="scene"><div class="sc-bg" style="background:${sc[0]};${dark ? "" : `filter:hue-rotate(${hue}deg)`}"></div>${items.map((it, i) =>
-      `<span class="sc-it" style="left:${it[1]}%;top:${it[2]}%;font-size:${it[3]}px;animation-delay:${(i * 0.16).toFixed(2)}s">${it[0]}</span>`).join("")}${strip}</div>
+      `<span class="sc-it" style="left:${it[1]}%;top:${it[2]}%;font-size:${it[3]}px;animation-delay:${(i * 0.16).toFixed(2)}s">${iconHtml(it[0])}</span>`).join("")}${strip}</div>
       <div class="sc-cap">🎉 ${esc(sc[2])}</div>
       <div class="sc-words">${pairs.map(p => `<span>${esc(p.l)} = ${esc(p.r)}</span>`).join("")}</div>`;
   }
