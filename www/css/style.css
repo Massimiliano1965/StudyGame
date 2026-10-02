@@ -440,7 +440,8 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 .vf-btns .btn { flex: 1; min-height: 72px; font-size: 24px; background: var(--card); color: var(--ink); }
 .vf-btns .btn.good { background: var(--good); color: #fff; opacity: 1; }
 .vf-btns .btn.bad { background: var(--bad); color: #fff; opacity: 1; }
-.vf-btns .btn[disabled] { opacity: .6; }
+.vf-btns .btn[disabled] { opacity: 1; }
+.vf-btns .btn.dim { opacity: .45; }
 
 /* ---------- Lettere mescolate ---------- */
 .lett { display: flex; flex-direction: column; gap: 16px; align-items: center; }
@@ -459,9 +460,19 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 /* ===== Trova l'intruso ===== */
 .odd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .odd-w { min-height: 84px; padding: 10px; font-family: inherit; font-weight: 800; font-size: 22px; line-height: 1.15; color: #2B2D52; background: #FFE066; border: 3px solid var(--edge); border-radius: 18px; box-shadow: 0 5px 0 var(--edge); overflow-wrap: anywhere; touch-action: manipulation; }
+.odd-w[disabled] { opacity: 1; }
+.odd-w.dim { opacity: .45; }
 .odd-w.good { background: var(--good); color: #fff; opacity: 1; }
 .odd-w.bad { background: var(--bad); color: #fff; opacity: 1; }
-.odd-w[disabled] { opacity: .7; }
+.odd-w.good::after { content: " ✓"; }
+.odd-w.bad::after { content: " ✗"; }
+
+/* esito risposta: verde che "salta", rosso che trema, coriandoli discreti */
+.pop { animation: ansPop .45s ease-out; }
+.shake { animation: shake .4s ease-in-out; }
+@keyframes ansPop { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+.confetto { position: fixed; z-index: 15; width: 9px; height: 14px; border-radius: 2px; pointer-events: none; animation: confetto 1s ease-out forwards; }
+@keyframes confetto { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 120px)) rotate(var(--rot)); } }
 
 /* interruttore voce ON/OFF (sempre visibile) */
 .topctl { position: fixed; left: 0; right: 0; top: calc(8px + env(safe-area-inset-top)); z-index: 25; display: flex; justify-content: center; gap: 8px; pointer-events: none; }

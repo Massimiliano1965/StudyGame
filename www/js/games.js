@@ -19,6 +19,29 @@ const Games = (() => {
   const setTap = fn => { tapFn = fn || (() => {}); };
   let boomFn = () => {};
   const setBoom = fn => { boomFn = fn || (() => {}); };
+  // piccola pioggia di coriandoli dal bottone giusto (discreta, ~1 secondo)
+  function cheer(btn) {
+    if (!btn || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+    const r = btn.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const cols = ["#FFD23F", "#FF5C8A", "#3DDC84", "#4FC3F7", "#FF8A3D"];
+    for (let k = 0; k < 16; k++) {
+      const s = document.createElement("span");
+      s.className = "confetto";
+      s.style.left = cx + "px"; s.style.top = cy + "px";
+      s.style.background = cols[k % cols.length];
+      s.style.setProperty("--dx", (Math.random() * 240 - 120) + "px");
+      s.style.setProperty("--dy", (Math.random() * -170 - 30) + "px");
+      s.style.setProperty("--rot", (Math.random() * 720 - 360) + "deg");
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 1000);
+    }
+  }
+  // esito visibile su una risposta a bottoni: la giusta diventa verde (✓), quella sbagliata rossa (✗), le altre si spengono
+  function markAnswer(root, sel, goodBtn, chosenBtn, ok) {
+    root.querySelectorAll(sel).forEach(x => { if (x !== goodBtn && x !== chosenBtn) x.classList.add("dim"); });
+    if (goodBtn) { goodBtn.classList.add("good"); if (ok) { goodBtn.classList.add("pop"); cheer(goodBtn); } }
+    if (!ok && chosenBtn) chosenBtn.classList.add("bad", "shake");
+  }
   function stop() { if (raf) { cancelAnimationFrame(raf); raf = 0; } }
 
   // ====================================================================
@@ -1161,9 +1184,9 @@ const Games = (() => {
       const c = C[i], said = b.dataset.v === "1", ok = said === c.truth;
       el.querySelectorAll("[data-v]").forEach(x => { x.disabled = true; });
       const good = el.querySelector(`[data-v="${c.truth ? 1 : 0}"]`);
-      if (good) good.classList.add("good");
+      markAnswer(el, "[data-v]", good, b, ok);
       if (ok) right++; else {
-        mistakes++; boomFn(); b.classList.add("bad");
+        mistakes++; boomFn();
         wrongList.push(`${c.q.q} → ${c.right}`);
         const card = el.querySelector(".vf-card");
         if (card) card.insertAdjacentHTML("beforeend", `<div class="vf-fix">Giusto: <b>${esc(c.right)}</b></div>`);
@@ -1173,7 +1196,7 @@ const Games = (() => {
         busy = false;
         if (mistakes > 2 || i >= C.length - 1) { finish(); return; }
         i++; draw();
-      }, ok ? 650 : 1500);
+      }, ok ? 1000 : 1500);
     };
     draw();
   }
@@ -1293,9 +1316,9 @@ const Games = (() => {
       const c = R[i], ok = +b.dataset.k === c.odd;
       el.querySelectorAll("[data-k]").forEach(x => { x.disabled = true; });
       const good = el.querySelector(`[data-k="${c.odd}"]`);
-      if (good) good.classList.add("good");
+      markAnswer(el, "[data-k]", good, b, ok);
       if (ok) right++; else {
-        mistakes++; boomFn(); b.classList.add("bad");
+        mistakes++; boomFn();
         wrongList.push(`${c.words[c.odd]} è l'intruso (gli altri: ${c.rest.join(", ")})`);
         const card = el.querySelector(".vf-card");
         if (card) card.insertAdjacentHTML("beforeend", `<div class="vf-fix">Gli altri tre vanno insieme: <b>${esc(c.rest.join(", "))}</b></div>`);
@@ -1305,7 +1328,7 @@ const Games = (() => {
         busy = false;
         if (mistakes > 2 || i >= R.length - 1) { finish(); return; }
         i++; draw();
-      }, ok ? 650 : 1900);
+      }, ok ? 1000 : 1900);
     };
     draw();
   }
