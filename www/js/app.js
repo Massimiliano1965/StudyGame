@@ -313,9 +313,18 @@
       localStorage.setItem(K_RESUME, JSON.stringify({
         at: Date.now(), day: Storage.today(), classId: profile && profile.classId,
         g: { subjects: g.subjects, streak: g.streak, right: g.right, lastKind: g.lastKind, cls: g.cls, rel: g.rel, sec: g.sec,
-          rounds: g.rounds, okCount: g.okCount, loseRun: g.loseRun, help: g.help, helpAt: g.helpAt, nextBreak: g.nextBreak }
+          rounds: g.rounds, okCount: g.okCount, loseRun: g.loseRun, help: g.help, helpAt: g.helpAt, nextBreak: g.nextBreak },
+        cur: g.answered ? null : plain({ sid: g.sid, q: g.q, round: g.round, practice: !!g.practice })
       }));
     } catch (e) {}
+  }
+  // copia "pulita" (solo dati); se c'è dentro una funzione non si può salvare e si torna a null
+  function plain(o) {
+    try {
+      let bad = false;
+      const t = JSON.stringify(o, (k, v) => { if (typeof v === "function") bad = true; return v; });
+      return bad ? null : JSON.parse(t);
+    } catch (e) { return null; }
   }
   function clearResume() { try { localStorage.removeItem(K_RESUME); } catch (e) {} }
   function tryResume() {
@@ -328,6 +337,16 @@
     setTheme(profile.classId);
     game = Object.assign({ listening: false, round: null }, r.g, { subjects });
     lastJingle = { sid: game.subjects[0], at: Date.now() };   // niente stacchetto al rientro
+    const c = r.cur;
+    if (c && c.sid && (c.q || c.round) && game.subjects.includes(c.sid)) {
+      Games.stop();
+      game.sid = c.sid; game.q = c.round ? null : c.q; game.round = c.round || null; game.practice = !!c.practice;
+      game.orig = plain({ q: game.q, round: game.round });
+      game.answered = false; game.chosen = -1; game.mood = "happy"; game.fb = null; game.listening = false;
+      if (game.sid === "lingua2") { L2.use(profile.l2); Voice.setForeign(L2.loc()); } else Voice.setForeign("en-US");
+      renderGame();
+      return true;
+    }
     nextQuestion();
     return true;
   }
@@ -408,7 +427,9 @@
     game.lastKind = game.round ? game.round.kind : "quiz";
     game.q = game.round ? null : Questions.next(game.sid, game.cls);
     game.answered = false; game.chosen = -1; game.mood = "happy"; game.fb = null; game.listening = false;
+    game.practice = false; game.orig = plain({ q: game.q, round: game.round });
     renderGame();
+    saveResume();
     // stacchetto musicale: all'inizio della sfida, poi solo se cambia materia e sono passati 90 secondi
     const now = Date.now();
     if (lastJingle.sid === null || (game.sid !== lastJingle.sid && now - lastJingle.at > JINGLE_GAP)) {
@@ -552,6 +573,7 @@
         ${showSol && fb.correct ? `<p class="sol">Soluzione: <b>${esc(fb.correct)}</b></p>` : ""}
         ${fb.text ? `<p>${esc(fb.text)}</p>` : ""}
         <button class="btn big flash" data-act="next-q">Avanti ▶</button>
+        <button class="btn alt big" data-act="repeat-q">🔁 Ripeti questa sfida</button>
         ${game && game.help ? `<button class="btn alt big" data-act="help">🙋 Serve aiuto? Chiama mamma o papà</button>` : ""}
       </div>`;
   }
@@ -605,18 +627,21 @@
 
   function finishRound(ok, expl, correct) {
     Voice.stopSpeaking();
-    const r = Credit.answer(ok, game.rel);
-    Stats.round(game.sid, ok, r.rel === 0 && game.rel < 0 ? -1 : game.rel);
-    game.rounds++; if (ok) { game.okCount++; game.loseRun = 0; } else game.loseRun++;
+    const r = game.practice ? { delta: 0, rel: game.rel } : Credit.answer(ok, game.rel);
+    if (!game.practice) {
+      Stats.round(game.sid, ok, r.rel === 0 && game.rel < 0 ? -1 : game.rel);
+      game.rounds++; if (ok) { game.okCount++; game.loseRun = 0; } else game.loseRun++;
+    }
     // il piccolo è in difficoltà: 5 sbagliati di fila, oppure più di 20 minuti con meno del 30% di giuste
     if (!game.help && Date.now() - game.helpAt > 600000 &&
         (game.loseRun >= 5 || (game.sec >= 1200 && game.rounds >= 5 && game.okCount / game.rounds < 0.3))) game.help = true;
     game.answered = true; game.mood = ok ? "cheer" : "sad"; game.listening = false;
-    if (ok) { game.streak++; game.right++; } else { game.streak = 0; }
+    if (!game.practice) { if (ok) { game.streak++; game.right++; } else { game.streak = 0; } }
     const th = themeFor(profile.classId);
     let text = expl || "";
-    if (ok && r.delta === 0) text = (text ? text + " " : "") + "Hai già il massimo di oggi, ma continua pure per allenarti!";
-    if (!ok && r.delta === 0) text = (text ? text + " " : "") + (r.rel > 0 ? "Livello più alto: non perdi minuti, e provando si impara!" : "I minuti garantiti restano tuoi.");
+    if (game.practice) text = (text ? text + " " : "") + "Ripasso: i minuti non cambiano.";
+    else if (ok && r.delta === 0) text = (text ? text + " " : "") + "Hai già il massimo di oggi, ma continua pure per allenarti!";
+    if (!game.practice && !ok && r.delta === 0) text = (text ? text + " " : "") + (r.rel > 0 ? "Livello più alto: non perdi minuti, e provando si impara!" : "I minuti garantiti restano tuoi.");
     game.fb = { title: ok ? pick(PRAISE[th]) : pick(OOPS), delta: r.delta, text, correct: ok ? "" : (correct || "") };
   }
 
@@ -1052,6 +1077,15 @@
     "narr-no": () => narrChoice(false),
     mic: () => listenForAnswer(),
     "next-q": () => nextQuestion(),
+    "repeat-q": () => {
+      if (!game || !game.orig) return;
+      Voice.stopSpeaking(); Games.stop();
+      const o = plain(game.orig);
+      game.q = o.round ? null : o.q; game.round = o.round || null;
+      game.practice = true; game.answered = false; game.chosen = -1; game.mood = "happy"; game.fb = null; game.listening = false;
+      renderGame(); saveResume();
+      if (profile.autoRead) readQuestion();
+    },
     exit: () => { Voice.stopSpeaking(); Music.stop(); showHome(); },
     // impostazioni
     close: () => closeModal(),
