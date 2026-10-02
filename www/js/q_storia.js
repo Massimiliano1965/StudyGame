@@ -15,11 +15,8 @@
     S("Quale oggetto i nonni da piccoli non avevano?", ["Il tablet", "Il pane", "Le scarpe", "Il cappello"], "Il tablet è stato inventato molti anni dopo."),
     S("Gli uomini della preistoria vivevano…", ["Nelle caverne", "Nei grattacieli", "Nelle astronavi", "Nei castelli"], "Per ripararsi dal freddo usavano le grotte."),
     S("Perché l'uomo primitivo accendeva il fuoco?", ["Per scaldarsi e cuocere il cibo", "Per guardare la TV", "Per ricaricare il telefono", "Per fare le fotografie"], "Il fuoco dava calore, luce e permetteva di cuocere il cibo."),
-    S("Come si chiamano i resti di animali o piante molto antichi?", ["Fossili", "Giocattoli", "Monete", "Libri"], "I fossili ci raccontano com'era la vita tanto tempo fa."),
     S("Quale di questi animali è un dinosauro?", ["Il tirannosauro", "L'elefante", "L'orso", "La tigre"], "Il tirannosauro viveva milioni di anni fa."),
-    S("In quale paese sono state costruite le grandi piramidi?", ["Egitto", "Francia", "Giappone", "Canada"], "Le piramidi sono state costruite dagli antichi Egizi."),
     S("Che cos'è il Colosseo?", ["Una grande arena dell'antica Roma", "Un castello medievale", "Una piramide", "Un ponte"], "Nel Colosseo si facevano spettacoli e combattimenti."),
-    S("I cavalieri del Medioevo vivevano spesso in…", ["Castelli", "Astronavi", "Capanne di ghiaccio", "Grattacieli"], "I signori e i cavalieri abitavano nei castelli."),
     S("Che cosa viene prima: ieri o domani?", ["Ieri", "Domani", "Nessuno dei due", "Vengono insieme"], "Ieri è già passato, domani deve ancora arrivare.")
   ];
 

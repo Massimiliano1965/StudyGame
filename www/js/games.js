@@ -449,7 +449,7 @@ const Games = (() => {
     A: [
       { prompt: "Collega ogni giorno della settimana al giorno che viene dopo.", pairs: [["lunedì", "martedì"], ["martedì", "mercoledì"], ["mercoledì", "giovedì"], ["giovedì", "venerdì"], ["venerdì", "sabato"], ["sabato", "domenica"]] },
       { prompt: "Collega ogni stagione a un suo mese.", pairs: [["inverno", "gennaio"], ["primavera", "aprile"], ["estate", "luglio"], ["autunno", "ottobre"]] },
-      { prompt: "Collega ogni cosa di una volta a quella di oggi.", pairs: [["candela", "lampadina"], ["lettera", "messaggio"], ["carrozza", "automobile"], ["telegrafo", "telefono"], ["macchina da scrivere", "computer"]] }
+      { prompt: "Collega ogni cosa di una volta a quella di oggi.", pairs: [["candela", "lampadina"], ["lettera", "messaggio"], ["carrozza", "automobile"]] }
     ],
     B: [
       { prompt: "Collega ogni popolo antico al suo luogo.", pairs: [["Egizi", "Nilo"], ["Sumeri", "Mesopotamia"], ["Greci", "Atene"], ["Romani", "Roma"], ["Etruschi", "Etruria"]] },
@@ -517,7 +517,7 @@ const Games = (() => {
   };
   const ART_PAIRS = {
     A: [
-      { prompt: "Collega ogni mescolanza di colori al colore che si ottiene.", pairs: [["giallo + blu", "verde"], ["giallo + rosso", "arancione"], ["rosso + blu", "viola"], ["rosso + bianco", "rosa"], ["blu + bianco", "azzurro"]] },
+      { prompt: "Collega ogni cosa al suo colore.", pairs: [["sole", "giallo"], ["erba", "verde"], ["fragola", "rosso"], ["neve", "bianco"], ["cielo sereno", "azzurro"]] },
       { prompt: "Collega ogni artista a ciò che usa.", pairs: [["pittore", "pennello"], ["scultore", "scalpello"], ["fotografo", "macchina fotografica"], ["disegnatore", "matita"], ["ceramista", "argilla"]] }
     ],
     B: [

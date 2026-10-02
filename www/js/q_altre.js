@@ -88,13 +88,13 @@
 
   // ===================== ARTE =====================
   const ART_A = [
-    S("Quali sono i tre colori primari?", ["Rosso, giallo e blu", "Verde, viola e arancione", "Rosa, nero e bianco", "Marrone, grigio e verde"], "Con i primari si ottengono quasi tutti gli altri colori."),
-    S("Giallo e blu mescolati danno…", ["Verde", "Viola", "Arancione", "Rosa"], "Giallo + blu = verde."),
-    S("Giallo e rosso mescolati danno…", ["Arancione", "Verde", "Viola", "Azzurro"], "Giallo + rosso = arancione."),
-    S("Rosso e blu mescolati danno…", ["Viola", "Verde", "Arancione", "Giallo"], "Rosso + blu = viola."),
-    S("Rosso e bianco mescolati danno…", ["Rosa", "Viola", "Verde", "Grigio"], "Il bianco schiarisce il rosso."),
-    S("Quale di questi è un colore caldo?", ["Il rosso", "L'azzurro", "Il blu", "Il verde acqua"], "Rosso, arancione e giallo sono colori caldi."),
-    S("Quale di questi è un colore freddo?", ["L'azzurro", "Il rosso", "L'arancione", "Il giallo"], "Blu e azzurro sono colori freddi."),
+    S("Di che colore è il sole nei disegni?", ["Giallo", "Blu", "Verde", "Nero"], "Il sole si colora di giallo."),
+    S("Di che colore è l'erba?", ["Verde", "Rosso", "Viola", "Rosa"], "L'erba è verde."),
+    S("Di che colore è il cielo sereno?", ["Azzurro", "Marrone", "Nero", "Arancione"], "Il cielo sereno è azzurro."),
+    S("Di che colore è una fragola matura?", ["Rossa", "Blu", "Verde scuro", "Nera"], "La fragola matura è rossa."),
+    S("Di che colore è la neve?", ["Bianca", "Rossa", "Verde", "Gialla"], "La neve è bianca."),
+    S("Di che colore è una banana matura?", ["Gialla", "Blu", "Rossa", "Viola"], "La banana matura è gialla."),
+    S("Quale di questi è un colore?", ["Rosso", "Tavolo", "Gatto", "Scarpa"], "Il rosso è un colore."),
     S("Come si chiama chi dipinge quadri?", ["Pittore", "Scultore", "Fornaio", "Cuoco"], "Il pittore usa pennelli e colori."),
     S("Come si chiama chi scolpisce le statue?", ["Scultore", "Pittore", "Postino", "Giardiniere"], "Lo scultore modella o scolpisce."),
     S("Quale strumento usa il pittore?", ["Il pennello", "Il martello da muratore", "La pentola", "Il cacciavite"], "Il pennello stende il colore."),
@@ -106,8 +106,7 @@
     S("Con quale materiale si modellano vasi e statuine?", ["Con l'argilla", "Con l'acqua", "Con la carta velina", "Con la stoffa"], "L'argilla si modella con le mani."),
     S("Chi dipinse la Gioconda?", ["Leonardo da Vinci", "Michelangelo", "Picasso", "Van Gogh"], "La Gioconda è di Leonardo."),
     S("Quale strumento si usa per disegnare linee dritte?", ["Il righello", "La spugna", "Il pennello", "Il cucchiaio"], "Il righello guida la linea."),
-    S("Quale di questi si usa per colorare?", ["I pastelli", "Le forbici", "Il martello", "Il metro"], "I pastelli colorano."),
-    S("Quale colore si ottiene mescolando blu e bianco?", ["Azzurro", "Verde", "Nero", "Marrone"], "Il bianco schiarisce il blu.")
+    S("Quale di questi si usa per colorare?", ["I pastelli", "Le forbici", "Il martello", "Il metro"], "I pastelli colorano.")
   ];
 
   const ART_B = [
