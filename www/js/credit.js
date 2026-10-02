@@ -1,6 +1,6 @@
 // ===== Minuti di telefono guadagnati =====
 // Si parte da MIN_MINUTES (garantiti). Il premio dipende dal livello scelto rispetto alla classe reale:
-// livello più basso +0,5 / −1,5; il proprio +2 / −1; più alto +3 / 0 (con tetto giornaliero HIGH_CAP).
+// livello più basso +1 / −1,5; il proprio +2 / −1; più alto +3 / 0 (con tetto giornaliero HIGH_CAP).
 // Non si scende mai sotto il minimo garantito e non si supera il tetto della fascia.
 const Credit = (() => {
   let state = Storage.loadDay();

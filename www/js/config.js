@@ -6,7 +6,7 @@ const CONFIG = {
   MAX_BY_BAND: [60, 90, 120],   // tetto giornaliero: 1ª-2ª elementare 1 h, 3ª-5ª elementare 1 h 30, medie 2 h
   // Minuti per risposta, secondo il livello scelto rispetto alla classe REALE (bloccata dal PIN dei genitori):
   // low = esercizi di una classe inferiore, same = della sua classe, high = di una classe superiore
-  REWARD: { low: { ok: 0.5, ko: 1.5 }, same: { ok: 2, ko: 1 }, high: { ok: 3, ko: 0 } },
+  REWARD: { low: { ok: 1, ko: 1.5 }, same: { ok: 2, ko: 1 }, high: { ok: 3, ko: 0 } },
   HIGH_CAP: 30,       // minuti al giorno guadagnabili col livello più alto; oltre, vale come il proprio livello
   PIN_TRIES: 5,       // tentativi sbagliati di PIN prima della pausa
   PIN_PAUSE_MIN: 5,   // minuti di pausa dopo troppi tentativi

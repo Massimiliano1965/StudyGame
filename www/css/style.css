@@ -619,3 +619,27 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 .rep-list { list-style: none; margin: 0; padding: 0; }
 .rep-list li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,.08); font-size: 15px; }
 .rep-list li span:last-child { font-weight: 700; text-align: right; }
+
+/* ---------- tutto nello stesso schermo, senza scroll (2/10/2026) ---------- */
+.screen { min-height: calc(100vh - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); min-height: calc(100dvh - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); gap: 10px; }
+.nav { position: sticky; bottom: 0; z-index: 5; padding: 14px 0 2px; background: linear-gradient(to bottom, rgba(0,0,0,0), var(--bg-b) 38%); }
+/* il feedback con "Avanti" resta fisso in basso: non serve scorrere */
+.feedback { position: sticky; bottom: 6px; z-index: 5; }
+#gfb { position: sticky; bottom: 6px; z-index: 5; }
+.feedback .btn.big { min-height: 56px; font-size: 22px; }
+/* pupazzetto più piccolo nelle schermate di gioco, così domanda e risposte salgono */
+.gtop + .hero.small { width: 84px; }
+.gtop + .hero.xs { width: 64px; }
+@media (max-height: 800px) {
+  .hero { width: 150px; }
+  .hero.small { width: 96px; }
+  .gtop + .hero.small { width: 72px; }
+  .gtop + .hero.xs { width: 56px; }
+  .screen { gap: 8px; }
+  .qcard { padding: 12px; gap: 8px; }
+  .answers { gap: 8px; }
+  .ans { min-height: 56px; }
+  .family .char { width: 70%; }
+  .avatar.xl { width: 110px; height: 110px; }
+  h1 { font-size: 27px; }
+}
