@@ -102,8 +102,8 @@ const Voice = (() => {
   // Stile della voce: tono (pitch), velocità e genere (f/m), scelti dal personaggio e dalle Impostazioni.
   let STYLE = { pitch: 1, rate: 0.95, g: "f" };
   const setStyle = s => { STYLE = { ...STYLE, ...s }; };
-  // Voci italiane di Google: ita/itd/ite sono femminili, itb/itc maschili (se non ci sono si usa la prima locale)
-  const GENDER_IDS = { f: ["-ita-", "-itd-", "-ite-"], m: ["-itb-", "-itc-"] };
+  // Voci italiane di Google: itb/itc sono femminili, ita/itd/ite maschili (verificato sul telefono di Massi; se non ci sono si usa la prima locale)
+  const GENDER_IDS = { f: ["-itb-", "-itc-"], m: ["-ita-", "-itd-", "-ite-"] };
   let voicesP = null;
   const voiceCache = {};
   function pickVoice(loc, g) {
