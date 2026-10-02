@@ -28,7 +28,7 @@ const Storage = (() => {
   const saveDay = s => write(K_DAY, s);
 
   function resetAll() {
-    try { localStorage.removeItem(K_PROFILE); localStorage.removeItem(K_DAY); } catch (e) {}
+    try { localStorage.removeItem(K_PROFILE); localStorage.removeItem(K_DAY); localStorage.removeItem("sg2_hist"); } catch (e) {}
   }
 
   return { loadProfile, saveProfile, loadDay, saveDay, resetAll, today };

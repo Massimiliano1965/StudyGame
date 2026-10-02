@@ -122,6 +122,20 @@
   // ====================================================================
   // CREAZIONE / MODIFICA PROFILO
   // ====================================================================
+  // primo avvio: schermata parlante con i tre compagni, per i più piccoli che ancora non leggono
+  function showWelcome() {
+    setTheme(null);
+    const fams = Characters.FAMILIES;
+    $app.innerHTML = `<section class="screen welcome">
+      ${brandHtml()}
+      <div class="center"><h1>Ciao! Benvenuto!</h1></div>
+      <div class="trio">${fams.map(f => `<div class="mate">${Characters.svg({ family: f.id, color: Characters.COLORS[fams.indexOf(f) % Characters.COLORS.length].hex, stage: 0, mood: "cheer" })}<b>${esc(f.pet)}</b></div>`).join("")}</div>
+      <p class="center muted">Giochiamo insieme e vinciamo minuti di telefono!</p>
+      <button class="btn big flash" data-act="welcome-go">Avanti ▶</button>
+    </section>`;
+    Voice.speak("Ciao! Benvenuto in Gioca e Impara! Io sono Pufo, lui è Bip e lui è Rudy. Giocheremo insieme! Tocca il pulsante che lampeggia.", msg => toast(msg, 6000));
+  }
+
   // installazione nuova: prima il PIN dei genitori (a meno che sia già deciso dalla build), poi il profilo
   function beginSetup(yes) {
     pendingAuto = yes;
@@ -175,8 +189,8 @@
       nextLabel = "Ho finito! ✔";
       body = `<div class="center"><h1>Vuoi metterci la tua foto?</h1><p class="muted" style="margin-top:6px">È facoltativa. La foto resta solo su questo telefono e non viene mai inviata.</p></div>
         ${avatarHtml(d, "xl")}
-        ${navigator.camera ? `<div class="btn-row"><button class="btn alt big" data-act="photo-cam">📷 Scatta</button><button class="btn alt big" data-act="photo-gal">🖼️ Galleria</button></div>`
-          : `<label class="btn alt big" for="photo">📷 Scegli una foto</label><input id="photo" type="file" accept="image/*" hidden>`}
+        ${navigator.camera ? `<div class="btn-row"><button class="btn alt big flash" data-act="photo-cam">📷 Scatta</button><button class="btn alt big" data-act="photo-gal">🖼️ Galleria</button></div>`
+          : `<label class="btn alt big flash" for="photo">📷 Scegli una foto</label><input id="photo" type="file" accept="image/*" hidden>`}
         ${d.photo ? `<button class="btn ghost" data-act="nophoto">Togli la foto</button>` : `<p class="muted center">Se non la metti, usi il tuo compagno come avatar.</p>`}`;
     } else {
       nextLabel = "Ho finito! ✔";
@@ -190,19 +204,30 @@
     $app.innerHTML = `<section class="screen">${dotsHtml(s)}${body}
       <div class="nav">
         ${wiz.pinOnly ? (wiz.pinForce ? "" : `<button class="btn ghost" data-act="cancel">Annulla</button>`) : s > 0 ? `<button class="btn ghost" data-act="back">◀ Indietro</button>` : (wiz.editing ? `<button class="btn ghost" data-act="cancel">Annulla</button>` : "")}
-        <button id="next" class="btn" data-act="next" ${canNext ? "" : "disabled"}>${nextLabel}</button>
+        <button id="next" class="btn ${canNext && s !== 3 ? "flash" : ""}" data-act="next" ${canNext ? "" : "disabled"}>${nextLabel}</button>
       </div></section>`;
 
     const nick = document.getElementById("nick");
     if (nick) {
       nick.addEventListener("input", () => {
         wiz.d.nick = nick.value;
-        document.getElementById("next").disabled = nick.value.trim().length < 2;
+        const nx = document.getElementById("next"), okn = nick.value.trim().length >= 2;
+        nx.disabled = !okn; nx.classList.toggle("flash", okn);
       });
+    }
+    // profilo nuovo: ogni passo si legge da solo, una volta
+    if (!wiz.editing) {
+      const key = wiz.pinFirst ? "pin" : s;
+      wiz.said = wiz.said || {};
+      if (!wiz.said[key]) {
+        wiz.said[key] = true;
+        const t = wiz.pinFirst ? STEP_SAY.pin : STEP_SAY.steps[s];
+        if (t && pendingAuto !== false) Voice.speak(t, msg => toast(msg, 6000));
+      }
     }
     const p1 = document.getElementById("pin1"), p2 = document.getElementById("pin2");
     if (p1 && p2) {
-      const upd = () => { wiz.pin1 = p1.value.replace(/\D/g, ""); wiz.pin2 = p2.value.replace(/\D/g, ""); document.getElementById("next").disabled = !pinValid(); };
+      const upd = () => { wiz.pin1 = p1.value.replace(/\D/g, ""); wiz.pin2 = p2.value.replace(/\D/g, ""); const nx = document.getElementById("next"); nx.disabled = !pinValid(); nx.classList.toggle("flash", pinValid()); };
       p1.addEventListener("input", upd); p2.addEventListener("input", upd);
     }
     const photo = document.getElementById("photo");
@@ -309,7 +334,7 @@
       }).join("")}</div>
       <div class="dock">
         <button class="btn alt" data-act="surprise">🎲 Sorprendimi</button>
-        <button class="btn" data-act="play">▶ Gioca!</button>
+        <button class="btn flash" data-act="play">▶ Gioca!</button>
       </div></section>`;
   }
 
@@ -324,7 +349,8 @@
   function startGame(ids) {
     const ok = ids.filter(isReady);
     if (!ok.length) { toast("Scegli almeno una sfida con il bollino verde."); return; }
-    game = { subjects: ok, streak: 0, right: 0, listening: false, lastKind: "", round: null, cls: playClass(), rel: relOf(playClass()) };
+    game = { subjects: ok, streak: 0, right: 0, listening: false, lastKind: "", round: null, cls: playClass(), rel: relOf(playClass()),
+      sec: 0, rounds: 0, okCount: 0, loseRun: 0, help: false, helpAt: 0, nextBreak: 2700 };
     lastJingle = { sid: null, at: 0 };
     nextQuestion();
   }
@@ -482,7 +508,8 @@
         <div class="head"><h2>${esc(fb.title)}</h2><span class="delta ${fb.delta > 0 ? "up" : fb.delta < 0 ? "down" : ""}">${fb.delta > 0 ? "+" : fb.delta < 0 ? "−" : ""}${fb.delta === 0 ? "" : Credit.fmtDelta(fb.delta) + " min"}</span></div>
         ${showSol && fb.correct ? `<p class="sol">Soluzione: <b>${esc(fb.correct)}</b></p>` : ""}
         ${fb.text ? `<p>${esc(fb.text)}</p>` : ""}
-        <button class="btn big" data-act="next-q">Avanti ▶</button>
+        <button class="btn big flash" data-act="next-q">Avanti ▶</button>
+        ${game && game.help ? `<button class="btn alt big" data-act="help">🙋 Serve aiuto? Chiama mamma o papà</button>` : ""}
       </div>`;
   }
 
@@ -541,6 +568,11 @@
   function finishRound(ok, expl, correct) {
     Voice.stopSpeaking();
     const r = Credit.answer(ok, game.rel);
+    Stats.round(game.sid, ok, r.rel === 0 && game.rel < 0 ? -1 : game.rel);
+    game.rounds++; if (ok) { game.okCount++; game.loseRun = 0; } else game.loseRun++;
+    // il piccolo è in difficoltà: 5 sbagliati di fila, oppure più di 20 minuti con meno del 30% di giuste
+    if (!game.help && Date.now() - game.helpAt > 600000 &&
+        (game.loseRun >= 5 || (game.sec >= 1200 && game.rounds >= 5 && game.okCount / game.rounds < 0.3))) game.help = true;
     game.answered = true; game.mood = ok ? "cheer" : "sad"; game.listening = false;
     if (ok) { game.streak++; game.right++; } else { game.streak = 0; }
     const th = themeFor(profile.classId);
@@ -672,6 +704,15 @@
   // ====================================================================
   // NARRAZIONE: scelta iniziale e pulsante su ogni schermata
   // ====================================================================
+  // frasi lette a voce durante la creazione del profilo (per chi ancora non sa leggere)
+  const STEP_SAY = {
+    pin: "Adesso tocca a mamma e papà. Scegliete un PIN di quattro cifre.",
+    steps: ["Come ti chiami? Scrivi il tuo nome nella casella.",
+      "Che classe fai? Tocca il tuo numero. Se non lo sai, chiedi a mamma e papà.",
+      "Scegli il tuo compagno: Pufo, Bip o Rudy. Tocca quello che ti piace di più.",
+      "Vuoi mettere una fotografia? Tocca la macchina fotografica, oppure fatti aiutare da mamma e papà. Se non vuoi, tocca Ho finito."]
+  };
+
   function askNarration(cb) {
     askCb = cb;
     setTheme(null);
@@ -692,11 +733,10 @@
 
   function getNarration() {
     if (askCb) return "Vuoi che ti legga le domande? Tocca sì, leggimele, oppure no, grazie.";
-    if (wiz) return ["Ciao! Come ti chiami? Scrivi il tuo nome o un soprannome inventato.",
-      "Che classe fai? Così ti preparo le sfide giuste.",
-      "Scegli il tuo compagno. Crescerà con te, classe dopo classe!",
-      "Vuoi metterci la tua foto? È facoltativa e resta solo su questo telefono."][wiz.step] || "";
+    if (wiz && wiz.pinFirst) return STEP_SAY.pin;
+    if (wiz) return STEP_SAY.steps[wiz.step] || "";
     if (game) return game.answered && game.fb ? feedbackSpeech() : (game.round ? roundSpeech(game.round) : questionSpeech());
+    if (!profile) return "Ciao! Benvenuto in Gioca e Impara! Io sono Pufo, lui è Bip e lui è Rudy. Giocheremo insieme! Tocca il pulsante che lampeggia.";
     if (profile) return `Ciao ${profile.nick}! Oggi hai ${Credit.format(Credit.get())} di telefono. Scegli le sfide che vuoi e tocca Gioca.`;
     return "";
   }
@@ -752,6 +792,7 @@
       <div class="row-set l2-set"><span class="set-label">Seconda lingua</span><div class="l2-pick">${L2.codes().map(c => `<button class="switch ${(p.l2 || L2.DEFAULT) === c ? "on" : ""}" data-act="set-l2" data-id="${c}" aria-pressed="${(p.l2 || L2.DEFAULT) === c}"><span class="fl">${L2.LANGS[c].flag}</span><span>${L2.LANGS[c].name}</span></button>`).join("")}</div></div>
       <div class="row-set"><span>Suoni</span><button class="switch ${p.sound !== false ? "on" : ""}" data-act="toggle-sound" aria-pressed="${p.sound !== false}">${p.sound !== false ? "Sì" : "No"}</button></div>
       ${lockBoxHtml()}
+      <button class="btn alt" data-act="report">📊 Resoconto per i genitori</button>
       <button class="btn ghost" data-act="change-pin">🔐 Cambia PIN dei genitori</button>
       <button class="btn ghost" data-act="info">ℹ️ Avvertenze</button>
       <button class="btn ghost" data-act="reset">🗑 Ricomincia da zero</button>
@@ -798,6 +839,38 @@
       <input id="pin-in" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN">
       <button class="btn" data-act="pin-go">OK</button>
       <button class="btn ghost" data-act="close">Annulla</button>`);
+  }
+
+  const fmtSec = t => { const m = Math.round(t / 60), h = Math.floor(m / 60); return h ? `${h} h ${String(m % 60).padStart(2, "0")} min` : `${m} min`; };
+  function openHelp() {
+    openModal(`<h2>🙋 Aiuto dei genitori</h2><p>Regala dei minuti oppure togli per oggi la penalità delle risposte sbagliate.</p>
+      <div class="btn-row"><button class="btn alt" data-act="gift" data-n="5">🎁 +5 min</button><button class="btn alt" data-act="gift" data-n="10">🎁 +10 min</button><button class="btn alt" data-act="gift" data-n="15">🎁 +15 min</button></div>
+      <button class="btn" data-act="nopen">Oggi nessuna penalità</button>
+      <button class="btn ghost" data-act="close">Chiudi</button>`);
+  }
+  function openReport() {
+    Stats.flush();
+    const d = Stats.days(7), t = d[0], pc = (a, b) => (a + b) ? Math.round(a / (a + b) * 100) + "%" : "–";
+    const subj = Object.entries(t.subj).map(([id, v]) => { const s = SUBJECTS.find(x => x.id === id); return `<li><span>${s ? s.icon + " " + esc(s.name) : esc(id)}</span><span>✅ ${v[0]} · ❌ ${v[1]}</span></li>`; }).join("");
+    const lv = (k, n) => t.lvl[k][0] + t.lvl[k][1] ? `<li><span>${n}</span><span>✅ ${t.lvl[k][0]} · ❌ ${t.lvl[k][1]}</span></li>` : "";
+    const rows = d.map(x => `<li><span>${esc(x.date.toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" }))}</span><span>${fmtSec(x.sec)} · ✅ ${x.ok} · ❌ ${x.ko}</span></li>`).join("");
+    openModal(`<h2>📊 Resoconto di ${esc(profile.nick)}</h2>
+      <div class="report">
+        <h3>Oggi</h3>
+        <ul class="rep-list">
+          <li><span>Tempo nell'app</span><span>${fmtSec(t.sec)}</span></li>
+          <li><span>Minuti di telefono guadagnati</span><span>${esc(Credit.format(Credit.get()))}</span></li>
+          <li><span>Giochi fatti</span><span>${t.rounds}</span></li>
+          <li><span>Riusciti</span><span>✅ ${t.ok} (${pc(t.ok, t.ko)})</span></li>
+          <li><span>Non riusciti</span><span>❌ ${t.ko}</span></li>
+          ${t.gift ? `<li><span>Minuti regalati</span><span>🎁 ${t.gift}</span></li>` : ""}
+          ${t.help ? `<li><span>Richieste di aiuto</span><span>🙋 ${t.help}</span></li>` : ""}
+        </ul>
+        ${subj ? `<h3>Per materia</h3><ul class="rep-list">${subj}</ul>` : ""}
+        ${(t.lvl.low[0] + t.lvl.low[1] + t.lvl.same[0] + t.lvl.same[1] + t.lvl.high[0] + t.lvl.high[1]) ? `<h3>Per livello</h3><ul class="rep-list">${lv("low", "⬇ Più facili")}${lv("same", "⭐ Della sua classe")}${lv("high", "⬆ Più difficili")}</ul>` : ""}
+        <h3>Ultimi 7 giorni</h3><ul class="rep-list">${rows}</ul>
+      </div>
+      <button class="btn" data-act="close">Chiudi</button>`);
   }
 
   function openInfo() {
@@ -930,7 +1003,22 @@
       Lock.unlock(n).then(() => { toast("📱 Telefono sbloccato per " + n + " minuti. Buon divertimento!", 4000); renderHome(); });
     },
     reset: () => askPin("Ricominciare da zero", confirmReset),
-    "reset-yes": () => { Storage.resetAll(); profile = null; viewClass = null; closeModal(); Credit.refresh(); askNarration(beginSetup); }
+    report: () => askPin("Resoconto", openReport),
+    help: () => askPin("Aiuto dei genitori", openHelp),
+    gift: el => {
+      const n = +el.dataset.n, got = Credit.gift(n);
+      Stats.gift(n); game.help = false; game.helpAt = Date.now(); game.loseRun = 0; Stats.help();
+      closeModal(); toast(got > 0 ? "🎁 Regalati " + Credit.fmtDelta(got) + " minuti!" : "Hai già il massimo di oggi.", 3500);
+      const m = document.getElementById("gmins"); if (m) m.textContent = "⏱ " + Credit.format(Credit.get());
+      const fb = document.querySelector(".feedback"); if (fb) { const b = fb.querySelector('[data-act="help"]'); if (b) b.remove(); }
+    },
+    nopen: () => {
+      Credit.noPenalty(); game.help = false; game.helpAt = Date.now(); game.loseRun = 0; Stats.help();
+      closeModal(); toast("Per oggi le risposte sbagliate non tolgono minuti.", 3500);
+      const fb = document.querySelector(".feedback"); if (fb) { const b = fb.querySelector('[data-act="help"]'); if (b) b.remove(); }
+    },
+    "welcome-go": () => beginSetup(true),
+    "reset-yes": () => { Storage.resetAll(); Stats.wipe(); profile = null; viewClass = null; closeModal(); Credit.refresh(); showWelcome(); }
   };
 
   document.addEventListener("click", e => {
@@ -946,9 +1034,23 @@
     if (wiz && wiz.editing && !wiz.pinForce && profile && (e.target === $app || e.target.classList.contains("screen"))) { wiz = null; showHome(); }
   });
 
+  // tempo passato nelle sfide (solo con l'app davanti) + pausa ogni 45 minuti di gioco
+  setInterval(() => {
+    if (!game || document.hidden) return;
+    game.sec++; Stats.tick();
+    if (game.sec % 15 === 0) Stats.flush();
+    if (game.sec >= game.nextBreak && $modal.hidden) {
+      game.nextBreak += 2700;
+      Voice.stopSpeaking();
+      openModal(`<h2>⏸ Pausa!</h2><p>Hai giocato per tanto tempo. Alzati, muoviti e bevi un po' d'acqua. Poi torni più in forma!</p>
+        <button class="btn big flash" data-act="close">Ok, faccio una pausa</button>`);
+      if (profile && profile.autoRead) Voice.speak("Pausa! Alzati, muoviti e bevi un po' d'acqua. Poi torni più in forma!");
+    }
+  }, 1000);
+
   // nuovo giorno: i minuti ripartono dal minimo garantito
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) { Voice.stopSpeaking(); return; }
+    if (document.hidden) { Voice.stopSpeaking(); Stats.flush(); return; }
     Credit.refresh();
     if (Lock.available()) { refreshLockBox(); return; }
     if (profile && !wiz && !game && !askCb) renderHome();
@@ -959,9 +1061,8 @@
     Splash.done();
     refreshNarrate();
     if (Lock.available()) refreshLockBox();
-    const first = beginSetup;
     if (profile && typeof profile.classId !== "number") { Storage.resetAll(); profile = null; }
-    if (!profile) { askNarration(first); return; }
+    if (!profile) { showWelcome(); return; }
     Credit.setClass(profile.classId); Credit.refresh();
     selected = subsNow();
     // profili senza PIN (creati prima): i genitori lo scelgono adesso

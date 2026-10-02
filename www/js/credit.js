@@ -20,7 +20,8 @@ const Credit = (() => {
     const before = state.minutes;
     let r = rel || 0;
     if (r > 0 && (state.hi || 0) >= CONFIG.HIGH_CAP) r = 0;   // tetto del livello alto raggiunto: vale come il proprio
-    const t = CONFIG.REWARD[r < 0 ? "low" : r > 0 ? "high" : "same"];
+    const t0 = CONFIG.REWARD[r < 0 ? "low" : r > 0 ? "high" : "same"];
+    const t = state.noPen ? { ok: t0.ok, ko: 0 } : t0;   // «oggi nessuna penalità» deciso da un genitore
     state.minutes = clamp(before + (isCorrect ? t.ok : -t.ko));
     if (isCorrect && r > 0) state.hi = (state.hi || 0) + t.ok;
     if (isCorrect) state.correct++; else state.wrong++;
@@ -29,6 +30,9 @@ const Credit = (() => {
     return { delta: state.minutes - before, minutes: state.minutes, full: state.minutes >= max(), rel: r };
   }
 
+  // regalo di un genitore: dentro il tetto del giorno
+  function gift(n) { const b = state.minutes; state.minutes = clamp(b + n); state.gift = (state.gift || 0) + n; Storage.saveDay(state); notify(); return state.minutes - b; }
+  function noPenalty() { state.noPen = true; Storage.saveDay(state); }
   const get = () => state.minutes;
   // minuti interi guadagnati ma non ancora usati per sbloccare il telefono (granted = già consegnati al blocco)
   const available = () => Math.max(0, Math.floor(state.minutes) - (state.granted || 0));
@@ -48,5 +52,5 @@ const Credit = (() => {
   }
   const fmtDelta = n => String(Math.abs(n)).replace(".", ",");
 
-  return { answer, get, available, claim, progress, onChange, refresh, format, fmtDelta, max, setClass, highFull };
+  return { answer, get, available, claim, progress, onChange, refresh, format, fmtDelta, max, setClass, highFull, gift, noPenalty };
 })();

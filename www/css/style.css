@@ -604,3 +604,18 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 .brand-for { text-align: center; font-weight: 700; font-size: 15px; color: var(--muted); margin-top: 4px; }
 .sp-for { margin: 8px 0 0; text-align: center; color: #FFE066; font-weight: 700; font-size: 18px; text-shadow: 0 2px 0 rgba(43, 45, 82, .4); }
 .sp-for[hidden] { display: none; }
+
+/* tasto da premere: lampeggia 6 volte (niente transform: non sposta il tasto) */
+@keyframes flashBtn { 0%, 100% { filter: none; box-shadow: 0 6px 0 var(--edge); } 50% { filter: brightness(1.28) saturate(1.2); box-shadow: 0 6px 0 var(--edge), 0 0 0 7px rgba(255, 220, 60, .95), 0 0 26px 10px rgba(255, 220, 60, .75); } }
+.flash:not(:disabled) { animation: flashBtn .75s ease-in-out 6; }
+@media (prefers-reduced-motion: reduce) { .flash:not(:disabled) { animation-iteration-count: 2; } }
+/* schermata di benvenuto */
+.welcome .trio { display: flex; justify-content: center; gap: 6px; }
+.welcome .mate { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.welcome .mate svg { width: 100%; max-width: 110px; height: auto; }
+.welcome .mate b { font-size: 20px; }
+/* resoconto */
+.report h3 { margin: 10px 0 4px; font-size: 16px; }
+.rep-list { list-style: none; margin: 0; padding: 0; }
+.rep-list li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,.08); font-size: 15px; }
+.rep-list li span:last-child { font-weight: 700; text-align: right; }
