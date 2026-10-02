@@ -685,3 +685,8 @@ body.playing .voicetgl { padding: 0 10px; font-size: 16px; }
 .guide-steps li { display: flex; gap: 10px; align-items: flex-start; font-size: 16px; line-height: 1.25; text-align: left; }
 .guide-steps .gi { font-size: 26px; line-height: 1; flex: none; }
 .screen.play.quiz .qcard .qsub { margin-left: 92px; }
+
+/* scelta classe: 3 colonne, entra tutta nello schermo (2/10/2026) */
+.cls-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.cls-grid .choice { font-size: 14px; padding: 8px 4px; min-height: 66px; }
+.cls-grid .choice .big-num { font-size: 26px; }

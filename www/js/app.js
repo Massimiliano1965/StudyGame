@@ -186,7 +186,7 @@
         <input id="nick" class="field" type="text" inputmode="text" autocomplete="off" autocapitalize="words" maxlength="${CONFIG.NICK_MAX}" placeholder="Il tuo nome" value="${esc(d.nick)}" aria-label="Il tuo nome o soprannome">`;
     } else if (s === 1) {
       canNext = d.classId != null;
-      const grp = (title, from, to) => `<div class="group-title">${title}</div><div class="grid2">${CONFIG.CLASSES.slice(from, to).map(c =>
+      const grp = (title, from, to) => `<div class="group-title">${title}</div><div class="grid2 cls-grid">${CONFIG.CLASSES.slice(from, to).map(c =>
         `<button class="choice ${d.classId === c.id ? "sel" : ""}" data-act="class" data-id="${c.id}"><span class="big-num">${c.short}</span><span>${c.level === "Medie" ? "media" : "elementare"}</span></button>`).join("")}</div>`;
       body = `<div class="center"><h1>Che classe fai?</h1><p class="muted" style="margin-top:6px">Così ti preparo le sfide giuste.${wiz.editing ? "" : " Attenzione: dopo, la classe si cambia solo con il PIN dei genitori."}</p></div>
         ${grp("Elementari", 0, 5)}${grp("Medie", 5, 8)}`;
@@ -303,9 +303,39 @@
     teen: ["Pronti? Scegli la sfida.", "Facciamo vedere chi comanda.", "Un'altra serie da record?"]
   };
 
+  // ---- ripresa del gioco: se Android chiude l'app in secondo piano, al ritorno si riparte da dove era ----
+  const K_RESUME = "sg2_resume";
+  const RESUME_MAX_MS = 6 * 3600 * 1000;
+  function saveResume() {
+    try {
+      if (!game || wiz) return;
+      const g = game;
+      localStorage.setItem(K_RESUME, JSON.stringify({
+        at: Date.now(), day: Storage.today(), classId: profile && profile.classId,
+        g: { subjects: g.subjects, streak: g.streak, right: g.right, lastKind: g.lastKind, cls: g.cls, rel: g.rel, sec: g.sec,
+          rounds: g.rounds, okCount: g.okCount, loseRun: g.loseRun, help: g.help, helpAt: g.helpAt, nextBreak: g.nextBreak }
+      }));
+    } catch (e) {}
+  }
+  function clearResume() { try { localStorage.removeItem(K_RESUME); } catch (e) {} }
+  function tryResume() {
+    let r = null;
+    try { r = JSON.parse(localStorage.getItem(K_RESUME)); } catch (e) {}
+    clearResume();
+    if (!r || !r.g || r.day !== Storage.today() || Date.now() - r.at > RESUME_MAX_MS || r.classId !== profile.classId) return false;
+    const subjects = (r.g.subjects || []).filter(isReady);
+    if (!subjects.length) return false;
+    setTheme(profile.classId);
+    game = Object.assign({ listening: false, round: null }, r.g, { subjects });
+    lastJingle = { sid: game.subjects[0], at: Date.now() };   // niente stacchetto al rientro
+    nextQuestion();
+    return true;
+  }
+
   function showHome() {
     Games.stop();
     game = null;
+    clearResume();
     setTheme(profile.classId);
     renderHome();
     maybeShowInfo();
@@ -1114,7 +1144,7 @@
   setInterval(() => {
     if (!game || document.hidden) return;
     game.sec++; Stats.tick();
-    if (game.sec % 15 === 0) Stats.flush();
+    if (game.sec % 15 === 0) { Stats.flush(); saveResume(); }
     if (game.sec >= game.nextBreak && $modal.hidden) {
       game.nextBreak += 2700;
       Voice.stopSpeaking();
@@ -1126,7 +1156,7 @@
 
   // nuovo giorno: i minuti ripartono dal minimo garantito
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) { Voice.stopSpeaking(); Stats.flush(); return; }
+    if (document.hidden) { Voice.stopSpeaking(); Stats.flush(); saveResume(); return; }
     Credit.refresh();
     if (Lock.available()) { refreshLockBox(); return; }
     if (profile && !wiz && !game && !askCb) renderHome();
@@ -1144,7 +1174,7 @@
     // profili senza PIN (creati prima): i genitori lo scelgono adesso
     const go = () => {
       if (!profile.pin && presetPin()) { profile.pin = presetPin(); Storage.saveProfile(profile); }
-      if (profile.pin) { showHome(); return; }
+      if (profile.pin) { if (!tryResume()) showHome(); return; }
       wiz = { step: 4, editing: true, pinOnly: true, pinForce: true, pin1: "", pin2: "", d: { ...profile } };
       renderWizard();
     };
@@ -1166,6 +1196,6 @@
 
   // Nell'app Android si aspetta che i plugin (voce, microfono) siano pronti
   if (window.cordova) {
-    document.addEventListener("deviceready", () => { document.addEventListener("backbutton", onBack, false); boot(); }, false);
+    document.addEventListener("deviceready", () => { document.addEventListener("backbutton", onBack, false); document.addEventListener("pause", () => { Stats.flush(); saveResume(); }, false); boot(); }, false);
   } else boot();
 })();

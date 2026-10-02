@@ -1,6 +1,8 @@
 // ===== Schermata iniziale animata: resta almeno 3 secondi, poi sfuma; un tocco la chiude (dopo l'avvio) =====
 const Splash = (() => {
-  const el = document.getElementById("splash"), t0 = Date.now(), MIN = 3200;
+  let resuming = false;
+  try { const r = JSON.parse(localStorage.getItem("sg2_resume")); resuming = !!(r && r.g && Date.now() - r.at < 6 * 3600 * 1000); } catch (e) {}
+  const el = document.getElementById("splash"), t0 = Date.now(), MIN = resuming ? 0 : 3200;
   let gone = false, booted = false;
   const f = document.getElementById("sp-for");
   if (f && typeof DEDICA === "string" && DEDICA) { f.textContent = "Ideata per " + DEDICA + " \u2764\uFE0F"; f.hidden = false; }
