@@ -2,6 +2,8 @@
 const Splash = (() => {
   const el = document.getElementById("splash"), t0 = Date.now(), MIN = 3200;
   let gone = false, booted = false;
+  const f = document.getElementById("sp-for");
+  if (f && typeof DEDICA === "string" && DEDICA) { f.textContent = "Ideata per " + DEDICA + " \u2764\uFE0F"; f.hidden = false; }
   function remove() {
     if (gone || !el) return;
     gone = true; el.classList.add("out");

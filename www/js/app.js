@@ -11,6 +11,8 @@
   let toastTimer = null;
   let askCb = null;      // schermata iniziale "vuoi la narrazione?"
   let pendingAuto = true; // scelta fatta in quella schermata
+  let viewClass = null;   // classe degli esercizi scelta nella home (null = la propria)
+  let pinCb = null;       // cosa fare dopo che il PIN dei genitori è giusto
   const $narr = document.getElementById("narrate");
 
   const pick = a => a[Math.floor(Math.random() * a.length)];
@@ -19,6 +21,12 @@
   const setTheme = id => { document.body.dataset.theme = themeFor(id); };
   const classLabel = id => CONFIG.CLASSES[id].label;
   const isReady = id => READY_SUBJECTS.includes(id);
+  // la classe REALE (profile.classId) è bloccata dal PIN; gli esercizi possono essere di un'altra classe e il premio cambia
+  const playClass = () => viewClass == null ? profile.classId : viewClass;
+  const relOf = c => c < profile.classId ? -1 : c > profile.classId ? 1 : 0;
+  const subsNow = () => subjectsForClass(playClass()).filter(s => isReady(s.id)).map(s => s.id);
+  const hashPin = v => { let h = 5381; const t = "gei|" + v + "|2026"; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return "p1" + (h >>> 0).toString(36); };
+  const pinValid = () => !!wiz && /^\d{4}$/.test(wiz.pin1 || "") && wiz.pin1 === wiz.pin2;
 
   // ---------- suoni ----------
   const Sfx = (() => {
@@ -122,7 +130,9 @@
   }
 
   function dotsHtml(step) {
-    return `<div class="dots" aria-label="Passo ${step + 1} di 4">${[0, 1, 2, 3].map(i => `<i class="${i === step ? "on" : ""}"></i>`).join("")}</div>`;
+    if (wiz && wiz.pinOnly) return "";
+    const n = wiz && wiz.editing ? 4 : 5;
+    return `<div class="dots" aria-label="Passo ${step + 1} di ${n}">${Array.from({ length: n }, (_, i) => `<i class="${i === step ? "on" : ""}"></i>`).join("")}</div>`;
   }
 
   function renderWizard() {
@@ -141,7 +151,7 @@
       canNext = d.classId != null;
       const grp = (title, from, to) => `<div class="group-title">${title}</div><div class="grid2">${CONFIG.CLASSES.slice(from, to).map(c =>
         `<button class="choice ${d.classId === c.id ? "sel" : ""}" data-act="class" data-id="${c.id}"><span class="big-num">${c.short}</span><span>${c.level === "Medie" ? "media" : "elementare"}</span></button>`).join("")}</div>`;
-      body = `<div class="center"><h1>Che classe fai?</h1><p class="muted" style="margin-top:6px">Così ti preparo le sfide giuste.</p></div>
+      body = `<div class="center"><h1>Che classe fai?</h1><p class="muted" style="margin-top:6px">Così ti preparo le sfide giuste.${wiz.editing ? "" : " Attenzione: dopo, la classe si cambia solo con il PIN dei genitori."}</p></div>
         ${grp("Elementari", 0, 5)}${grp("Medie", 5, 8)}`;
     } else if (s === 2) {
       const st = d.classId == null ? 0 : d.classId;
@@ -151,18 +161,25 @@
           `<button class="choice family ${d.family === f.id ? "sel" : ""}" data-act="family" data-id="${f.id}" aria-label="${f.name}">${Characters.svg({ family: f.id, color: d.color, stage: st, mood: "happy" })}<span><b>${f.pet}</b><small>${f.name}</small></span></button>`).join("")}</div>
         <div class="colors" role="group" aria-label="Colore">${Characters.COLORS.map(c =>
           `<button class="dot ${d.color === c.hex ? "sel" : ""}" data-act="color" data-hex="${c.hex}" style="background:${c.hex}" aria-label="${c.name}"></button>`).join("")}</div>`;
-    } else {
-      nextLabel = "Ho finito! ✔";
+    } else if (s === 3) {
+      nextLabel = wiz.editing ? "Ho finito! ✔" : "Avanti ▶";
       body = `<div class="center"><h1>Vuoi metterci la tua foto?</h1><p class="muted" style="margin-top:6px">È facoltativa. La foto resta solo su questo telefono e non viene mai inviata.</p></div>
         ${avatarHtml(d, "xl")}
         ${navigator.camera ? `<div class="btn-row"><button class="btn alt big" data-act="photo-cam">📷 Scatta</button><button class="btn alt big" data-act="photo-gal">🖼️ Galleria</button></div>`
           : `<label class="btn alt big" for="photo">📷 Scegli una foto</label><input id="photo" type="file" accept="image/*" hidden>`}
         ${d.photo ? `<button class="btn ghost" data-act="nophoto">Togli la foto</button>` : `<p class="muted center">Se non la metti, usi il tuo compagno come avatar.</p>`}`;
+    } else {
+      nextLabel = "Ho finito! ✔";
+      canNext = pinValid();
+      body = `<div class="center"><h1>🔐 PIN dei genitori</h1><p class="muted" style="margin-top:6px">Genitori: scegliete un PIN di 4 cifre. Serve per cambiare nome o classe, spegnere il blocco e ricominciare da zero. Non ditelo ai bambini!</p></div>
+        <input id="pin1" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN (4 cifre)" value="${esc(wiz.pin1 || "")}" aria-label="PIN a 4 cifre">
+        <input id="pin2" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Ripeti il PIN" value="${esc(wiz.pin2 || "")}" aria-label="Ripeti il PIN" style="margin-top:10px">
+        <p class="muted center">Se lo dimenticate, bisogna reinstallare l'app.</p>`;
     }
 
     $app.innerHTML = `<section class="screen">${dotsHtml(s)}${body}
       <div class="nav">
-        ${s > 0 ? `<button class="btn ghost" data-act="back">◀ Indietro</button>` : (wiz.editing ? `<button class="btn ghost" data-act="cancel">Annulla</button>` : "")}
+        ${wiz.pinOnly ? (wiz.pinForce ? "" : `<button class="btn ghost" data-act="cancel">Annulla</button>`) : s > 0 ? `<button class="btn ghost" data-act="back">◀ Indietro</button>` : (wiz.editing ? `<button class="btn ghost" data-act="cancel">Annulla</button>` : "")}
         <button id="next" class="btn" data-act="next" ${canNext ? "" : "disabled"}>${nextLabel}</button>
       </div></section>`;
 
@@ -172,6 +189,11 @@
         wiz.d.nick = nick.value;
         document.getElementById("next").disabled = nick.value.trim().length < 2;
       });
+    }
+    const p1 = document.getElementById("pin1"), p2 = document.getElementById("pin2");
+    if (p1 && p2) {
+      const upd = () => { wiz.pin1 = p1.value.replace(/\D/g, ""); wiz.pin2 = p2.value.replace(/\D/g, ""); document.getElementById("next").disabled = !pinValid(); };
+      p1.addEventListener("input", upd); p2.addEventListener("input", upd);
     }
     const photo = document.getElementById("photo");
     if (photo) photo.addEventListener("change", () => { if (photo.files && photo.files[0]) handlePhoto(photo.files[0]); });
@@ -209,13 +231,17 @@
 
   function finishWizard() {
     const d = wiz.d, seen = !!(profile && profile.infoSeen);
-    profile = { nick: d.nick.trim(), classId: d.classId, family: d.family, color: d.color, photo: d.photo || null,
+    const old = profile || {};
+    profile = { ...old, nick: d.nick.trim(), classId: d.classId, family: d.family, color: d.color, photo: d.photo || null,
       autoRead: !!d.autoRead, narrAsked: true,
-      sound: d.sound !== false, l2: d.l2 || undefined, infoSeen: seen };
+      sound: d.sound !== false, l2: d.l2 || undefined, infoSeen: seen,
+      pin: pinValid() ? hashPin(wiz.pin1) : old.pin };
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
     wiz = null;
+    viewClass = null;
+    Credit.setClass(profile.classId);
     Credit.refresh();
-    selected = subjectsForClass(profile.classId).filter(s => isReady(s.id)).map(s => s.id);
+    selected = subsNow();
     showHome();
   }
 
@@ -236,12 +262,14 @@
     maybeShowInfo();
   }
 
-  const brandHtml = () => `<div class="brand">${Logo.svg("brand-em")}<span class="b1">Gioca</span><span class="b2">e</span><span class="b3">Impara</span></div>`;
+  const brandHtml = () => `<div class="brand">${Logo.svg("brand-em")}<span class="b1">Gioca</span><span class="b2">e</span><span class="b3">Impara</span></div>${DEDICA ? `<div class="brand-for">Ideata per ${esc(DEDICA)} ❤️</div>` : ""}`;
 
   function renderHome() {
     const p = profile, th = themeFor(p.classId);
-    const min = Credit.get(), pct = Math.round(min / CONFIG.MAX_MINUTES * 100), mark = Math.round(CONFIG.MIN_MINUTES / CONFIG.MAX_MINUTES * 100);
-    const subs = subjectsForClass(p.classId);
+    const min = Credit.get(), cap = Credit.max(), pct = Math.round(min / cap * 100), mark = Math.round(CONFIG.MIN_MINUTES / cap * 100);
+    const pc = playClass(), rel = relOf(pc), subs = subjectsForClass(pc);
+    const hiFull = rel > 0 && Credit.highFull();
+    const tag = rel < 0 ? "Più facili: " + Credit.fmtDelta(CONFIG.REWARD.low.ok) + " min a risposta giusta" : rel > 0 ? (hiFull ? "Tetto di oggi raggiunto: valgono come i tuoi" : "Più difficili: " + Credit.fmtDelta(CONFIG.REWARD.high.ok) + " min a risposta giusta e nessun minuto perso") : "Il tuo livello: " + Credit.fmtDelta(CONFIG.REWARD.same.ok) + " min a risposta giusta";
     $app.innerHTML = `<section class="screen">
       ${brandHtml()}
       <div class="top">
@@ -254,10 +282,13 @@
       <div class="card time">
         <div class="row"><h3>Tempo di telefono</h3><span class="muted">oggi</span></div>
         <div class="row"><span class="num">${esc(Credit.format(min))}</span></div>
-        <div class="bar" role="img" aria-label="${min} minuti su ${CONFIG.MAX_MINUTES}"><i style="width:${pct}%"></i><b style="left:${mark}%"></b></div>
-        <div class="bar-labels"><span>${CONFIG.MIN_MINUTES} min garantiti</span><span>massimo ${esc(Credit.format(CONFIG.MAX_MINUTES))}</span></div>
+        <div class="bar" role="img" aria-label="${Math.floor(min)} minuti su ${cap}"><i style="width:${pct}%"></i><b style="left:${mark}%"></b></div>
+        <div class="bar-labels"><span>${CONFIG.MIN_MINUTES} min garantiti</span><span>massimo ${esc(Credit.format(cap))}</span></div>
         ${lockHomeHtml()}
       </div>
+      <div class="lvl-box lvl${rel}"><button class="icon-btn" data-act="lvl-down" aria-label="Esercizi più facili" ${pc <= 0 ? "disabled" : ""}>◀</button>
+        <div class="lvl-mid"><small>Esercizi di</small><b>${esc(classLabel(pc))}</b><span class="lvl-tag">${esc(tag)}</span></div>
+        <button class="icon-btn" data-act="lvl-up" aria-label="Esercizi più difficili" ${pc >= 7 ? "disabled" : ""}>▶</button></div>
       <div class="sel-head"><h2>Scegli le sfide</h2>
         <span class="sel-btns"><button class="btn ghost small" data-act="sel-all">✔ Tutte</button><button class="btn ghost small" data-act="sel-none">✖ Nessuna</button></span></div>
       <div class="subjects">${subs.map(s => {
@@ -282,7 +313,7 @@
   function startGame(ids) {
     const ok = ids.filter(isReady);
     if (!ok.length) { toast("Scegli almeno una sfida con il bollino verde."); return; }
-    game = { subjects: ok, streak: 0, right: 0, listening: false, lastKind: "", round: null };
+    game = { subjects: ok, streak: 0, right: 0, listening: false, lastKind: "", round: null, cls: playClass(), rel: relOf(playClass()) };
     lastJingle = { sid: null, at: 0 };
     nextQuestion();
   }
@@ -293,9 +324,9 @@
     // lingua straniera della voce: inglese, oppure quella scelta nelle Impostazioni per la seconda lingua
     if (game.sid === "lingua2") { L2.use(profile.l2); Voice.setForeign(L2.loc()); }
     else Voice.setForeign("en-US");
-    game.round = Games.pick(game.sid, profile.classId, game.lastKind, themeFor(profile.classId) === "piccoli" ? CONFIG.GAME_SHARE_SMALL : CONFIG.GAME_SHARE);
+    game.round = Games.pick(game.sid, game.cls, game.lastKind, themeFor(profile.classId) === "piccoli" ? CONFIG.GAME_SHARE_SMALL : CONFIG.GAME_SHARE);
     game.lastKind = game.round ? game.round.kind : "quiz";
-    game.q = game.round ? null : Questions.next(game.sid, profile.classId);
+    game.q = game.round ? null : Questions.next(game.sid, game.cls);
     game.answered = false; game.chosen = -1; game.mood = "happy"; game.fb = null; game.listening = false;
     renderGame();
     // stacchetto musicale: all'inizio della sfida, poi solo se cambia materia e sono passati 90 secondi
@@ -437,7 +468,7 @@
 
   function feedbackHtml(fb, showSol) {
     return `<div class="card feedback">
-        <div class="head"><h2>${esc(fb.title)}</h2><span class="delta ${fb.delta > 0 ? "up" : fb.delta < 0 ? "down" : ""}">${fb.delta > 0 ? "+" : fb.delta < 0 ? "−" : ""}${fb.delta === 0 ? "" : Math.abs(fb.delta) + " min"}</span></div>
+        <div class="head"><h2>${esc(fb.title)}</h2><span class="delta ${fb.delta > 0 ? "up" : fb.delta < 0 ? "down" : ""}">${fb.delta > 0 ? "+" : fb.delta < 0 ? "−" : ""}${fb.delta === 0 ? "" : Credit.fmtDelta(fb.delta) + " min"}</span></div>
         ${showSol && fb.correct ? `<p class="sol">Soluzione: <b>${esc(fb.correct)}</b></p>` : ""}
         ${fb.text ? `<p>${esc(fb.text)}</p>` : ""}
         <button class="btn big" data-act="next-q">Avanti ▶</button>
@@ -498,13 +529,13 @@
 
   function finishRound(ok, expl, correct) {
     Voice.stopSpeaking();
-    const r = Credit.answer(ok);
+    const r = Credit.answer(ok, game.rel);
     game.answered = true; game.mood = ok ? "cheer" : "sad"; game.listening = false;
     if (ok) { game.streak++; game.right++; } else { game.streak = 0; }
     const th = themeFor(profile.classId);
     let text = expl || "";
     if (ok && r.delta === 0) text = (text ? text + " " : "") + "Hai già il massimo di oggi, ma continua pure per allenarti!";
-    if (!ok && r.delta === 0) text = (text ? text + " " : "") + "I minuti garantiti restano tuoi.";
+    if (!ok && r.delta === 0) text = (text ? text + " " : "") + (r.rel > 0 ? "Livello più alto: non perdi minuti, e provando si impara!" : "I minuti garantiti restano tuoi.");
     game.fb = { title: ok ? pick(PRAISE[th]) : pick(OOPS), delta: r.delta, text, correct: ok ? "" : (correct || "") };
   }
 
@@ -710,6 +741,7 @@
       <div class="row-set l2-set"><span class="set-label">Seconda lingua</span><div class="l2-pick">${L2.codes().map(c => `<button class="switch ${(p.l2 || L2.DEFAULT) === c ? "on" : ""}" data-act="set-l2" data-id="${c}" aria-pressed="${(p.l2 || L2.DEFAULT) === c}"><span class="fl">${L2.LANGS[c].flag}</span><span>${L2.LANGS[c].name}</span></button>`).join("")}</div></div>
       <div class="row-set"><span>Suoni</span><button class="switch ${p.sound !== false ? "on" : ""}" data-act="toggle-sound" aria-pressed="${p.sound !== false}">${p.sound !== false ? "Sì" : "No"}</button></div>
       ${lockBoxHtml()}
+      <button class="btn ghost" data-act="change-pin">🔐 Cambia PIN dei genitori</button>
       <button class="btn ghost" data-act="info">ℹ️ Avvertenze</button>
       <button class="btn ghost" data-act="reset">🗑 Ricomincia da zero</button>
       <button class="btn" data-act="close">Chiudi</button>`);
@@ -744,15 +776,17 @@
     });
   }
 
-  // spegnere il blocco richiede un piccolo calcolo da adulti
-  let adultAnswer = 0;
-  function askAdultOff() {
-    const a = 12 + Math.floor(Math.random() * 18), b = 6 + Math.floor(Math.random() * 8);
-    adultAnswer = a * b;
-    openModal(`<h2>Solo per adulti</h2><p>Per spegnere il blocco risolvi: <b>${a} × ${b}</b></p>
-      <input id="adult-ans" class="adult-in" type="number" inputmode="numeric" autocomplete="off" placeholder="Risultato">
-      <button class="btn" data-act="lock-off-go">Spegni il blocco</button>
-      <button class="btn ghost" data-act="settings">Annulla</button>`);
+  // PIN dei genitori: serve per cambiare nome/classe, spegnere il blocco e ricominciare da zero
+  function pinWait() { const u = (profile && profile.pinLock) || 0; return u > Date.now() ? Math.ceil((u - Date.now()) / 60000) : 0; }
+  function askPin(title, cb) {
+    if (!profile.pin) { cb(); return; }
+    const w = pinWait();
+    if (w > 0) { toast("Troppi tentativi sbagliati. Riprova tra " + w + " min.", 4000); return; }
+    pinCb = cb;
+    openModal(`<h2>🔐 ${esc(title)}</h2><p>Inserisci il PIN dei genitori.</p>
+      <input id="pin-in" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN">
+      <button class="btn" data-act="pin-go">OK</button>
+      <button class="btn ghost" data-act="close">Annulla</button>`);
   }
 
   function openInfo() {
@@ -762,7 +796,9 @@
       <p><b>Il telefono: meglio usarlo bene.</b> Sono contrario all'uso spropositato dei cellulari. Ma viviamo in un mondo tecnologico e i bambini la tecnologia la usano comunque: allora cerchiamo di usarla al meglio, e di impedire che la usino male. Qui il tempo di telefono si guadagna: prima si gioca e si impara, poi arriva il tempo per i propri giochi.</p>
       <p><b>Non sostituisce la scuola.</b> Gioca e Impara non sostituisce l'insegnamento né l'aiuto dei genitori: è solo un piccolo aiuto per fissare in mente alcune cose divertendosi, perché la ripetizione è ciò che fa davvero imparare e diventare bravi in qualcosa.</p>
       <p><b>Da dove vengono le domande.</b> Si basano sui programmi ministeriali italiani, consultati su internet: le <i>Indicazioni nazionali per il curricolo della scuola dell'infanzia e del primo ciclo d'istruzione</i> (D.M. 254 del 16 novembre 2012, con il documento di aggiornamento «Indicazioni nazionali e nuovi scenari» del 2018), ancora in vigore nell'anno scolastico 2026/27 per quasi tutte le classi. Le nuove Indicazioni (D.M. 221 del 9 dicembre 2025, Gazzetta Ufficiale n. 21 del 27 gennaio 2026) dal 2026/27 si applicano solo alle classi prime di primaria e media e poi, anno dopo anno, alle altre. Le domande sono state scritte per questa app e possono contenere errori.</p>
+      <p><b>Come si guadagnano i minuti.</b> La classe vera si sceglie all'inizio e si cambia solo con il PIN dei genitori. Gli esercizi della propria classe danno 2 minuti a risposta giusta; quelli di classi inferiori solo mezzo minuto (e le risposte sbagliate costano di più); quelli di classi superiori ne danno 3 e le risposte sbagliate non tolgono niente. Il tetto di ogni giorno è di 1 ora per la 1ª–2ª elementare, 1 ora e mezza per la 3ª–5ª, 2 ore alle medie.</p>
       <p><b>Genitori.</b> Si raccomanda a mamma e papà di tenere sotto controllo i figli quando usano il cellulare, soprattutto se sono piccoli, e di usare sempre buon senso e discrezione sul tempo davanti allo schermo.</p>
+      <p><b>Un grazie speciale.</b> A Pietro: è per lui che papà ha pensato questa app, e sarà lui il primo a collaudarla.</p>
       <button class="btn" data-act="close">Ho capito</button>`);
   }
 
@@ -804,7 +840,8 @@
       if (wiz.step === 0 && d.nick.trim().length < 2) return;
       if (wiz.step === 1 && d.classId == null) return;
       if (wiz.step < 3) { wiz.step++; renderWizard(); window.scrollTo(0, 0); }
-      else finishWizard();
+      else if (wiz.step === 3 && !wiz.editing) { wiz.step = 4; renderWizard(); window.scrollTo(0, 0); }
+      else { if (wiz.step === 4 && !pinValid()) return; finishWizard(); }
     },
     // home
     sound: () => { profile.sound = profile.sound === false; Storage.saveProfile(profile); renderHome(); Sfx.tap(); },
@@ -815,7 +852,9 @@
       selected = selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id];
       Sfx.tap(); renderHome();
     },
-    surprise: () => startGame([pick(subjectsForClass(profile.classId).filter(s => isReady(s.id))).id]),
+    surprise: () => startGame([pick(subjectsForClass(playClass()).filter(s => isReady(s.id))).id]),
+    "lvl-down": () => { viewClass = Math.max(0, playClass() - 1); selected = subsNow(); Sfx.tap(); renderHome(); },
+    "lvl-up": () => { viewClass = Math.min(7, playClass() + 1); selected = subsNow(); Sfx.tap(); renderHome(); },
     play: () => startGame(selected),
     // sfida
     ans: el => answer(+el.dataset.i),
@@ -832,9 +871,24 @@
     exit: () => { Voice.stopSpeaking(); Music.stop(); showHome(); },
     // impostazioni
     close: () => closeModal(),
-    edit: () => { closeModal(); startWizard(true, 0); },
+    edit: () => askPin("Cambia nome o classe", () => startWizard(true, 0)),
+    "change-pin": () => askPin("Cambia PIN", () => { wiz = { step: 4, editing: true, pinOnly: true, pin1: "", pin2: "", d: { ...profile } }; renderWizard(); }),
+    "pin-go": () => {
+      const el = document.getElementById("pin-in"), v = el ? el.value : "";
+      if (profile.pin && hashPin(v) === profile.pin) {
+        profile.pinFails = 0; Storage.saveProfile(profile);
+        const cb = pinCb; pinCb = null; closeModal(); if (cb) cb(); return;
+      }
+      profile.pinFails = (profile.pinFails || 0) + 1;
+      if (profile.pinFails >= CONFIG.PIN_TRIES) {
+        profile.pinFails = 0; profile.pinLock = Date.now() + CONFIG.PIN_PAUSE_MIN * 60000;
+        Storage.saveProfile(profile); closeModal();
+        toast("PIN sbagliato troppe volte. Pausa di " + CONFIG.PIN_PAUSE_MIN + " minuti.", 4000); return;
+      }
+      Storage.saveProfile(profile); toast("PIN sbagliato.");
+    },
     editphoto: () => { closeModal(); startWizard(true, 3); },
-    "sel-all": () => { selected = subjectsForClass(profile.classId).filter(s => isReady(s.id)).map(s => s.id); Sfx.tap(); renderHome(); },
+    "sel-all": () => { selected = subsNow(); Sfx.tap(); renderHome(); },
     "sel-none": () => { selected = []; Sfx.tap(); renderHome(); },
     info: () => openInfo(),
     "toggle-read": () => { profile.autoRead = !profile.autoRead; Storage.saveProfile(profile); refreshVoiceToggle(); openSettings(); },
@@ -853,24 +907,19 @@
     "set-l2": el => { profile.l2 = L2.use(el.dataset.id); Storage.saveProfile(profile); openSettings(); },
     "toggle-sound": () => { profile.sound = profile.sound === false; Storage.saveProfile(profile); openSettings(); renderHome(); },
     "lock-toggle": () => {
-      if (Lock.get().enabled) { askAdultOff(); return; }
+      if (Lock.get().enabled) { askPin("Spegni il blocco", () => Lock.setEnabled(false).then(() => { toast("Blocco spento"); openSettings(); renderHome(); })); return; }
       Lock.setEnabled(true).then(() => { openSettings(); });
     },
     "lock-perm-overlay": () => { Lock.openOverlaySettings(); },
     "lock-perm-usage": () => { Lock.openUsageSettings(); },
     "lock-emergency": () => { Lock.emergency().then(() => { toast("Telefono sbloccato per 10 minuti", 4000); refreshLockBox(); }); },
-    "lock-off-go": () => {
-      const el = document.getElementById("adult-ans");
-      if (!el || parseInt(el.value, 10) !== adultAnswer) { toast("Risposta sbagliata."); return; }
-      Lock.setEnabled(false).then(() => { toast("Blocco spento"); openSettings(); renderHome(); });
-    },
     "lock-claim": () => {
       const n = Credit.claim();
       if (!n) return;
       Lock.unlock(n).then(() => { toast("📱 Telefono sbloccato per " + n + " minuti. Buon divertimento!", 4000); renderHome(); });
     },
-    reset: () => confirmReset(),
-    "reset-yes": () => { Storage.resetAll(); profile = null; closeModal(); Credit.refresh(); askNarration(yes => { pendingAuto = yes; startWizard(false); }); }
+    reset: () => askPin("Ricominciare da zero", confirmReset),
+    "reset-yes": () => { Storage.resetAll(); profile = null; viewClass = null; closeModal(); Credit.refresh(); askNarration(yes => { pendingAuto = yes; startWizard(false); }); }
   };
 
   document.addEventListener("click", e => {
@@ -883,7 +932,7 @@
   $modal.addEventListener("click", e => { if (e.target === $modal) closeModal(); });
   // tap fuori dalla scheda (sullo sfondo) mentre si modifica il profilo: come Annulla
   $app.addEventListener("click", e => {
-    if (wiz && wiz.editing && profile && (e.target === $app || e.target.classList.contains("screen"))) { wiz = null; showHome(); }
+    if (wiz && wiz.editing && !wiz.pinForce && profile && (e.target === $app || e.target.classList.contains("screen"))) { wiz = null; showHome(); }
   });
 
   // nuovo giorno: i minuti ripartono dal minimo garantito
@@ -902,15 +951,24 @@
     const first = yes => { pendingAuto = yes; startWizard(false); };
     if (profile && typeof profile.classId !== "number") { Storage.resetAll(); profile = null; }
     if (!profile) { askNarration(first); return; }
-    selected = subjectsForClass(profile.classId).filter(s => isReady(s.id)).map(s => s.id);
-    if (profile.narrAsked) showHome();
-    else askNarration(yes => { profile.autoRead = yes; profile.narrAsked = true; Storage.saveProfile(profile); showHome(); });
+    Credit.setClass(profile.classId); Credit.refresh();
+    selected = subsNow();
+    // profili senza PIN (creati prima): i genitori lo scelgono adesso
+    const go = () => {
+      if (profile.pin) { showHome(); return; }
+      wiz = { step: 4, editing: true, pinOnly: true, pinForce: true, pin1: "", pin2: "", d: { ...profile } };
+      renderWizard();
+    };
+    if (profile.narrAsked) go();
+    else askNarration(yes => { profile.autoRead = yes; profile.narrAsked = true; Storage.saveProfile(profile); go(); });
   }
   // Tasto indietro di Android: torna alla pagina precedente invece di chiudere l'app.
   // Si esce dall'app solo dalla schermata principale (non c'è niente prima).
   function onBack() {
     if (!$modal.hidden) { closeModal(); return; }
     if (wiz) {
+      if (wiz.pinForce) { if (navigator.app && navigator.app.exitApp) navigator.app.exitApp(); return; }
+      if (wiz.pinOnly) { wiz = null; showHome(); return; }
       if (wiz.step > 0) { wiz.step--; renderWizard(); window.scrollTo(0, 0); return; }
       if (profile) { wiz = null; showHome(); return; }
     } else if (game) { Voice.stopSpeaking(); Music.stop(); showHome(); return; }

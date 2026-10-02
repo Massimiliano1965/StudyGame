@@ -1,40 +1,52 @@
 // ===== Minuti di telefono guadagnati =====
-// Si parte da MIN_MINUTES (garantiti). Giuste = +BONUS, sbagliate = -MALUS,
-// ma non si scende mai sotto il minimo garantito e non si supera il tetto.
+// Si parte da MIN_MINUTES (garantiti). Il premio dipende dal livello scelto rispetto alla classe reale:
+// livello più basso +0,5 / −1,5; il proprio +2 / −1; più alto +3 / 0 (con tetto giornaliero HIGH_CAP).
+// Non si scende mai sotto il minimo garantito e non si supera il tetto della fascia.
 const Credit = (() => {
   let state = Storage.loadDay();
+  let classId = 0;
   const listeners = [];
 
   const notify = () => listeners.forEach(fn => fn(state));
-  const clamp = v => Math.max(CONFIG.MIN_MINUTES, Math.min(CONFIG.MAX_MINUTES, v));
+  const band = () => classId <= 1 ? 0 : classId <= 4 ? 1 : 2;
+  const max = () => CONFIG.MAX_BY_BAND[band()];
+  const clamp = v => Math.max(CONFIG.MIN_MINUTES, Math.min(max(), v));
 
-  function refresh() { state = Storage.loadDay(); notify(); }
+  function setClass(id) { classId = id == null ? 0 : id; state.minutes = clamp(state.minutes); }
+  function refresh() { state = Storage.loadDay(); state.minutes = clamp(state.minutes); notify(); }
 
-  function answer(isCorrect) {
+  // rel: -1 livello più basso, 0 il proprio, +1 più alto
+  function answer(isCorrect, rel) {
     const before = state.minutes;
-    state.minutes = clamp(before + (isCorrect ? CONFIG.BONUS : -CONFIG.MALUS));
+    let r = rel || 0;
+    if (r > 0 && (state.hi || 0) >= CONFIG.HIGH_CAP) r = 0;   // tetto del livello alto raggiunto: vale come il proprio
+    const t = CONFIG.REWARD[r < 0 ? "low" : r > 0 ? "high" : "same"];
+    state.minutes = clamp(before + (isCorrect ? t.ok : -t.ko));
+    if (isCorrect && r > 0) state.hi = (state.hi || 0) + t.ok;
     if (isCorrect) state.correct++; else state.wrong++;
     Storage.saveDay(state);
     notify();
-    return { delta: state.minutes - before, minutes: state.minutes, full: state.minutes >= CONFIG.MAX_MINUTES };
+    return { delta: state.minutes - before, minutes: state.minutes, full: state.minutes >= max(), rel: r };
   }
 
   const get = () => state.minutes;
-  // minuti guadagnati ma non ancora usati per sbloccare il telefono (granted = già consegnati al blocco)
-  const available = () => Math.max(0, state.minutes - (state.granted || 0));
+  // minuti interi guadagnati ma non ancora usati per sbloccare il telefono (granted = già consegnati al blocco)
+  const available = () => Math.max(0, Math.floor(state.minutes) - (state.granted || 0));
   function claim() {
     const n = available();
-    if (n > 0) { state.granted = state.minutes; Storage.saveDay(state); notify(); }
+    if (n > 0) { state.granted = Math.floor(state.minutes); Storage.saveDay(state); notify(); }
     return n;
   }
   // quanta parte della barra è riempita (0..1) tra minimo e tetto
-  const progress = () => (state.minutes - CONFIG.MIN_MINUTES) / (CONFIG.MAX_MINUTES - CONFIG.MIN_MINUTES);
+  const progress = () => (state.minutes - CONFIG.MIN_MINUTES) / (max() - CONFIG.MIN_MINUTES);
+  const highFull = () => (state.hi || 0) >= CONFIG.HIGH_CAP;
   const onChange = fn => listeners.push(fn);
 
   function format(min) {
-    const h = Math.floor(min / 60), m = min % 60;
+    const t = Math.floor(min), h = Math.floor(t / 60), m = t % 60;
     return h > 0 ? `${h} h ${String(m).padStart(2, "0")} min` : `${m} min`;
   }
+  const fmtDelta = n => String(Math.abs(n)).replace(".", ",");
 
-  return { answer, get, available, claim, progress, onChange, refresh, format };
+  return { answer, get, available, claim, progress, onChange, refresh, format, fmtDelta, max, setClass, highFull };
 })();

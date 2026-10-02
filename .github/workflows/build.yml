@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      dedica:
+        description: "Nome per la dedica «Ideata per …» (vuoto = versione per tutti)"
+        required: false
+        default: ""
 
 jobs:
   build:
@@ -33,6 +38,11 @@ jobs:
       - name: Aggiungi plugin voce, microfono, fotocamera e blocco
         run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 cordova-plugin-camera@7.0.0 ./plugins-local/speechrecognition ./plugins-local/studylock
 
+      - name: Dedica personale (solo se indicata)
+        env:
+          DEDICA: ${{ inputs.dedica }}
+        run: node -e 'require("fs").writeFileSync("www/js/dedica.js", "const DEDICA = " + JSON.stringify(process.env.DEDICA || "") + ";\n")'
+
       - name: Numero di versione che cresce a ogni build
         run: sed -i "s/<widget /<widget android-versionCode=\"$((100000 + ${{ github.run_number }}))\" /" config.xml
 
@@ -48,5 +58,5 @@ jobs:
       - name: Carica APK
         uses: actions/upload-artifact@v4
         with:
-          name: StudyGame-apk
+          name: ${{ inputs.dedica != '' && 'StudyGame-apk-dedica' || 'StudyGame-apk' }}
           path: platforms/android/app/build/outputs/apk/debug/app-debug.apk

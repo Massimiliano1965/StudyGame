@@ -590,3 +590,17 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 .bubble.intro { animation: introPop .4s cubic-bezier(.2,1.4,.4,1) both; }
 @keyframes introPop { 0% { opacity: 0; transform: scale(.6); } 100% { opacity: 1; transform: scale(1); } }
 .bubble.intro::after { left: var(--tail, 50%); }
+
+/* livello degli esercizi (home) e dedica */
+.lvl-box { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; margin: 10px 0 4px; border: 3px solid var(--edge); border-radius: 18px; background: var(--card-soft); }
+.lvl-box .lvl-mid { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; line-height: 1.2; }
+.lvl-box .lvl-mid small { color: var(--muted); font-weight: 600; }
+.lvl-box .lvl-mid b { font-size: 20px; }
+.lvl-box .lvl-tag { font-size: 13px; font-weight: 700; margin-top: 2px; }
+.lvl-box.lvl-1 .lvl-tag { color: #b36b00; }
+.lvl-box.lvl0 .lvl-tag { color: var(--muted); }
+.lvl-box.lvl1 { border-color: #3DDC97; }
+.lvl-box.lvl1 .lvl-tag { color: #158a58; }
+.brand-for { text-align: center; font-weight: 700; font-size: 15px; color: var(--muted); margin-top: 4px; }
+.sp-for { margin: 8px 0 0; text-align: center; color: #FFE066; font-weight: 700; font-size: 18px; text-shadow: 0 2px 0 rgba(43, 45, 82, .4); }
+.sp-for[hidden] { display: none; }
