@@ -784,3 +784,5 @@ body.playing .voicetgl { min-height: 46px; min-width: 46px; font-size: 22px; pad
 .fw u { position: absolute; left: 0; top: 0; width: 8px; height: 8px; border-radius: 50%; opacity: 0; animation: fwb 1.3s ease-out infinite; }
 @keyframes fwb { 0% { opacity: 1; transform: translate(0,0) scale(1); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.3); } }
 .fest-banner.b2 { text-transform: uppercase; }
+
+.parent-note { margin: 8px 0 4px; padding: 10px 12px; background: #ffd23f; color: var(--edge, #0d0c33); border: 3px solid var(--edge, #0d0c33); border-radius: 14px; font-weight: 800; font-size: 16px; text-align: center; line-height: 1.25; }

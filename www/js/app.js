@@ -234,7 +234,7 @@
     } else {
       nextLabel = "Ho finito! ✔";
       canNext = pinValid();
-      body = `<div class="center"><h1>🔐 PIN dei genitori</h1><p class="muted" style="margin-top:6px">${wiz.pinFirst ? "Questa schermata è per i genitori. " : ""}Genitori: scegliete un PIN di 4 cifre. Serve per cambiare nome o classe, spegnere il blocco e ricominciare da zero. Non ditelo ai bambini!</p></div>
+      body = `<div class="center"><h1>🔐 PIN dei genitori</h1>${wiz.pinFirst ? `<p class="parent-note">👨‍👩‍👧 Chiedi ai tuoi genitori! Queste impostazioni sono molto difficili e vanno fatte da un adulto.</p>` : ""}<p class="muted" style="margin-top:6px">${wiz.pinFirst ? "Genitori: Gioca e Impara blocca le altre app del telefono finché il bambino non guadagna minuti giocando. Scegliete" : "Genitori: scegliete"} un PIN di 4 cifre. Serve per cambiare nome o classe, spegnere il blocco e ricominciare da zero. Non ditelo ai bambini e <b>ricordatelo</b>: se lo dimenticate bisogna reinstallare l'app.</p></div>
         <input id="pin1" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN (4 cifre)" value="${esc(wiz.pin1 || "")}" aria-label="PIN a 4 cifre">
         <input id="pin2" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Ripeti il PIN" value="${esc(wiz.pin2 || "")}" aria-label="Ripeti il PIN" style="margin-top:10px">
         <p class="muted center">Se lo dimenticate, bisogna reinstallare l'app.</p>`;
@@ -305,6 +305,7 @@
 
   function finishWizard() {
     const d = wiz.d, seen = !!(profile && profile.infoSeen);
+    const firstTime = !wiz.editing && !profile;
     const old = profile || {};
     profile = { ...old, nick: d.nick.trim(), classId: d.classId, family: d.family, color: d.color, photo: d.photo || null,
       autoRead: !!d.autoRead, narrAsked: true,
@@ -319,6 +320,8 @@
     Credit.refresh();
     selected = subsNow();
     showHome();
+    // installazione nuova: i genitori attivano subito il blocco (impostazioni difficili, da adulti)
+    if (firstTime && Lock.available() && !Lock.ready()) setTimeout(openLockOffer, 700);
   }
 
   // ====================================================================
@@ -916,7 +919,7 @@
   // ====================================================================
   // frasi lette a voce durante la creazione del profilo (per chi ancora non sa leggere)
   const STEP_SAY = {
-    pin: "Adesso tocca a mamma e papà. Scegliete un PIN di quattro cifre.",
+    pin: "Fermo! Questa parte è per i grandi. Chiedi ai tuoi genitori: sono impostazioni molto difficili e le deve fare un adulto.",
     steps: [null,
       "Che classe fai? Tocca il tuo numero. Se non lo sai, chiedi a mamma e papà.",
       "Scegli il tuo compagno: Pufo, Bip o Rudy. Tocca quello che ti piace di più.",
@@ -1060,6 +1063,17 @@
   }
 
 
+
+  // dopo la creazione del profilo: le impostazioni del blocco sono difficili, le deve fare un adulto
+  function openLockOffer() {
+    openModal(`<h2>👨‍👩‍👧 Chiedi ai tuoi genitori!</h2>
+      <p class="center">Adesso si attiva il <b>blocco del telefono</b>: le altre app si aprono solo con i minuti guadagnati qui.</p>
+      <p class="center">Sono impostazioni <b>molto difficili</b>, vanno fatte da un adulto.</p>
+      <button class="btn big" data-act="lock-offer-go">Ci sono i miei genitori ▶</button>
+      <button class="btn ghost small" data-act="lock-steps-done">Più tardi, dalle Impostazioni</button>`);
+    if (profile && profile.autoRead) Voice.speak("Chiedi ai tuoi genitori. Sono impostazioni molto difficili e le deve fare un adulto.", () => {});
+  }
+
   // procedura guidata dei permessi, un passo alla volta: si aggiorna da sola quando si torna dalle impostazioni di Android
   let lockStepsOpen = false;
   function openLockSteps() { lockStepsOpen = true; renderLockSteps(); }
@@ -1074,8 +1088,8 @@
       return;
     }
     // passo 1: «Consenti impostazioni con restrizioni» (Android 13+, app installate a mano) — Android non dice se è fatto, quindi si conferma a mano
-    if (!profile.lockRestr) {
-      openModal(`${dots(1)}<h2>Passo 1 di 3</h2>
+    if (!(profile && profile.lockRestr)) {
+      openModal(`${dots(1)}<p class="parent-note">👨‍👩‍👧 Per i genitori: queste impostazioni sono molto difficili e vanno fatte da un adulto.</p><h2>Passo 1 di 3</h2>
         <p class="step-name">Consenti impostazioni con restrizioni</p>
         <ol class="guide-steps">
           <li><span class="gi">1️⃣</span><span>Tocca il bottone qui sotto: si apre la pagina <b>Info app</b> di Gioca e Impara.</span></li>
@@ -1310,6 +1324,7 @@
     "lock-steps": () => { Lock.status().then(openLockSteps); },
     "lock-restr-ok": () => { profile.lockRestr = true; Storage.saveProfile(profile); renderLockSteps(); },
     "lock-restr-again": () => { profile.lockRestr = false; Storage.saveProfile(profile); renderLockSteps(); },
+    "lock-offer-go": () => { Lock.setEnabled(true).then(() => openLockSteps()); },
     "lock-steps-done": () => { lockStepsOpen = false; openSettings(); renderHome(); },
     "lock-guide": () => { lockStepsOpen = false; openLockGuide(); },
     "lock-appinfo": () => { Lock.openAppInfo(); },
