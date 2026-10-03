@@ -1208,10 +1208,6 @@
     if (fn) fn(el);
   });
   $modal.addEventListener("click", e => { if (e.target === $modal) closeModal(); });
-  // tap fuori dalla scheda (sullo sfondo) mentre si modifica il profilo: come Annulla
-  $app.addEventListener("click", e => {
-    if (wiz && wiz.editing && !wiz.pinForce && profile && (e.target === $app || e.target.classList.contains("screen"))) { wiz = null; showHome(); }
-  });
 
   // tempo passato nelle sfide (solo con l'app davanti) + pausa ogni 45 minuti di gioco
   setInterval(() => {
