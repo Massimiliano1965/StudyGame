@@ -453,7 +453,7 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 
 /* ---------- Lettere mescolate ---------- */
 .lett { display: flex; flex-direction: column; gap: 16px; align-items: center; }
-.lt-clue { font-weight: 800; font-size: 28px; text-align: center; }
+.lt-clue { font-weight: 800; font-size: 20px; line-height: 1.25; text-align: center; color: var(--ink); }
 .lt-clue span { color: var(--accent); }
 .lt-slots, .lt-pool { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
 .lt-slots { padding: 12px; background: var(--card-soft); border: 3px dashed var(--edge); border-radius: 20px; min-height: 76px; }
@@ -673,7 +673,7 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 .screen.play .hero.narr { position: fixed; right: 6px; top: calc(4px + env(safe-area-inset-top)); width: 104px; height: 104px; margin: 0; z-index: 30; animation: none; }
 .screen.play .hero.narr svg { width: 100%; height: 100%; }
 .screen.play:not(.quiz) { padding-top: 46px; }
-.screen.play .nbub { position: relative; margin-right: 120px; background: #fff; border: 3px solid var(--edge); border-radius: 18px; padding: 6px 10px; font-weight: 800; font-size: 15px; line-height: 1.2; box-shadow: 0 4px 0 var(--edge); display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.screen.play .nbub { position: relative; color: var(--edge); margin-right: 120px; background: #fff; border: 3px solid var(--edge); border-radius: 18px; padding: 6px 10px; font-weight: 800; font-size: 15px; line-height: 1.2; box-shadow: 0 4px 0 var(--edge); display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 .screen.play .nbub:after { content: ""; position: absolute; right: -14px; top: 16px; border: 8px solid transparent; border-left: 12px solid var(--edge); }
 .screen.play .nbub .bsub { padding: 0 8px; font-size: 12px; font-weight: 700; background: var(--sc); border: 2px solid var(--edge); border-radius: 999px; }
 body.playing .topctl { left: 8px; right: auto; top: calc(48px + env(safe-area-inset-top)); justify-content: flex-start; gap: 6px; }
@@ -689,7 +689,7 @@ body.playing .voicetgl { min-height: 32px; padding: 0 9px; font-size: 12px; }
 .screen.play { padding-top: 4px; }
 .screen.play:not(.quiz) { padding-top: 4px; }
 .screen.play.quiz { padding-top: 52px; }
-.screen.play .nbub { margin: 0 0 0 108px; min-height: 100px; justify-content: center; }
+.screen.play .nbub { margin: 0 0 0 108px; min-height: 100px; justify-content: center; color: var(--edge); }
 .screen.play .nbub:after { right: auto; left: -14px; top: 40px; border-left: 0; border-right: 12px solid var(--edge); }
 body.playing .voicetgl { padding: 0 7px; font-size: 11px; gap: 3px; min-height: 30px; }
 body.playing .topctl { gap: 4px; }

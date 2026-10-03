@@ -1201,17 +1201,111 @@ const Games = (() => {
     draw();
   }
 
+
+  // ====================================================================
+  // DOMANDE CHIARE: trasforma la regola dell'abbinamento ("Collega ogni organo alla
+  // sua funzione.") in una domanda vera ("Che cosa fa «stomaco»?"), con la parola
+  // da indovinare scritta in mezzo. Serve a Lettere mescolate e Salva l'omino.
+  // ====================================================================
+  const ASK_RULES = [
+    [/stessa cosa/, "Quale parola significa la stessa cosa di ", "?"],
+    [/animale al suo cucciolo/, "Come si chiama il cucciolo di ", "?"],
+    [/animale al suo verso/, "Che verso fa ", "?"],
+    [/animale alla sua classe/, "A quale classe di animali appartiene ", "?"],
+    [/articolo della Costituzione/, "Di che cosa parla l'articolo ", " della Costituzione?"],
+    [/artista a ciò che usa/, "Che cosa usa questo artista: ", "?"],
+    [/artista alla sua corrente/, "A quale corrente artistica appartiene ", "?"],
+    [/(artista|autore|compositore) (alla sua|a una sua) opera/, "Qual è un'opera di ", "?"],
+    [/città italiana/, "Per che cosa è famosa la città di ", "?"],
+    [/compositore alla sua epoca/, "A quale epoca musicale appartiene ", "?"],
+    [/cosa al suo colore/, "Di che colore è ", "?"],
+    [/cosa di una volta/, "Che cosa usiamo oggi al posto di ", "?"],
+    [/data a ciò che è successo/, "Che cosa è successo in questa data: ", "?"],
+    [/evento alla sua data/, "In che data è avvenuto questo evento: ", "?"],
+    [/festa alla sua data/, "In che data cade questa festa: ", "?"],
+    [/figura retorica/, "Quale esempio corrisponde a questa figura retorica: ", "?"],
+    [/fiume alla città/, "Quale città attraversa il fiume ", "?"],
+    [/fonte di energia/, "Come si ottiene l'energia ", "?"],
+    [/giorno della settimana al giorno/, "Quale giorno viene dopo ", "?"],
+    [/indicazione di velocità/, "Che cosa significa in musica ", "?"],
+    [/luogo a chi ci lavora/, "Chi lavora in questo posto: ", "?"],
+    [/materiale a ciò da cui/, "Da che cosa si ricava ", "?"],
+    [/materiale a una sua proprietà/, "Qual è una caratteristica di questo materiale: ", "?"],
+    [/mezzo di trasporto/, "Dove viaggia ", "?"],
+    [/montagna al suo continente/, "In quale continente si trova ", "?"],
+    [/monumento al suo popolo/, "Quale popolo ha costruito ", "?"],
+    [/monumento alla sua città/, "In quale città si trova ", "?"],
+    [/oggetto a ciò che serve/, "A che cosa serve ", "?"],
+    [/opera al luogo/, "Dove si trova ", "?"],
+    [/organizzazione al suo scopo/, "Qual è lo scopo di questa organizzazione: ", "?"],
+    [/organo dello Stato/, "Che cosa fa questo organo dello Stato: ", "?"],
+    [/organo alla sua funzione/, "Che cosa fa questo organo del corpo: ", "?"],
+    [/parola (inglese )?al suo contrario/, "Qual è il contrario di ", "?"],
+    [/al suo plurale/, "Qual è il plurale di ", "?"],
+    [/parola alla sua categoria/, "Che tipo di parola è ", "?"],
+    [/parola alla sua definizione/, "Che cosa significa ", "?"],
+    [/parte del computer/, "A che cosa serve nel computer: ", "?"],
+    [/parte del corpo al suo senso/, "Con quale senso usiamo ", "?"],
+    [/parte del paesaggio/, "Come si descrive ", "?"],
+    [/parte della pianta/, "A che cosa serve nella pianta: ", "?"],
+    [/passaggio di stato/, "Come si chiama il passaggio di stato ", "?"],
+    [/periodo alla sua caratteristica/, "Qual è una caratteristica di ", "?"],
+    [/personaggio al suo ruolo/, "Chi era ", "?"],
+    [/personaggio alla sua storia/, "Chi era o che cosa ha fatto ", "?"],
+    [/pianeta alla sua caratteristica/, "Qual è la caratteristica del pianeta ", "?"],
+    [/popolo antico/, "Dove viveva questo popolo antico: ", "?"],
+    [/regione al suo capoluogo/, "Qual è il capoluogo della regione ", "?"],
+    [/rifiuto al suo contenitore/, "In quale contenitore va buttato ", "?"],
+    [/scienziato alla sua scoperta/, "Che cosa ha scoperto ", "?"],
+    [/segnale a ciò che dobbiamo fare/, "Che cosa dobbiamo fare con ", "?"],
+    [/segno al suo significato/, "Che cosa significa in musica ", "?"],
+    [/simbolo al suo elemento chimico/, "Quale elemento chimico ha il simbolo ", "?"],
+    [/simbolo italiano/, "Che cosa è per l'Italia ", "?"],
+    [/stagione a un suo mese/, "Quale mese fa parte di questa stagione: ", "?"],
+    [/stato alla sua capitale/, "Qual è la capitale di questo stato: ", "?"],
+    [/stile a una sua caratteristica/, "Qual è una caratteristica dello stile ", "?"],
+    [/strumento a come si suona/, "Come si suona questo strumento: ", "?"],
+    [/strumento alla sua famiglia/, "A quale famiglia di strumenti appartiene ", "?"],
+    [/tecnica a come si fa/, "Come si fa questa tecnica: ", "?"],
+    [/unità di misura/, "Che cosa misura questa unità: ", "?"],
+    [/verbo al suo passato prossimo/, "Qual è il passato prossimo di ", "?"],
+    [/verbo irregolare al suo passato/, "Qual è il passato del verbo inglese ", "?"],
+    [/voce del coro/, "Che tipo di voce del coro è ", "?"],
+    [/al suo significato/, "Che cosa significa ", "?"],
+    [/al suo tema/, "Di che cosa parla ", "?"]
+  ];
+  // regole in cui la risposta non è una sola: nei giochi a lettere si saltano
+  const ASK_AMBIGUE = /stagione a un suo mese|a una sua opera|alla sua opera|a una sua caratteristica|a una sua proprietà|periodo alla sua|parte del paesaggio|personaggio|città italiana|cosa di una volta|fonte di energia|oggetto a ciò|ciò che dobbiamo fare|parte del computer|parte della pianta|pianeta alla sua|organizzazione al suo|simbolo italiano|tecnica a come|strumento a come|monumento al suo|segnale|rifiuto/;
+
+  // restituisce { pre, post, text } : la parola da indovinare va tra «pre» e «post»
+  function askFor(rule, word, eng, rEn) {
+    rule = String(rule || "");
+    if (/operazione al suo risultato/.test(rule)) return { pre: "Quanto fa ", post: "?", text: `Quanto fa ${word}?`, bare: true };
+    if (/(equazione|quesito) alla sua soluzione/.test(rule)) return { pre: "Risolvi: ", post: "", text: `Risolvi: ${word}`, bare: true };
+    let hit = ASK_RULES.find(a => a[0].test(rule));
+    let pre, post;
+    if (hit) { pre = hit[1]; post = hit[2]; }
+    else { pre = rule.replace(/\.$/, "") + ": "; post = ""; }
+    // inglese/altre lingue: dillo chiaro nella domanda, così si legge anche se la voce non si capisce
+    if (hit && eng && !rEn && /significato/.test(rule)) post = " in italiano?";
+    else if (hit && rEn && /contrario/.test(rule)) post = " in inglese?";
+    if (hit && /latina|«sum»/.test(rule)) post = " in italiano?";
+    const text = `${pre}«${word}»${post}`;
+    return { pre: pre + "«", post: "»" + post, text };
+  }
+
   // ====================================================================
   // LETTERE MESCOLATE: rimetti in ordine le lettere della parola
   // ====================================================================
   function makeLettere(classId, subjectId) {
-    for (let k = 0; k < 8; k++) {
+    for (let k = 0; k < 20; k++) {
       const g = pairsFor(classId, subjectId);
+      if (ASK_AMBIGUE.test(g.prompt)) continue;
       const cands = shuffle(g.pairs).filter(p => { const w = String(p.r); return !/\s/.test(w) && w.length >= 2 && w.length <= 9; });
       if (!cands.length) continue;
-      const p = cands[0];
-      return { kind: "lettere", title: "Lettere mescolate", eng: g.eng, rEn: g.rEn, clue: { l: p.l, r: String(p.r) },
-        prompt: `Rimetti in ordine le lettere: ${p.l} → ?`, hint: "Regola: " + g.prompt.replace(/^Collega/, "collega") + " Tocca le lettere nell'ordine giusto: due errori si perdonano.", scene: g.scene };
+      const p = cands[0], ask = askFor(g.prompt, p.l, g.eng, g.rEn);
+      return { kind: "lettere", title: "Lettere mescolate", eng: g.eng, rEn: g.rEn, clue: { l: p.l, r: String(p.r) }, ask,
+        prompt: `${ask.text} Rimetti in ordine le lettere della risposta.`, hint: "Tocca le lettere nell'ordine giusto: due errori si perdonano.", scene: g.scene };
     }
     return null;
   }
@@ -1225,7 +1319,7 @@ const Games = (() => {
     function draw(state) {
       const pool = order.filter(i => !placed.includes(i));
       el.innerHTML = `<div class="lett">
-        <div class="lt-clue">${esc(r.clue.l)} <span>→</span> ?</div>
+        <div class="lt-clue">${esc(r.ask ? r.ask.text : r.clue.l + " → ?")}</div>
         <div class="lt-slots ${state || ""}">${letters.map((_, k) => placed[k] !== undefined
           ? `<button class="lt-slot on" data-pos="${k}">${esc(letters[placed[k]])}</button>` : `<span class="lt-slot"></span>`).join("")}</div>
         <div class="lt-pool">${pool.map(i => `<button class="lt-tile" data-id="${i}">${esc(letters[i])}</button>`).join("")}</div>
@@ -1515,18 +1609,19 @@ const Games = (() => {
   // ====================================================================
   function makeImpiccato(classId, subjectId) {
     const maxLen = classId <= 2 ? 7 : 10;
-    for (let k = 0; k < 8; k++) {
+    for (let k = 0; k < 20; k++) {
       const g = pairsFor(classId, subjectId);
+      if (ASK_AMBIGUE.test(g.prompt)) continue;
       const cands = shuffle(g.pairs).filter(p => {
         if (p.r == null) return false;
         const w = String(p.r), dig = /^\d+$/.test(w);
         return /^[\p{L}\d]+$/u.test(w) && w.length >= (dig ? 2 : 3) && w.length <= maxLen;
       });
       if (!cands.length) continue;
-      const p = cands[0];
-      return { kind: "impiccato", title: "Salva l'omino", eng: g.eng, rEn: g.rEn, clue: { l: String(p.l), r: String(p.r) },
+      const p = cands[0], ask = askFor(g.prompt, String(p.l), g.eng, g.rEn);
+      return { kind: "impiccato", title: "Salva l'omino", eng: g.eng, rEn: g.rEn, clue: { l: String(p.l), r: String(p.r) }, ask,
         extra: classId <= 2 ? 3 : classId <= 4 ? 4 : 6,
-        prompt: `Salva l'omino! ${p.l} → ?`,
+        prompt: `${ask.text} Indovina la parola toccando le lettere.`,
         hint: "Indovina la parola toccando le lettere. Due errori si perdonano, al terzo l'omino cade in acqua.", scene: g.scene };
     }
     return null;

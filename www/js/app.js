@@ -516,8 +516,13 @@
     }
     if (r.kind === "vf") return fin([{ t: "Vero o falso. Per ogni frase tocca vero se la risposta è giusta, falso se è sbagliata. Prima frase: " }, ...vfSegs(r.cards[0])]);
     if (r.kind === "intruso") return fin([{ t: "Trova l'intruso. Tocca la parola che non c'entra con le altre tre. Primo giro: " }, ...oddSegs(r.rounds[0])]);
-    if (r.kind === "lettere") return fin([{ t: "Rimetti in ordine le lettere per formare la parola. La parola da trovare corrisponde a: " }, { t: toSpeech(r.clue.l), l: r.eng ? "en" : "" }, { t: ". " + toSpeech(r.hint) }]);
-    if (r.kind === "impiccato") return fin([{ t: "Salva l'omino. Indovina la parola toccando le lettere. La parola da trovare corrisponde a: " }, { t: toSpeech(r.clue.l), l: r.eng ? "en" : "" }, { t: ". Due errori si perdonano, al terzo l'omino cade in acqua." }]);
+    if (r.kind === "lettere" || r.kind === "impiccato") {
+      const a = r.ask, intro = r.kind === "lettere" ? "Rimetti in ordine le lettere per formare la parola. " : "Salva l'omino. Indovina la parola toccando le lettere. ";
+      const outro = r.kind === "lettere" ? " Tocca le lettere nell'ordine giusto. Due errori si perdonano." : " Due errori si perdonano, al terzo l'omino cade in acqua.";
+      if (!a) return fin([{ t: intro + "La parola da trovare corrisponde a: " }, { t: toSpeech(r.clue.l), l: r.eng ? "en" : "" }, { t: ". " + toSpeech(r.hint || "") }]);
+      return fin(a.bare ? [{ t: intro + toSpeech(a.text) + outro }]
+        : [{ t: intro + toSpeech(a.pre.replace(/«$/, "")) }, { t: toSpeech(r.clue.l), l: r.eng ? "en" : "" }, { t: toSpeech(a.post.replace(/^»/, "")) + outro }]);
+    }
     if (r.kind === "linee") {
       const segs = [{ t: "Collega con le linee. " + toSpeech(r.prompt) + " Parole a sinistra: " }];
       r.pairs.forEach((p, i) => segs.push({ t: toSpeech(p.l) + (i < r.pairs.length - 1 ? ", " : "."), l: r.eng ? "en" : "" }));
@@ -590,6 +595,7 @@
     return `<div class="card feedback">
         <div class="head"><h2>${esc(fb.title)}</h2><span class="delta ${fb.delta > 0 ? "up" : fb.delta < 0 ? "down" : ""}">${fb.delta > 0 ? "+" : fb.delta < 0 ? "−" : ""}${fb.delta === 0 ? "" : Credit.fmtDelta(fb.delta) + " min"}</span></div>
         ${showSol && fb.correct ? `<p class="sol">Soluzione: <b>${esc(fb.correct)}</b></p>` : ""}
+        ${fb.tr && fb.tr.length ? `<p class="sol tr">🔤 ${fb.tr.map(x => `<b>${esc(x)}</b>`).join(" · ")}</p>` : ""}
         ${fb.text ? `<p>${esc(fb.text)}</p>` : ""}
         <button class="btn big flash" data-act="next-q">Avanti ▶</button>
         <button class="btn alt big" data-act="repeat-q">🔁 Ripeti questa sfida</button>
@@ -665,7 +671,10 @@
     let title = ok ? pick(PRAISE[th]) : pick(OOPS);
     const nm = (profile.nick || "").trim();
     if (ok && nm && Math.random() < 0.34) title = title.replace(/!$/, "") + ", " + nm + "!";
-    game.fb = { title, delta: r.delta, text, correct: ok ? "" : (correct || "") };
+    // lingue straniere: la traduzione resta anche per iscritto (la voce del telefono non sempre si capisce)
+    const rr = game.round; let tr = [];
+    if (ok && rr && rr.eng) tr = rr.clue ? [`${rr.clue.l} = ${rr.clue.r}`] : (rr.pairs ? rr.pairs.map(x => `${x.l} = ${x.r}`) : []);
+    game.fb = { title, delta: r.delta, text, correct: ok ? "" : (correct || ""), tr };
   }
 
   // ---- esultanze ----
