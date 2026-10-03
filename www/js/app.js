@@ -28,6 +28,7 @@
   const hashPin = v => { let h = 5381; const t = "gei|" + v + "|2026"; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return "p1" + (h >>> 0).toString(36); };
   const presetPin = () => (typeof PIN_PRESET === "string" && PIN_PRESET) || "";
   let pendingPin = "";    // PIN scelto nella prima schermata di una installazione nuova
+  let pendingCalm = false; // "figlio fotosensibile": scelta fatta nella schermata di benvenuto
   const pinValid = () => !!wiz && /^\d{4}$/.test(wiz.pin1 || "") && wiz.pin1 === wiz.pin2;
 
   // ---------- suoni ----------
@@ -143,10 +144,26 @@
       <div class="center"><h1>Ciao! Benvenuto!</h1></div>
       <div class="trio">${fams.map(f => `<div class="mate">${Characters.svg({ family: f.id, color: Characters.COLORS[fams.indexOf(f) % Characters.COLORS.length].hex, stage: 0, mood: "cheer" })}<b>${esc(f.pet)}</b></div>`).join("")}</div>
       <p class="center muted">Giochiamo insieme e vinciamo minuti di telefono!</p>
-      <p class="center muted" style="font-size:.8rem;margin-top:8px">⚠️ Per i genitori: l'app usa colori vivaci e piccoli effetti di luce. Chi è sensibile alle luci intermittenti può ridurli da Impostazioni → Effetti e luci.</p>
+      <div class="fx-ask" style="margin:10px 0 14px">
+        <p class="center" style="font-size:1.05rem;font-weight:700;margin-bottom:8px">⚠️ Per i genitori: vostro figlio è sensibile alle luci intermittenti (fotosensibile)?</p>
+        <p class="center muted" style="font-size:.95rem;margin-bottom:10px">L'app usa colori vivaci e piccoli effetti di luce. Se premete «Sì» vengono attenuati. Si può cambiare quando si vuole da Impostazioni → Effetti e luci.</p>
+        <div class="grid2">
+          <button class="choice ${pendingCalm ? "sel" : ""}" data-act="fx-yes" data-fx="yes" style="padding:14px 8px"><span style="font-size:1.05rem;font-weight:800">Sì, attenua gli effetti</span></button>
+          <button class="choice ${pendingCalm ? "" : "sel"}" data-act="fx-no" data-fx="no" style="padding:14px 8px"><span style="font-size:1.05rem;font-weight:800">No, lascia così</span></button>
+        </div>
+      </div>
       <button class="btn big flash" data-act="welcome-go">Avanti ▶</button>
     </section>`;
+    document.body.classList.toggle("calm", pendingCalm);
     Voice.speak("Ciao! Benvenuto in Gioca e Impara! Io sono Pufo, lui è Bip e lui è Rudy. Giocheremo insieme! Tocca il pulsante che lampeggia.", msg => toast(msg, 6000));
+  }
+
+  // scelta "figlio fotosensibile" nella schermata di benvenuto: si aggiorna sul posto (senza ridisegnare, così la voce non riparte)
+  function setFxChoice(yes) {
+    pendingCalm = !!yes;
+    document.body.classList.toggle("calm", pendingCalm);
+    document.querySelectorAll(".fx-ask [data-fx]").forEach(b => b.classList.toggle("sel", (b.dataset.fx === "yes") === pendingCalm));
+    Sfx.tap();
   }
 
   // installazione nuova: prima il PIN dei genitori (a meno che sia già deciso dalla build), poi il profilo
@@ -161,7 +178,7 @@
     wiz = {
       step: step || 0, editing: !!editing,
       d: editing && profile ? { ...profile } :
-        { nick: "", classId: null, family: "creatura", color: Characters.COLORS[0].hex, photo: null, autoRead: pendingAuto, sound: true }
+        { nick: "", classId: null, family: "creatura", color: Characters.COLORS[0].hex, photo: null, autoRead: pendingAuto, sound: true, calm: pendingCalm }
     };
     renderWizard();
   }
@@ -283,10 +300,11 @@
     const old = profile || {};
     profile = { ...old, nick: d.nick.trim(), classId: d.classId, family: d.family, color: d.color, photo: d.photo || null,
       autoRead: !!d.autoRead, narrAsked: true,
-      sound: d.sound !== false, l2: d.l2 || undefined, infoSeen: seen,
+      sound: d.sound !== false, l2: d.l2 || undefined, infoSeen: seen, calm: !!d.calm,
       pin: pinValid() ? hashPin(wiz.pin1) : (old.pin || pendingPin || presetPin()) };
     pendingPin = "";
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
+    applyCalm();
     wiz = null;
     viewClass = null;
     Credit.setClass(profile.classId);
@@ -1197,8 +1215,10 @@
       const fb = document.querySelector(".feedback"); if (fb) { const b = fb.querySelector('[data-act="help"]'); if (b) b.remove(); }
     },
     "welcome-go": () => beginSetup(true),
+    "fx-yes": () => setFxChoice(true),
+    "fx-no": () => setFxChoice(false),
     "name-mic": () => listenName(),
-    "reset-yes": () => { Storage.resetAll(); Stats.wipe(); profile = null; viewClass = null; closeModal(); Credit.refresh(); showWelcome(); }
+    "reset-yes": () => { Storage.resetAll(); Stats.wipe(); profile = null; viewClass = null; pendingCalm = false; closeModal(); Credit.refresh(); showWelcome(); }
   };
 
   document.addEventListener("click", e => {
