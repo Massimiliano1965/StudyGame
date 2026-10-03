@@ -143,6 +143,7 @@
       <div class="center"><h1>Ciao! Benvenuto!</h1></div>
       <div class="trio">${fams.map(f => `<div class="mate">${Characters.svg({ family: f.id, color: Characters.COLORS[fams.indexOf(f) % Characters.COLORS.length].hex, stage: 0, mood: "cheer" })}<b>${esc(f.pet)}</b></div>`).join("")}</div>
       <p class="center muted">Giochiamo insieme e vinciamo minuti di telefono!</p>
+      <p class="center muted" style="font-size:.8rem;margin-top:8px">⚠️ Per i genitori: l'app usa colori vivaci e piccoli effetti di luce. Chi è sensibile alle luci intermittenti può ridurli da Impostazioni → Effetti e luci.</p>
       <button class="btn big flash" data-act="welcome-go">Avanti ▶</button>
     </section>`;
     Voice.speak("Ciao! Benvenuto in Gioca e Impara! Io sono Pufo, lui è Bip e lui è Rudy. Giocheremo insieme! Tocca il pulsante che lampeggia.", msg => toast(msg, 6000));
