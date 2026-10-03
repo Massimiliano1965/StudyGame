@@ -709,3 +709,13 @@ body.playing .voicetgl { padding: 0 10px; font-size: 16px; }
 .cls-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .cls-grid .choice { font-size: 14px; padding: 8px 4px; min-height: 66px; }
 .cls-grid .choice .big-num { font-size: 26px; }
+
+/* ---------- spazio sotto riempito, risultato sotto il gioco senza sovrapposizioni (3/10/2026) ---------- */
+.screen.play #gbox { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
+.screen.play #gbox > .gbuild, .screen.play #gbox > .runwrap, .screen.play #gbox > .inc, .screen.play #gbox > .vf,
+.screen.play #gbox > .lett, .screen.play #gbox > .fila, .screen.play #gbox > .hang { flex: 1 1 auto; justify-content: space-evenly; }
+.screen.play #gbox > .lk { flex: 1 1 auto; }
+.screen.play #gbox > .lk .lk-col { justify-content: space-evenly; }
+.screen.play #gbox > .lk .lk-item { min-height: 64px; }
+.screen.play #gbox > .mem { flex: 1 1 auto; align-content: space-evenly; }
+.screen.play #gfb, .screen.play #gfb .feedback { position: static; flex: 0 0 auto; }
