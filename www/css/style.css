@@ -786,3 +786,8 @@ body.playing .voicetgl { min-height: 46px; min-width: 46px; font-size: 22px; pad
 .fest-banner.b2 { text-transform: uppercase; }
 
 .parent-note { margin: 8px 0 4px; padding: 10px 12px; background: #ffd23f; color: var(--edge, #0d0c33); border: 3px solid var(--edge, #0d0c33); border-radius: 14px; font-weight: 800; font-size: 16px; text-align: center; line-height: 1.25; }
+.screen .sheet .parent-note, .sheet .parent-note { font-size: 14px; padding: 6px 10px; margin: 4px 0; }
+.sheet .guide-steps { gap: 6px; margin: 4px 0 8px; }
+.sheet .guide-steps li { font-size: 15px; }
+.sheet .step-name { font-size: 18px; margin: 0 0 4px; }
+.sheet .step-dots + h2, .sheet .parent-note + h2 { font-size: 20px; margin: 2px 0; }

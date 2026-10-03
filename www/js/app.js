@@ -1089,14 +1089,14 @@
     }
     // passo 1: «Consenti impostazioni con restrizioni» (Android 13+, app installate a mano) — Android non dice se è fatto, quindi si conferma a mano
     if (!(profile && profile.lockRestr)) {
-      openModal(`${dots(1)}<p class="parent-note">👨‍👩‍👧 Per i genitori: queste impostazioni sono molto difficili e vanno fatte da un adulto.</p><h2>Passo 1 di 3</h2>
+      openModal(`${dots(1)}<p class="parent-note">👨‍👩‍👧 Chiedi ai tuoi genitori: queste impostazioni sono molto difficili, le deve fare un adulto.</p><h2>Passo 1 di 3</h2>
         <p class="step-name">Consenti impostazioni con restrizioni</p>
         <ol class="guide-steps">
-          <li><span class="gi">1️⃣</span><span>Tocca il bottone qui sotto: si apre la pagina <b>Info app</b> di Gioca e Impara.</span></li>
+          <li><span class="gi">1️⃣</span><span>Tocca «Apri Info app» qui sotto.</span></li>
           <li><span class="gi">2️⃣</span><span>In alto a destra tocca i <b>tre puntini ⋮</b>.</span></li>
           <li><span class="gi">3️⃣</span><span>Tocca <b>«Consenti impostazioni con restrizioni»</b> e conferma con PIN o impronta del telefono.</span></li>
-          <li><span class="gi">4️⃣</span><span>Se la voce non c'è, va bene lo stesso. Torna qui con la freccia indietro.</span></li>
         </ol>
+        <p class="muted center" style="font-size:14px;margin:0">Se la voce non c'è, va bene lo stesso. Poi torna qui con la freccia indietro.</p>
         <button class="btn big" data-act="lock-appinfo">⚙️ Apri Info app</button>
         <button class="btn alt" data-act="lock-restr-ok">✅ Fatto, avanti</button>
         <button class="btn ghost small" data-act="lock-steps-done">Più tardi</button>`);
