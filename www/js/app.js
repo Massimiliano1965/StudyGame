@@ -1096,7 +1096,7 @@
   function renderLockSteps() {
     const s = Lock.get();
     const needPin = !(profile && profile.pin);
-    const total = needPin ? 4 : 3;
+    const total = needPin ? 3 : 2;
     const dots = n => `<div class="step-dots">${Array.from({ length: total }, (_, k) => k + 1).map(i => `<span class="${i < n ? "done" : i === n ? "now" : ""}"></span>`).join("")}</div>`;
     lockStepsOpen = true;
     if (lockPinStage) return;   // sta scrivendo il PIN: non ridisegno
@@ -1107,25 +1107,10 @@
       lockStepsOpen = true;
       return;
     }
-    // passo 1: «Consenti impostazioni con restrizioni» (Android 13+, app installate a mano) — Android non dice se è fatto, quindi si conferma a mano
-    if (!(profile && profile.lockRestr)) {
-      openModal(`${dots(1)}<p class="parent-note">👨‍👩‍👧 Chiedi ai tuoi genitori: queste impostazioni sono molto difficili, le deve fare un adulto.</p><h2>Passo 1 di ${total}</h2>
-        <p class="step-name">Consenti impostazioni con restrizioni</p>
-        <ol class="guide-steps">
-          <li><span class="gi">1️⃣</span><span>Tocca «Apri Info app» qui sotto.</span></li>
-          <li><span class="gi">2️⃣</span><span>In alto a destra tocca i <b>tre puntini ⋮</b>.</span></li>
-          <li><span class="gi">3️⃣</span><span>Tocca <b>«Consenti impostazioni con restrizioni»</b> e conferma con PIN o impronta del telefono.</span></li>
-        </ol>
-        <p class="muted center" style="font-size:14px;margin:0">Se la voce non c'è, va bene lo stesso. Poi torna qui con la freccia indietro.</p>
-        <button class="btn big" data-act="lock-appinfo">⚙️ Apri Info app</button>
-        <button class="btn alt" data-act="lock-restr-ok">✅ Fatto, avanti</button>
-        <button class="btn ghost small" data-act="lock-steps-done">Più tardi</button>`);
-      return;
-    }
     const first = !s.overlay;
     const title = first ? "Mostra sopra le altre app" : "Accesso all'uso";
     const act = first ? "lock-perm-overlay" : "lock-perm-usage";
-    openModal(`${dots(first ? 2 : 3)}<h2>Passo ${first ? 2 : 3} di ${total}</h2>
+    openModal(`${dots(first ? 1 : 2)}<h2>Passo ${first ? 1 : 2} di ${total}</h2>
       <p class="step-name">${title}</p>
       <ol class="guide-steps">
         <li><span class="gi">1️⃣</span><span>Tocca il bottone qui sotto: si apre una pagina di Android.</span></li>
@@ -1133,20 +1118,20 @@
         <li><span class="gi">3️⃣</span><span>Attiva l'interruttore, poi torna qui con la freccia indietro.</span></li>
       </ol>
       <button class="btn big" data-act="${act}">📲 Apri la pagina</button>
-      <button class="btn ghost small" data-act="lock-restr-again">❓ Il permesso resta grigio: rifai il passo 1</button>
+      <button class="btn alt small" data-act="lock-guide">❓ Android dice «Impostazione con restrizioni»</button>
       <button class="btn ghost small" data-act="lock-steps-done">Più tardi</button>`);
   }
 
   // guida per «Consenti impostazioni con restrizioni» (Android 13+, app installate a mano)
   function openLockGuide() {
-    openModal(`<h2>🔓 Come dare i permessi</h2>
-      <p class="muted">Se Android dice «Impostazione con restrizioni» o il permesso resta grigio, serve questo passaggio (una volta sola):</p>
+    openModal(`<h2>🔓 «Impostazione con restrizioni»</h2>
+      <p class="muted" style="margin:0 0 4px">Succede con le app installate a mano. I <b>tre puntini</b> compaiono solo <b>dopo</b> che Android ha bloccato il permesso:</p>
       <ol class="guide-steps">
-        <li><span class="gi">1️⃣</span><span>Tocca <b>«Apri Info app»</b> qui sotto.</span></li>
-        <li><span class="gi">2️⃣</span><span>In alto a destra tocca i <b>tre puntini ⋮</b>.</span></li>
-        <li><span class="gi">3️⃣</span><span>Tocca <b>«Consenti impostazioni con restrizioni»</b> e conferma con PIN o impronta del telefono. Se la voce non c'è, vai avanti.</span></li>
-        <li><span class="gi">4️⃣</span><span>Torna qui con la freccia indietro.</span></li>
-        <li><span class="gi">5️⃣</span><span>Torna ai passi e tocca <b>«Apri la pagina»</b>: ora Android ti lascia attivare Gioca e Impara.</span></li>
+        <li><span class="gi">1️⃣</span><span>Prima prova: tocca «Apri la pagina» e prova ad attivare Gioca e Impara. Android lo blocca e scrive «Impostazione con restrizioni»: è normale.</span></li>
+        <li><span class="gi">2️⃣</span><span>Torna qui e tocca <b>«Apri Info app»</b>.</span></li>
+        <li><span class="gi">3️⃣</span><span>In alto a destra ora ci sono i <b>tre puntini ⋮</b>: toccali.</span></li>
+        <li><span class="gi">4️⃣</span><span>Tocca <b>«Consenti impostazioni con restrizioni»</b> e conferma con PIN o impronta.</span></li>
+        <li><span class="gi">5️⃣</span><span>Torna ai passi e attiva il permesso: ora funziona.</span></li>
       </ol>
       <button class="btn" data-act="lock-appinfo">⚙️ Apri Info app</button>
       <button class="btn alt" data-act="lock-guide-done">✅ Fatto, torna ai passi</button>`);
