@@ -719,3 +719,19 @@ body.playing .voicetgl { padding: 0 10px; font-size: 16px; }
 .screen.play #gbox > .lk .lk-item { min-height: 64px; }
 .screen.play #gbox > .mem { flex: 1 1 auto; align-content: space-evenly; }
 .screen.play #gfb, .screen.play #gfb .feedback { position: static; flex: 0 0 auto; }
+
+/* ---------- 3/10/2026 sera: tasti più grossi e staccati, narratore più grande e in basso, freccetta bianca, gioco che riempie lo spazio ---------- */
+body.playing .topctl { top: calc(16px + env(safe-area-inset-top)); gap: 10px; }
+body.playing .voicetgl { min-height: 46px; min-width: 46px; font-size: 22px; padding: 0 12px; }
+.screen.play .gtop { top: calc(16px + env(safe-area-inset-top)); gap: 8px; }
+.screen.play .gtop .icon-btn { width: 46px; height: 46px; min-height: 46px; font-size: 20px; }
+.screen.play .gtop .chip { font-size: 15px; padding: 8px 11px; }
+.screen.play .hero.narr { top: calc(144px + env(safe-area-inset-top)); width: 122px; height: 122px; left: 2px; }
+.screen.play, .screen.play.quiz, .screen.play:not(.quiz) { padding-top: 92px; min-height: 100dvh; display: flex; flex-direction: column; padding-bottom: 18px; }
+.screen.play .nbub { margin-left: 122px; margin-top: -30px; }
+.screen.play .nbub:after { left: -15px; top: 56px; border-width: 10px 14px 10px 0; border-style: solid; border-color: transparent var(--edge) transparent transparent; }
+.screen.play .nbub:before { content: ""; position: absolute; left: -9px; top: 59px; border: 7px solid transparent; border-left: 0; border-right: 12px solid #fff; z-index: 2; }
+.screen.play #gbox { margin-top: -10px; flex: 1 1 auto; }
+/* domande a risposta multipla: il pupazzetto sta sull'angolo del riquadro, senza coprire il testo */
+.screen.play.quiz { padding-top: 168px; }
+.screen.play.quiz .hero.narr { top: calc(88px + env(safe-area-inset-top)); }
