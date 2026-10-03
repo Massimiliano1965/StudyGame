@@ -142,9 +142,11 @@ const Voice = (() => {
     const segs = toSegments(input);
     const fail = why => {
       if (!onFail || my !== token) return;
-      const detail = why ? " (" + String(why && why.message || why).slice(0, 80) + ")" : "";
+      // avviso una volta sola per apertura dell'app, senza dettagli tecnici: il gioco funziona anche senza voce
+      if (speak.warned) return;
+      speak.warned = true;
       const needEn = segs.some(s => s.l === "en");
-      onFail("La voce non parte: controlla che il telefono abbia la sintesi vocale con l'italiano" + (needEn ? " e " + (FOREIGN_NAMES[LANG_EN.slice(0, 2)] || "la lingua straniera") : "") + "." + detail);
+      onFail("Per sentire la voce serve la sintesi vocale del telefono con l'italiano" + (needEn ? " e " + (FOREIGN_NAMES[LANG_EN.slice(0, 2)] || "la lingua straniera") : "") + ". Intanto puoi giocare lo stesso!");
     };
     return new Promise(resolve => {
       const done = () => { if (my === token) setSpeaking(false); resolve(); };
@@ -160,15 +162,19 @@ const Voice = (() => {
             const vid = await pickVoice(loc, en ? "" : STYLE.g);
             const opts = { text: s.t, locale: loc, rate: (en ? 1.15 : 0.95) * (STYLE.rate / 0.95), pitch: STYLE.pitch };
             if (vid) opts.identifier = vid;
-            for (let k = 0; k < 3; k++) {
+            // al primo avvio il motore vocale del telefono può essere ancora "freddo": più tentativi, con pause più lunghe.
+            // L'errore conta solo se TUTTI i tentativi falliscono (prima restava segnato anche dopo un tentativo riuscito).
+            let lastErr = null;
+            for (let k = 0; k < 5; k++) {
               if (my !== token) return;
               try { await window.TTS.speak(opts); return; }
               catch (err) {
-                failed = err;
-                if (k === 1) { delete opts.identifier; }   // seconda volta senza voce scelta da me
-                await wait(250 + k * 250);
+                lastErr = err;
+                if (k === 2) { delete opts.identifier; }   // dalla terza volta senza voce scelta da me
+                await wait(300 + k * 450);
               }
             }
+            failed = lastErr;
           };
           (async () => {
             for (let i = 0; i < segs.length && my === token; i++) {
