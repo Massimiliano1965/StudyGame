@@ -25,6 +25,7 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.telecom.TelecomManager;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -179,7 +180,7 @@ public class LockService extends Service {
   private void refreshForeground(long now) {
     UsageStatsManager usm = (UsageStatsManager) getSystemService(Context.USAGE_STATS_SERVICE);
     if (usm == null) return;
-    long from = lastQuery == 0 ? now - 24L * 3600L * 1000L : lastQuery - 1500;
+    long from = lastQuery == 0 ? now - 30L * 60L * 1000L : lastQuery - 1500;   // finestra corta: il servizio gira sul thread principale
     UsageEvents ev = usm.queryEvents(from, now);
     UsageEvents.Event e = new UsageEvents.Event();
     while (ev.hasNextEvent()) {
@@ -215,6 +216,8 @@ public class LockService extends Service {
     lastTick = now;
 
     if (now < p.getLong("emergencyUntil", 0)) { hideOverlay(); return; }
+    // i genitori sono nelle Impostazioni di Android aperte da qui: non coprirle
+    if (now < p.getLong("settingsUntil", 0)) { hideOverlay(); return; }
 
     boolean ok = fg == null || allowed.contains(fg);
     boolean need = false;
@@ -273,7 +276,16 @@ public class LockService extends Service {
 
   private void showOverlay() {
     if (overlay != null || wm == null) return;
-    LinearLayout root = new LinearLayout(this);
+    LinearLayout root = new LinearLayout(this) {
+      // la freccia indietro sulla schermata di blocco riporta a Gioca e Impara (prima non faceva niente)
+      @Override public boolean dispatchKeyEvent(KeyEvent ev) {
+        if (ev.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+          if (ev.getAction() == KeyEvent.ACTION_UP) { launchApp(); hideOverlay(); }
+          return true;
+        }
+        return super.dispatchKeyEvent(ev);
+      }
+    };
     root.setOrientation(LinearLayout.VERTICAL);
     root.setGravity(Gravity.CENTER);
     root.setBackgroundColor(Color.parseColor("#1E1B4B"));

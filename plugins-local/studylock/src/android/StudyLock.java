@@ -51,23 +51,17 @@ public class StudyLock extends CordovaPlugin {
         return true;
       }
       if (action.equals("openOverlaySettings")) {
-        Intent i = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + c.getPackageName()));
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        c.startActivity(i);
+        openSettings(c, p, new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + c.getPackageName())));
         cb.success(status(c));
         return true;
       }
       if (action.equals("openAppInfo")) {
-        Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + c.getPackageName()));
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        c.startActivity(i);
+        openSettings(c, p, new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + c.getPackageName())));
         cb.success(status(c));
         return true;
       }
       if (action.equals("openUsageSettings")) {
-        Intent i = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        c.startActivity(i);
+        openSettings(c, p, new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
         cb.success(status(c));
         return true;
       }
@@ -76,6 +70,27 @@ public class StudyLock extends CordovaPlugin {
       return true;
     }
     return false;
+  }
+
+
+  /**
+   * Apre una schermata delle Impostazioni di Android DENTRO il task dell'app (con l'Activity, senza NEW_TASK):
+   * cosi' la freccia indietro riporta qui. Per 5 minuti il blocco non copre le Impostazioni, altrimenti
+   * i genitori ci finirebbero davanti la schermata «Telefono in pausa» e non riuscirebbero a tornare.
+   */
+  private void openSettings(final Context c, SharedPreferences p, final Intent i) {
+    p.edit().putLong("settingsUntil", System.currentTimeMillis() + 5 * 60 * 1000L).apply();
+    final android.app.Activity a = cordova.getActivity();
+    if (a != null) {
+      a.runOnUiThread(new Runnable() {
+        @Override public void run() {
+          try { a.startActivity(i); } catch (Throwable t) { /* nessuna schermata disponibile */ }
+        }
+      });
+    } else {
+      i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      c.startActivity(i);
+    }
   }
 
   /** Se il blocco e' attivo e i permessi ci sono, il servizio deve girare. Altrimenti non fa niente. */
