@@ -438,7 +438,7 @@ const Games = (() => {
     ],
     C: [
       { rEn: true, prompt: "Collega ogni parola inglese al suo contrario.", pairs: [["hot", "cold"], ["early", "late"], ["easy", "difficult"], ["rich", "poor"], ["strong", "weak"], ["safe", "dangerous"]] },
-      { rEn: true, prompt: "Collega ogni verbo irregolare al suo passato.", pairs: [["go", "went"], ["see", "saw"], ["eat", "ate"], ["buy", "bought"], ["take", "took"], ["write", "wrote"], ["have", "had"]] },
+      { rEn: true, prompt: "Collega ogni verbo inglese irregolare al suo passato (past simple).", pairs: [["go", "went"], ["see", "saw"], ["eat", "ate"], ["buy", "bought"], ["take", "took"], ["write", "wrote"], ["have", "had"]] },
       { prompt: "Collega ogni parola inglese al suo significato.", pairs: [["although", "anche se"], ["however", "tuttavia"], ["because", "perché"], ["always", "sempre"], ["never", "mai"], ["together", "insieme"]] }
     ]
   };
@@ -539,11 +539,11 @@ const Games = (() => {
     B: [
       { prompt: "Collega ogni compositore a una sua opera.", pairs: [["Vivaldi", "Le quattro stagioni"], ["Verdi", "La traviata"], ["Rossini", "Il barbiere di Siviglia"], ["Mozart", "Il flauto magico"], ["Puccini", "Tosca"], ["Beethoven", "Nona sinfonia"]] },
       { prompt: "Collega ogni strumento alla sua famiglia.", pairs: [["violino", "archi"], ["tromba", "ottoni"], ["flauto", "legni"], ["timpano", "percussioni"], ["pianoforte", "tastiera"]] },
-      { prompt: "Collega ogni segno al suo significato.", pairs: [["f (forte)", "suonare con forza"], ["p (piano)", "suonare piano"], ["crescendo", "volume che aumenta"], ["diminuendo", "volume che diminuisce"], ["pausa", "silenzio"]] }
+      { prompt: "Collega ogni segno della musica al suo significato.", pairs: [["f (forte)", "suonare con forza"], ["p (piano)", "suonare piano"], ["crescendo", "volume che aumenta"], ["diminuendo", "volume che diminuisce"], ["pausa", "silenzio"]] }
     ],
     C: [
       { prompt: "Collega ogni compositore alla sua epoca.", pairs: [["Bach", "Barocco"], ["Mozart", "Classicismo"], ["Chopin", "Romanticismo"], ["Debussy", "Impressionismo"], ["Stravinskij", "Novecento"]] },
-      { prompt: "Collega ogni indicazione di velocità al suo significato.", pairs: [["adagio", "lento"], ["andante", "a passo di camminata"], ["allegro", "veloce"], ["presto", "velocissimo"], ["moderato", "né lento né veloce"]] },
+      { prompt: "Collega ogni indicazione di velocità della musica al suo significato.", pairs: [["adagio", "lento"], ["andante", "a passo di camminata"], ["allegro", "veloce"], ["presto", "velocissimo"], ["moderato", "né lento né veloce"]] },
       { prompt: "Collega ogni voce del coro al suo tipo.", pairs: [["soprano", "femminile acuta"], ["contralto", "femminile grave"], ["tenore", "maschile acuta"], ["basso", "maschile grave"]] }
     ]
   };
@@ -1258,7 +1258,7 @@ const Games = (() => {
     [/rifiuto al suo contenitore/, "In quale contenitore va buttato ", "?"],
     [/scienziato alla sua scoperta/, "Che cosa ha scoperto ", "?"],
     [/segnale a ciò che dobbiamo fare/, "Che cosa dobbiamo fare con ", "?"],
-    [/segno al suo significato/, "Che cosa significa in musica ", "?"],
+    [/segno( della musica)? al suo significato/, "Che cosa significa in musica ", "?"],
     [/simbolo al suo elemento chimico/, "Quale elemento chimico ha il simbolo ", "?"],
     [/simbolo italiano/, "Che cosa è per l'Italia ", "?"],
     [/stagione a un suo mese/, "Quale mese fa parte di questa stagione: ", "?"],
@@ -1269,7 +1269,7 @@ const Games = (() => {
     [/tecnica a come si fa/, "Come si fa questa tecnica: ", "?"],
     [/unità di misura/, "Che cosa misura questa unità: ", "?"],
     [/verbo al suo passato prossimo/, "Qual è il passato prossimo di ", "?"],
-    [/verbo irregolare al suo passato/, "Qual è il passato del verbo inglese ", "?"],
+    [/verbo (inglese )?irregolare (inglese )?al suo passato/, "Qual è il passato del verbo inglese ", "?"],
     [/voce del coro/, "Che tipo di voce del coro è ", "?"],
     [/al suo significato/, "Che cosa significa ", "?"],
     [/al suo tema/, "Di che cosa parla ", "?"]
