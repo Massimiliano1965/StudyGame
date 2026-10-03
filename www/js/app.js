@@ -661,7 +661,11 @@
     if (game.practice) text = (text ? text + " " : "") + "Ripasso: i minuti non cambiano.";
     else if (ok && r.delta === 0) text = (text ? text + " " : "") + "Hai già il massimo di oggi, ma continua pure per allenarti!";
     if (!game.practice && !ok && r.delta === 0) text = (text ? text + " " : "") + (r.rel > 0 ? "Livello più alto: non perdi minuti, e provando si impara!" : "I minuti garantiti restano tuoi.");
-    game.fb = { title: ok ? pick(PRAISE[th]) : pick(OOPS), delta: r.delta, text, correct: ok ? "" : (correct || "") };
+    // ogni tanto (circa 1 volta su 3) l'elogio dice anche il nome del bambino: "Bravo, Luca!"
+    let title = ok ? pick(PRAISE[th]) : pick(OOPS);
+    const nm = (profile.nick || "").trim();
+    if (ok && nm && Math.random() < 0.34) title = title.replace(/!$/, "") + ", " + nm + "!";
+    game.fb = { title, delta: r.delta, text, correct: ok ? "" : (correct || "") };
   }
 
   // ---- esultanze ----
