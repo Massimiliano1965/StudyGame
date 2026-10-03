@@ -7,6 +7,11 @@ const CONFIG = {
   // Minuti per risposta, secondo il livello scelto rispetto alla classe REALE (bloccata dal PIN dei genitori):
   // low = esercizi di una classe inferiore, same = della sua classe, high = di una classe superiore
   REWARD: { low: { ok: 1, ko: 1.5 }, same: { ok: 2, ko: 1 }, high: { ok: 3, ko: 0 } },
+  // 3/10/2026: ogni esercizio vale fino a 3 risposte giuste; guadagno per risposta giusta e perdita per sbagliata, secondo il livello scelto.
+  // Alla 1ª-2ª elementare le sbagliate non tolgono mai niente.
+  RIGHT: { low: 0.5, same: 1, high: 1.5 },
+  WRONG: { low: 1.5, same: 1, high: 0 },
+  FEST_STEP: [5, 10, 30],   // festa dei traguardi ogni N minuti: 1ª-2ª elem. 5, 3ª-5ª elem. 10, medie 30 (a partire dai 30 garantiti)
   HIGH_CAP: 30,       // minuti al giorno guadagnabili col livello più alto; oltre, vale come il proprio livello
   PIN_TRIES: 5,       // tentativi sbagliati di PIN prima della pausa
   PIN_PAUSE_MIN: 5,   // minuti di pausa dopo troppi tentativi

@@ -775,7 +775,7 @@ const Games = (() => {
           done = true;
           const box = el.querySelector(".inc");
           if (box) box.innerHTML = sceneHtml(r.scene, P);
-          onDone(true, r.solution, mistakes === 0 ? "Tutto incastrato al primo colpo!" : "Incastrato!");
+          onDone(true, r.solution, mistakes === 0 ? "Tutto incastrato al primo colpo!" : "Incastrato!", mistakes);
         }
       } else {
         mistakes++; clearSel();
@@ -877,7 +877,7 @@ const Games = (() => {
       done = true;
       const ok = mistakes <= 5;
       if (ok) { el.innerHTML = `<div class="inc">${sceneHtml(r.scene, P)}</div>`; }
-      onDone(ok, r.solution, ok ? (mistakes === 0 ? "Memoria perfetta: nessun errore!" : "Tutte le coppie trovate!") : `Troppi errori (${mistakes}).`);
+      onDone(ok, r.solution, ok ? (mistakes === 0 ? "Memoria perfetta: nessun errore!" : "Tutte le coppie trovate!") : `Troppi errori (${mistakes}).`, mistakes);
     }
     els.forEach((card, i) => card.addEventListener("click", () => {
       if (done || lock || card.classList.contains("up") || card.classList.contains("match")) return;
@@ -947,7 +947,7 @@ const Games = (() => {
     function finish(ok) {
       done = true; stop();
       B.forEach(b => { b.el.disabled = true; });
-      onDone(ok, r.solution, ok ? (mistakes === 0 ? "Nemmeno un palloncino sbagliato!" : "Palloncini scoppiati!") : "Tre palloncini sbagliati: gli altri sono volati via.");
+      onDone(ok, r.solution, ok ? (mistakes === 0 ? "Nemmeno un palloncino sbagliato!" : "Palloncini scoppiati!") : "Tre palloncini sbagliati: gli altri sono volati via.", mistakes);
     }
     function pop(b) {
       if (done || !B.includes(b)) return;
@@ -1039,14 +1039,14 @@ const Games = (() => {
         done = true; stop();
         lineTo(s); s.el.classList.add("ok"); s.fe.textContent = "🎣";
         fs.forEach((f, k) => { f.disabled = true; if (k !== i) f.classList.add("dim"); });
-        onDone(true, q.a[q.c], q.e || "");
+        onDone(true, q.a[q.c], q.e || "", mistakes);
       } else {
         mistakes++; s.live = false; boomFn();
         s.el.classList.add("bad"); s.el.disabled = true; s.fe.textContent = "✖";
         if (mistakes > 2) {
           done = true; stop();
           fs.forEach((f, k) => { f.disabled = true; if (k === q.c) f.classList.add("ok"); else if (S[k].live) f.classList.add("dim"); });
-          onDone(false, q.a[q.c], q.e || "");
+          onDone(false, q.a[q.c], q.e || "", mistakes);
         }
       }
     }
@@ -1107,7 +1107,7 @@ const Games = (() => {
         done = true; stop();
         H.forEach(x => { x.el.disabled = true; if (x !== h) x.mole.classList.remove("up"); });
         h.mole.classList.add("ok"); h.face.textContent = "🤩";
-        onDone(true, q.a[q.c], q.e || "");
+        onDone(true, q.a[q.c], q.e || "", mistakes);
       } else {
         mistakes++; boomFn();
         h.mole.classList.add("bad"); h.face.textContent = "✖";
@@ -1116,7 +1116,7 @@ const Games = (() => {
           H.forEach(x => { x.el.disabled = true; if (x !== h) hide(x); });
           const free = H.find(x => x !== h);
           show(free, q.c, 99, "ok");
-          onDone(false, q.a[q.c], q.e || "");
+          onDone(false, q.a[q.c], q.e || "", mistakes);
         } else {
           setTimeout(() => { if (!done) hide(h); }, 450);
         }
@@ -1173,7 +1173,7 @@ const Games = (() => {
       const ok = mistakes <= 2;
       el.innerHTML = `<div class="vf"><div class="vf-dots">${C.map(() => `<i class="done"></i>`).join("")}</div>
         <div class="vf-card"><div class="vf-end">${ok ? "🎉" : "😅"} ${right} su ${C.length} giuste</div></div></div>`;
-      onDone(ok, wrongList.join(" · "), ok ? (mistakes === 0 ? "Cinque su cinque: lampo perfetto!" : "Bravo, hai superato il lampo!") : "");
+      onDone(ok, wrongList.join(" · "), ok ? (mistakes === 0 ? "Cinque su cinque: lampo perfetto!" : "Bravo, hai superato il lampo!") : "", mistakes);
     }
     el.onclick = e => {
       const say = e.target.closest("[data-say]");
@@ -1336,11 +1336,11 @@ const Games = (() => {
       const ok = placed.map(i => letters[i]).join("").toLowerCase() === word.toLowerCase();
       if (ok) {
         done = true; draw("ok");
-        onDone(true, `${r.clue.l} → ${word}`, mistakes === 0 ? "Parola ricostruita al primo colpo!" : "Parola ricostruita!");
+        onDone(true, `${r.clue.l} → ${word}`, mistakes === 0 ? "Parola ricostruita al primo colpo!" : "Parola ricostruita!", mistakes);
         return;
       }
       mistakes++; boomFn();
-      if (mistakes > 2) { done = true; draw("bad"); onDone(false, `${r.clue.l} → ${word}`, ""); return; }
+      if (mistakes > 2) { done = true; draw("bad"); onDone(false, `${r.clue.l} → ${word}`, "", mistakes); return; }
       busy = true; draw("bad");
       setTimeout(() => { if (!el.isConnected) return; busy = false; placed = []; draw(); }, 800);
     };
@@ -1399,7 +1399,7 @@ const Games = (() => {
       const ok = mistakes <= 2;
       el.innerHTML = `<div class="vf"><div class="vf-dots">${R.map(() => `<i class="done"></i>`).join("")}</div>
         <div class="vf-card"><div class="vf-end">${ok ? "🎉" : "😅"} ${right} su ${R.length} giuste</div></div></div>`;
-      onDone(ok, wrongList.join(" · "), ok ? (mistakes === 0 ? "Tre su tre: occhio da detective!" : "Bravo, hai trovato gli intrusi!") : "");
+      onDone(ok, wrongList.join(" · "), ok ? (mistakes === 0 ? "Tre su tre: occhio da detective!" : "Bravo, hai trovato gli intrusi!") : "", mistakes);
     }
     el.onclick = e => {
       const say = e.target.closest("[data-say]");
@@ -1594,11 +1594,11 @@ const Games = (() => {
       tapFn();
       if (it === items[next]) {
         next++;
-        if (next >= n) { done = true; draw(); el.querySelectorAll(".fila-slot").forEach(x => x.classList.add("ok")); onDone(true, r.solution, mistakes === 0 ? "Tutto in fila al primo colpo!" : "Tutto in fila!"); return; }
+        if (next >= n) { done = true; draw(); el.querySelectorAll(".fila-slot").forEach(x => x.classList.add("ok")); onDone(true, r.solution, mistakes === 0 ? "Tutto in fila al primo colpo!" : "Tutto in fila!", mistakes); return; }
         draw(); return;
       }
       mistakes++; boomFn(); b.classList.add("bad");
-      if (mistakes > 2) { done = true; busy = true; setTimeout(() => { if (!el.isConnected) return; draw(true); onDone(false, r.solution, ""); }, 500); return; }
+      if (mistakes > 2) { done = true; busy = true; setTimeout(() => { if (!el.isConnected) return; draw(true); onDone(false, r.solution, "", mistakes); }, 500); return; }
       busy = true; setTimeout(() => { if (!el.isConnected) return; busy = false; draw(); }, 600);
     };
     draw();
@@ -1694,12 +1694,12 @@ const Games = (() => {
         used.set(k, "ok");
         if (uniq.every(u => used.get(u) === "ok")) {
           done = true; win = true; draw();
-          onDone(true, `${r.clue.l} → ${word}`, mistakes === 0 ? "Omino salvato senza errori!" : "Omino salvato!");
+          onDone(true, `${r.clue.l} → ${word}`, mistakes === 0 ? "Omino salvato senza errori!" : "Omino salvato!", mistakes);
           return;
         }
       } else {
         used.set(k, "bad"); mistakes++; boomFn();
-        if (mistakes > 2) { done = true; draw(); onDone(false, `${r.clue.l} → ${word}`, ""); return; }
+        if (mistakes > 2) { done = true; draw(); onDone(false, `${r.clue.l} → ${word}`, "", mistakes); return; }
       }
       draw();
     };
@@ -1751,7 +1751,7 @@ const Games = (() => {
         done = true; stop();
         C.forEach(x => { if (x !== c) x.el.style.visibility = "hidden"; });
         center(c); line.setAttribute("points", "");
-        onDone(true, q.a[q.c], q.e || "");
+        onDone(true, q.a[q.c], q.e || "", mistakes);
         return;
       }
       mistakes++; boomFn(); c.in.className = "sl-in badc";
@@ -1759,7 +1759,7 @@ const Games = (() => {
         done = true; stop();
         C.forEach(x => { x.el.style.visibility = "hidden"; });
         center(C[q.c]); line.setAttribute("points", "");
-        onDone(false, q.a[q.c], q.e || "");
+        onDone(false, q.a[q.c], q.e || "", mistakes);
       }
     }
     function hitSeg(x1, y1, x2, y2) {
@@ -1852,7 +1852,7 @@ const Games = (() => {
       sel = null; from = null; clearMarks();
       if (lp === rp) {
         lock(lp, COL[lp]); lines.push({ p: lp, color: COL[lp] }); tmp = null; draw(); tapFn();
-        if (lines.length === n) { done = true; onDone(true, sol, mistakes === 0 ? "Tutte le coppie al primo colpo!" : "Tutte le coppie collegate!"); }
+        if (lines.length === n) { done = true; onDone(true, sol, mistakes === 0 ? "Tutte le coppie al primo colpo!" : "Tutte le coppie collegate!", mistakes); }
         return;
       }
       mistakes++; boomFn();
@@ -1863,7 +1863,7 @@ const Games = (() => {
       if (mistakes > 2) {
         done = true;
         for (let p = 0; p < n; p++) if (!lines.some(l => l.p === p)) { lock(p, "#E8E8F0"); lines.push({ p, color: "#7C7FA8", rev: true }); }
-        draw(); onDone(false, sol, "");
+        draw(); onDone(false, sol, "", mistakes);
       }
     }
     const rel = e => { const b = box.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };

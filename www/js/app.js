@@ -57,6 +57,14 @@
         [[110,0],[110,2],[131,3],[110,4],[147,6],[131,7]].forEach(([f, k]) => tone(f, k * s, .12, "square", .1));
         [[659,0,.1],[784,1,.1],[659,2,.1],[587,3,.1],[523,4,.1],[587,5,.1],[659,6,.2],[880,8,.35]].forEach(([f, k, d]) => tone(f, k * s, d + .06, "triangle", .2));
       }),
+      // fanfara della festa dei traguardi: scala che sale, scintille veloci e accordo finale
+      fest: () => play(() => {
+        const s = .11;
+        [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, k) => tone(f, k * s, .2, "triangle", .22));
+        [262, 330, 392, 523].forEach((f, k) => tone(f, k * s * 1.7, .3, "square", .08));
+        for (let k = 0; k < 14; k++) tone(1800 + (k % 5) * 260, .9 + k * .05, .06, "sine", .1);
+        [523, 659, 784, 1047].forEach(f => tone(f, 1.7, .9, "triangle", .2));
+      }),
       no: () => play(() => { tone(220, 0, .18, "sawtooth", .12); tone(165, .14, .26, "sawtooth", .12); }),
       tap: () => play(() => tone(520, 0, .06, "triangle", .12))
     };
@@ -386,7 +394,7 @@
     const min = Credit.get(), cap = Credit.max(), pct = Math.round(min / cap * 100), mark = Math.round(CONFIG.MIN_MINUTES / cap * 100);
     const pc = playClass(), rel = relOf(pc), subs = subjectsForClass(pc);
     const hiFull = rel > 0 && Credit.highFull();
-    const tag = rel < 0 ? "Più facili: " + Credit.fmtDelta(CONFIG.REWARD.low.ok) + " min a risposta giusta" : rel > 0 ? (hiFull ? "Tetto di oggi raggiunto: valgono come i tuoi" : "Più difficili: " + Credit.fmtDelta(CONFIG.REWARD.high.ok) + " min a risposta giusta e nessun minuto perso") : "Il tuo livello: " + Credit.fmtDelta(CONFIG.REWARD.same.ok) + " min a risposta giusta";
+    const tag = rel < 0 ? "Più facili: " + Credit.fmtDelta(CONFIG.RIGHT.low) + " min a risposta giusta" : rel > 0 ? (hiFull ? "Tetto di oggi raggiunto: valgono come i tuoi" : "Più difficili: " + Credit.fmtDelta(CONFIG.RIGHT.high) + " min a risposta giusta e nessun minuto perso") : "Il tuo livello: " + Credit.fmtDelta(CONFIG.RIGHT.same) + " min a risposta giusta";
     $app.innerHTML = `<section class="screen">
       ${brandHtml()}
       <div class="top">
@@ -650,9 +658,14 @@
     </section>`;
   }
 
-  function finishRound(ok, expl, correct) {
+  function finishRound(ok, expl, correct, mistakes, single) {
     Voice.stopSpeaking();
-    const r = game.practice ? { delta: 0, rel: game.rel } : Credit.answer(ok, game.rel);
+    // esercizio = fino a 3 risposte giuste: con errori consentiti vale 3 − errori; se perde, 0 giuste e le sbagliate si pagano
+    const m = typeof mistakes === "number" ? mistakes : null;
+    const right = single ? (ok ? 1 : 0) : ok ? (m == null ? 3 : Math.max(0, 3 - m)) : 0;
+    const wrong = single ? (ok ? 0 : 1) : ok ? (m == null ? 0 : m) : (m == null ? 1 : Math.max(1, Math.min(3, m)));
+    const r = game.practice ? { delta: 0, rel: game.rel } : Credit.result(right, wrong, game.rel);
+    game.fest = game.practice ? 0 : (r.milestone || 0);
     if (!game.practice) {
       Stats.round(game.sid, ok, r.rel === 0 && game.rel < 0 ? -1 : game.rel);
       game.rounds++; if (ok) { game.okCount++; game.loseRun = 0; } else game.loseRun++;
@@ -664,6 +677,7 @@
     if (!game.practice) { if (ok) { game.streak++; game.right++; } else { game.streak = 0; } }
     const th = themeFor(profile.classId);
     let text = expl || "";
+    if (!single && ok && m != null && m > 0) text = (text ? text + " " : "") + "Risposte giuste: " + (3 - m) + " su 3.";
     if (game.practice) text = (text ? text + " " : "") + "Ripasso: i minuti non cambiano.";
     else if (ok && r.delta === 0) text = (text ? text + " " : "") + "Hai già il massimo di oggi, ma continua pure per allenarti!";
     if (!game.practice && !ok && r.delta === 0) text = (text ? text + " " : "") + (r.rel > 0 ? "Livello più alto: non perdi minuti, e provando si impara!" : "I minuti garantiti restano tuoi.");
@@ -795,9 +809,49 @@
     if (hero && Math.random() < (ok ? 0.45 : 0.6)) heroSay(hero, ok ? "ok" : "no");
     if (ok) { Sfx.ok(); sparks(hero); } else { Sfx.no(); }
     window.scrollTo(0, document.body.scrollHeight);
+    if (game && game.fest) { const fm = game.fest; game.fest = 0; setTimeout(() => celebrate(fm), 1100); }
     // se scorrendo in basso l'omino è uscito dallo schermo, la sua reazione appare un attimo al centro (non blocca i tocchi)
     requestAnimationFrame(() => showHeroFx(ok, hero));
     if (profile.autoRead) Voice.speak(feedbackSpeech(), msg => toast(msg, 6000));
+  }
+
+
+  // ---- festa dei traguardi (3/10/2026): schermo intero, pupazzetto grande, coriandoli, fuochi, striscioni, musichetta e vibrazione ----
+  function minLabel(m) {
+    const h = Math.floor(m / 60), r = m % 60;
+    if (!h) return m + " minuti";
+    const ore = h === 1 ? "1 ora" : h + " ore";
+    return r === 0 ? ore : r === 30 ? ore + " e mezza" : ore + " e " + r + " minuti";
+  }
+  function celebrate(m) {
+    const old = document.getElementById("fest"); if (old) old.remove();
+    const calm = fxCalm();
+    const ov = document.createElement("div");
+    ov.id = "fest"; ov.className = "fest" + (calm ? " calm" : "");
+    const cols = ["#ff5a8a", "#ffd23f", "#4cc9f0", "#7ed957", "#b085ff", "#ff8a1f"];
+    let bits = "";
+    if (!calm) {
+      for (let i = 0; i < 70; i++) bits += `<i class="fc" style="left:${Math.random() * 100}%;background:${cols[i % cols.length]};animation-delay:${(Math.random() * 2.2).toFixed(2)}s;animation-duration:${(2.6 + Math.random() * 2).toFixed(2)}s"></i>`;
+      for (let b = 0; b < 6; b++) {
+        const x = 12 + Math.random() * 76, y = 10 + Math.random() * 40, c = cols[b % cols.length], d = (0.2 + b * 0.55).toFixed(2);
+        let dots = "";
+        for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI * 2, rr = 70 + Math.random() * 40; dots += `<u style="--dx:${Math.round(Math.cos(a) * rr)}px;--dy:${Math.round(Math.sin(a) * rr)}px;background:${c};animation-delay:${d}s"></u>`; }
+        bits += `<span class="fw" style="left:${x}%;top:${y}%">${dots}</span>`;
+      }
+    }
+    ov.innerHTML = `${bits}<div class="fest-in">
+      <div class="fest-banner b1">HAI GUADAGNATO</div>
+      <div class="fest-banner b2">${esc(minLabel(m))} DI GIOCO!</div>
+      <div id="fest-hero" class="hero">${charSvg(profile, "cheer")}</div>
+      <div class="fest-tap">Tocca per continuare</div></div>`;
+    document.body.appendChild(ov);
+    const h = document.getElementById("fest-hero");
+    if (h) animateHero(h, true);
+    Sfx.fest();
+    try { if (navigator.vibrate) navigator.vibrate(calm ? [200, 100, 200] : [250, 100, 250, 100, 500, 150, 900]); } catch (e) {}
+    const close = () => { clearTimeout(t); if (ov.parentNode) ov.remove(); };
+    const t = setTimeout(close, 7000);
+    ov.addEventListener("click", close);
   }
 
   function showHeroFx(ok, hero) {
@@ -822,15 +876,15 @@
     if (!game || game.answered || game.round) return;
     const q = game.q, ok = i === q.c;
     game.chosen = i;
-    finishRound(ok, q.e, q.a[q.c]);
+    finishRound(ok, q.e, q.a[q.c], null, true);
     renderGame();
     afterResult(ok);
   }
 
   // un gioco è finito: aggiorno minuti, personaggio e riquadro del risultato senza ridisegnare il gioco
-  function roundDone(ok, correct, expl) {
+  function roundDone(ok, correct, expl, mistakes) {
     if (!game || !game.round || game.answered) return;
-    finishRound(ok, expl, correct);
+    finishRound(ok, expl, correct, mistakes);
     const hero = document.getElementById("hero"), m = document.getElementById("gmins"), st = document.getElementById("gstreak"), f = document.getElementById("gfb");
     if (hero) hero.innerHTML = charSvg(profile, game.mood);
     if (m) m.textContent = "⏱ " + Credit.format(Credit.get());

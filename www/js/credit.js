@@ -30,6 +30,30 @@ const Credit = (() => {
     return { delta: state.minutes - before, minutes: state.minutes, full: state.minutes >= max(), rel: r };
   }
 
+  // 3/10/2026: risultato di un esercizio = quante risposte giuste e quante sbagliate.
+  // Guadagno per giusta (CONFIG.RIGHT) e perdita per sbagliata (CONFIG.WRONG; 0 alla 1ª-2ª elementare e con «nessuna penalità»).
+  // Restituisce anche il traguardo raggiunto (milestone, in minuti) se c'è da fare festa: una sola volta per traguardo al giorno.
+  function result(right, wrong, rel) {
+    const before = state.minutes;
+    let r = rel || 0;
+    if (r > 0 && (state.hi || 0) >= CONFIG.HIGH_CAP) r = 0;
+    const key = r < 0 ? "low" : r > 0 ? "high" : "same";
+    const gain = right * CONFIG.RIGHT[key];
+    const loss = (state.noPen || band() === 0) ? 0 : wrong * CONFIG.WRONG[key];
+    state.minutes = clamp(before + gain - loss);
+    if (r > 0) state.hi = (state.hi || 0) + gain;
+    state.correct += right; state.wrong += wrong;
+    let milestone = 0;
+    const step = CONFIG.FEST_STEP[band()];
+    for (let m = CONFIG.MIN_MINUTES + step; m <= max(); m += step) {
+      if (m > (state.festMax || CONFIG.MIN_MINUTES) && state.minutes >= m) milestone = m;
+    }
+    if (milestone) state.festMax = milestone;
+    Storage.saveDay(state);
+    notify();
+    return { delta: state.minutes - before, minutes: state.minutes, full: state.minutes >= max(), rel: r, milestone };
+  }
+
   // regalo di un genitore: dentro il tetto del giorno
   function gift(n) { const b = state.minutes; state.minutes = clamp(b + n); state.gift = (state.gift || 0) + n; Storage.saveDay(state); notify(); return state.minutes - b; }
   function noPenalty() { state.noPen = true; Storage.saveDay(state); }
@@ -52,5 +76,5 @@ const Credit = (() => {
   }
   const fmtDelta = n => String(Math.abs(n)).replace(".", ",");
 
-  return { answer, get, available, claim, progress, onChange, refresh, format, fmtDelta, max, setClass, highFull, gift, noPenalty };
+  return { answer, result, get, available, claim, progress, onChange, refresh, format, fmtDelta, max, setClass, highFull, gift, noPenalty };
 })();
