@@ -1011,17 +1011,33 @@
   function openLockSteps() { lockStepsOpen = true; renderLockSteps(); }
   function renderLockSteps() {
     const s = Lock.get();
-    const dots = n => `<div class="step-dots">${[1, 2].map(i => `<span class="${i < n ? "done" : i === n ? "now" : ""}"></span>`).join("")}</div>`;
+    const dots = n => `<div class="step-dots">${[1, 2, 3].map(i => `<span class="${i < n ? "done" : i === n ? "now" : ""}"></span>`).join("")}</div>`;
+    lockStepsOpen = true;
     if (s.overlay && s.usage) {
       openModal(`<h2>✅ Tutto pronto!</h2><p class="center">Il blocco è attivo: le altre app si aprono solo con i minuti guadagnati qui.</p>
         <button class="btn" data-act="lock-steps-done">Fatto</button>`);
       lockStepsOpen = true;
       return;
     }
+    // passo 1: «Consenti impostazioni con restrizioni» (Android 13+, app installate a mano) — Android non dice se è fatto, quindi si conferma a mano
+    if (!profile.lockRestr) {
+      openModal(`${dots(1)}<h2>Passo 1 di 3</h2>
+        <p class="step-name">Consenti impostazioni con restrizioni</p>
+        <ol class="guide-steps">
+          <li><span class="gi">1️⃣</span><span>Tocca il bottone qui sotto: si apre la pagina <b>Info app</b> di Gioca e Impara.</span></li>
+          <li><span class="gi">2️⃣</span><span>In alto a destra tocca i <b>tre puntini ⋮</b>.</span></li>
+          <li><span class="gi">3️⃣</span><span>Tocca <b>«Consenti impostazioni con restrizioni»</b> e conferma con PIN o impronta del telefono.</span></li>
+          <li><span class="gi">4️⃣</span><span>Se la voce non c'è, va bene lo stesso. Torna qui con la freccia indietro.</span></li>
+        </ol>
+        <button class="btn big" data-act="lock-appinfo">⚙️ Apri Info app</button>
+        <button class="btn alt" data-act="lock-restr-ok">✅ Fatto, avanti</button>
+        <button class="btn ghost small" data-act="lock-steps-done">Più tardi</button>`);
+      return;
+    }
     const first = !s.overlay;
     const title = first ? "Mostra sopra le altre app" : "Accesso all'uso";
     const act = first ? "lock-perm-overlay" : "lock-perm-usage";
-    openModal(`${dots(first ? 1 : 2)}<h2>Passo ${first ? 1 : 2} di 2</h2>
+    openModal(`${dots(first ? 2 : 3)}<h2>Passo ${first ? 2 : 3} di 3</h2>
       <p class="step-name">${title}</p>
       <ol class="guide-steps">
         <li><span class="gi">1️⃣</span><span>Tocca il bottone qui sotto: si apre una pagina di Android.</span></li>
@@ -1029,9 +1045,8 @@
         <li><span class="gi">3️⃣</span><span>Attiva l'interruttore, poi torna qui con la freccia indietro.</span></li>
       </ol>
       <button class="btn big" data-act="${act}">📲 Apri la pagina</button>
-      <button class="btn ghost small" data-act="lock-guide">❓ Android non mi fa dare il permesso</button>
+      <button class="btn ghost small" data-act="lock-restr-again">❓ Il permesso resta grigio: rifai il passo 1</button>
       <button class="btn ghost small" data-act="lock-steps-done">Più tardi</button>`);
-    lockStepsOpen = true;
   }
 
   // guida per «Consenti impostazioni con restrizioni» (Android 13+, app installate a mano)
@@ -1239,6 +1254,8 @@
       Lock.setEnabled(true).then(st => { if (st.overlay && st.usage) openSettings(); else openLockSteps(); });
     },
     "lock-steps": () => { Lock.status().then(openLockSteps); },
+    "lock-restr-ok": () => { profile.lockRestr = true; Storage.saveProfile(profile); renderLockSteps(); },
+    "lock-restr-again": () => { profile.lockRestr = false; Storage.saveProfile(profile); renderLockSteps(); },
     "lock-steps-done": () => { lockStepsOpen = false; openSettings(); renderHome(); },
     "lock-guide": () => { lockStepsOpen = false; openLockGuide(); },
     "lock-appinfo": () => { Lock.openAppInfo(); },
