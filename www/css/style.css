@@ -735,3 +735,34 @@ body.playing .voicetgl { min-height: 46px; min-width: 46px; font-size: 22px; pad
 /* domande a risposta multipla: il pupazzetto sta sull'angolo del riquadro, senza coprire il testo */
 .screen.play.quiz { padding-top: 168px; }
 .screen.play.quiz .hero.narr { top: calc(88px + env(safe-area-inset-top)); }
+
+/* ---------- 3/10/2026: otto reazioni diverse quando sbaglia (squash = schiaccia e piange, la prima) ---------- */
+.hero[class*="fail-"] { animation: none; }
+.hero[class*="fail-"] .char { animation: var(--fail-anim) 1.6s ease-in-out forwards; transform-origin: 50% 80%; }
+.hero.fail-ribalta { --fail-anim: ribalta; }
+.hero.fail-cade { --fail-anim: cade; }
+.hero.fail-stordito { --fail-anim: stordito; }
+.hero.fail-tremolio { --fail-anim: tremolio; }
+.hero.fail-sgonfia { --fail-anim: sgonfia; }
+.hero.fail-rotola { --fail-anim: rotola; }
+.hero.fail-svenuto { --fail-anim: svenuto; }
+@keyframes ribalta { 0% { transform: rotate(0); } 35% { transform: translateY(-18px) rotate(90deg); } 70% { transform: translateY(0) rotate(180deg); } 100% { transform: rotate(180deg); } }
+@keyframes cade { 0% { transform: rotate(0); } 25% { transform: rotate(-8deg); } 60% { transform: translate(26px,8px) rotate(-92deg); } 75% { transform: translate(26px,2px) rotate(-84deg); } 100% { transform: translate(26px,6px) rotate(-90deg); } }
+@keyframes stordito { 0% { transform: rotate(0); } 20% { transform: rotate(-12deg) translateX(-8px); } 40% { transform: rotate(12deg) translateX(8px); } 60% { transform: rotate(-9deg) translateX(-6px); } 80% { transform: rotate(6deg) translateX(4px); } 100% { transform: rotate(0); } }
+@keyframes tremolio { 0%, 100% { transform: translateX(0) scale(.92); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-7px) scale(.92); } 20%, 40%, 60%, 80% { transform: translateX(7px) scale(.92); } }
+@keyframes sgonfia { 0% { transform: scale(1.12,1.12); } 30% { transform: scale(1.2,1.2); } 100% { transform: scale(.82,.5) translateY(14%); } }
+@keyframes rotola { 0% { transform: translateX(0) rotate(0); } 50% { transform: translateX(-30px) rotate(-360deg); } 100% { transform: translateX(0) rotate(-720deg); } }
+@keyframes svenuto { 0% { transform: rotate(0); } 30% { transform: rotate(14deg); } 100% { transform: translate(-6px,6px) rotate(88deg); } }
+
+/* schermate dei genitori / scelte iniziali: spazio sotto i tasti Voce e Musica (3/10/2026) */
+.screen.wz { padding-top: 56px; min-height: calc(100dvh - 126px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+
+/* rotellina delle impostazioni: colore che risalta sullo sfondo (3/10/2026) */
+.icon-btn[data-act="settings"] { width: 54px; height: 54px; font-size: 26px; background: #FF8A1F; }
+
+/* guida permessi a passi (3/10/2026) */
+.step-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 6px; }
+.step-dots span { width: 26px; height: 8px; border-radius: 99px; background: rgba(255,255,255,.25); border: 2px solid var(--edge); }
+.step-dots span.now { background: var(--accent2, #b7f340); }
+.step-dots span.done { background: #34c76f; }
+.step-name { font-size: 20px; font-weight: 800; text-align: center; margin: 2px 0 6px; }

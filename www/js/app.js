@@ -139,7 +139,7 @@
   function showWelcome() {
     setTheme(null);
     const fams = Characters.FAMILIES;
-    $app.innerHTML = `<section class="screen welcome">
+    $app.innerHTML = `<section class="screen welcome wz">
       ${brandHtml()}
       <div class="center"><h1>Ciao! Benvenuto!</h1></div>
       <div class="trio">${fams.map(f => `<div class="mate">${Characters.svg({ family: f.id, color: Characters.COLORS[fams.indexOf(f) % Characters.COLORS.length].hex, stage: 0, mood: "cheer" })}<b>${esc(f.pet)}</b></div>`).join("")}</div>
@@ -232,7 +232,7 @@
         <p class="muted center">Se lo dimenticate, bisogna reinstallare l'app.</p>`;
     }
 
-    $app.innerHTML = `<section class="screen">${dotsHtml(s)}${body}
+    $app.innerHTML = `<section class="screen wz">${dotsHtml(s)}${body}
       <div class="nav">
         ${wiz.pinOnly ? (wiz.pinForce ? "" : `<button class="btn ghost" data-act="cancel">Annulla</button>`) : s > 0 ? `<button class="btn ghost" data-act="back">◀ Indietro</button>` : (wiz.editing ? `<button class="btn ghost" data-act="cancel">Annulla</button>` : "")}
         <button id="next" class="btn ${canNext && s !== 3 ? "flash" : ""}" data-act="next" ${canNext ? "" : "disabled"}>${nextLabel}</button>
@@ -678,6 +678,7 @@
   }
 
   // ---- esultanze ----
+  const FAILS = ["squash", "ribalta", "cade", "stordito", "tremolio", "sgonfia", "rotola", "svenuto"];
   const CHEERS = ["capriola", "pirouette", "saltoindietro", "ruota", "saltelli", "trottola", "dondolo", "razzo"];
   // effetti luminosi ridotti: dal profilo (genitori) oppure dalle impostazioni del telefono
   function fxCalm() {
@@ -711,7 +712,7 @@
 
   // sbagliato: il personaggio si schiaccia e piange; giusto: una delle 8 esultanze (capriole, pirouette, ecc.)
   function animateHero(hero, ok) {
-    hero.classList.remove("hop", "shake", "squash", "dance");
+    hero.classList.remove("hop", "shake", "squash", "dance", ...FAILS.map(f => "fail-" + f));
     hero.querySelectorAll(".tear,.cry,.halo").forEach(n => n.remove());
     void hero.offsetWidth;
     if (ok) {
@@ -723,8 +724,16 @@
       hero.classList.add("dance");
       cheerFx(hero);
     } else {
-      hero.insertAdjacentHTML("beforeend", '<span class="tear l"></span><span class="tear r"></span><span class="cry">😭</span>');
-      hero.classList.add("squash");
+      // 8 reazioni diverse all'errore, mai la stessa due volte di fila; con gli effetti ridotti: un semplice tremolio
+      let f = pick(FAILS), g = 0;
+      while (f === animateHero.lastFail && g++ < 8) f = pick(FAILS);
+      animateHero.lastFail = f;
+      if (fxCalm()) { hero.classList.add("shake"); return; }
+      if (f === "squash") hero.insertAdjacentHTML("beforeend", '<span class="tear l"></span><span class="tear r"></span><span class="cry">😭</span>');
+      else if (f === "stordito") hero.insertAdjacentHTML("beforeend", '<span class="cry">💫</span>');
+      else if (f === "sgonfia") hero.insertAdjacentHTML("beforeend", '<span class="cry">💨</span>');
+      else if (f === "svenuto") hero.insertAdjacentHTML("beforeend", '<span class="cry">😵</span>');
+      hero.classList.add(f === "squash" ? "squash" : "fail-" + f);
     }
   }
 
@@ -892,7 +901,7 @@
   function askNarration(cb) {
     askCb = cb;
     setTheme(null);
-    $app.innerHTML = `<section class="screen">
+    $app.innerHTML = `<section class="screen wz">
       ${brandHtml()}
       <div class="hero">${Characters.svg({ family: "creatura", color: Characters.COLORS[0].hex, stage: 0, mood: "happy" })}</div>
       <div class="center"><h1>Vuoi che ti legga le domande?</h1><p class="muted" style="margin-top:6px">Puoi cambiare idea quando vuoi, dalle impostazioni.</p></div>
@@ -957,7 +966,7 @@
   // IMPOSTAZIONI
   // ====================================================================
   function openModal(html) { $modal.innerHTML = `<div class="card sheet">${html}</div>`; $modal.hidden = false; }
-  function closeModal() { $modal.hidden = true; $modal.innerHTML = ""; }
+  function closeModal() { $modal.hidden = true; $modal.innerHTML = ""; lockStepsOpen = false; }
 
   function openSettings() {
     const p = profile;
@@ -990,12 +999,39 @@
     if (!Lock.available()) return "";
     const s = Lock.get();
     let body = `<p class="muted lock-note">Le altre app si aprono solo con i minuti guadagnati qui. Chiamate e sveglia non si bloccano mai. L'app si può sempre disinstallare.</p>`;
-    if (s.enabled && !s.overlay) body += `<button class="btn alt small" data-act="lock-perm-overlay">1 · Permetti «Mostra sopra le altre app»</button>`;
-    if (s.enabled && !s.usage) body += `<button class="btn alt small" data-act="lock-perm-usage">2 · Permetti «Accesso all'uso»</button>`;
-    if (s.enabled && (!s.overlay || !s.usage)) body += `<button class="btn ghost small" data-act="lock-guide">❓ Android non mi fa dare il permesso</button>`;
+    if (s.enabled && (!s.overlay || !s.usage)) body += `<button class="btn small flash" data-act="lock-steps">▶ Attiva il blocco, passo dopo passo</button>`;
     if (s.enabled && s.overlay && s.usage) body += `<p class="lock-ok">✅ Blocco attivo${s.emergencyToday ? " · sblocchi di emergenza oggi: " + s.emergencyToday : ""}</p>
       <button class="btn ghost small" data-act="lock-emergency">🆘 Emergenza: sblocca 10 minuti</button>`;
     return `<div class="lock-box" id="lockbox"><div class="row-set"><span>🔒 Blocco telefono</span><button class="switch ${s.enabled ? "on" : ""}" data-act="lock-toggle" aria-pressed="${!!s.enabled}">${s.enabled ? "Sì" : "No"}</button></div>${body}</div>`;
+  }
+
+
+  // procedura guidata dei permessi, un passo alla volta: si aggiorna da sola quando si torna dalle impostazioni di Android
+  let lockStepsOpen = false;
+  function openLockSteps() { lockStepsOpen = true; renderLockSteps(); }
+  function renderLockSteps() {
+    const s = Lock.get();
+    const dots = n => `<div class="step-dots">${[1, 2].map(i => `<span class="${i < n ? "done" : i === n ? "now" : ""}"></span>`).join("")}</div>`;
+    if (s.overlay && s.usage) {
+      openModal(`<h2>✅ Tutto pronto!</h2><p class="center">Il blocco è attivo: le altre app si aprono solo con i minuti guadagnati qui.</p>
+        <button class="btn" data-act="lock-steps-done">Fatto</button>`);
+      lockStepsOpen = true;
+      return;
+    }
+    const first = !s.overlay;
+    const title = first ? "Mostra sopra le altre app" : "Accesso all'uso";
+    const act = first ? "lock-perm-overlay" : "lock-perm-usage";
+    openModal(`${dots(first ? 1 : 2)}<h2>Passo ${first ? 1 : 2} di 2</h2>
+      <p class="step-name">${title}</p>
+      <ol class="guide-steps">
+        <li><span class="gi">1️⃣</span><span>Tocca il bottone qui sotto: si apre una pagina di Android.</span></li>
+        <li><span class="gi">2️⃣</span><span>Cerca <b>Gioca e Impara</b> nell'elenco e toccalo.</span></li>
+        <li><span class="gi">3️⃣</span><span>Attiva l'interruttore, poi torna qui con la freccia indietro.</span></li>
+      </ol>
+      <button class="btn big" data-act="${act}">📲 Apri la pagina</button>
+      <button class="btn ghost small" data-act="lock-guide">❓ Android non mi fa dare il permesso</button>
+      <button class="btn ghost small" data-act="lock-steps-done">Più tardi</button>`);
+    lockStepsOpen = true;
   }
 
   // guida per «Consenti impostazioni con restrizioni» (Android 13+, app installate a mano)
@@ -1007,16 +1043,17 @@
         <li><span class="gi">2️⃣</span><span>In alto a destra tocca i <b>tre puntini ⋮</b>.</span></li>
         <li><span class="gi">3️⃣</span><span>Tocca <b>«Consenti impostazioni con restrizioni»</b> e conferma con PIN o impronta del telefono. Se la voce non c'è, vai avanti.</span></li>
         <li><span class="gi">4️⃣</span><span>Torna qui con la freccia indietro.</span></li>
-        <li><span class="gi">5️⃣</span><span>Tocca i due pulsanti <b>«1 · Mostra sopra le altre app»</b> e <b>«2 · Accesso all'uso»</b> e attiva Gioca e Impara.</span></li>
+        <li><span class="gi">5️⃣</span><span>Torna ai passi e tocca <b>«Apri la pagina»</b>: ora Android ti lascia attivare Gioca e Impara.</span></li>
       </ol>
       <button class="btn" data-act="lock-appinfo">⚙️ Apri Info app</button>
-      <button class="btn alt" data-act="lock-guide-done">✅ Fatto, torna alle impostazioni</button>`);
+      <button class="btn alt" data-act="lock-guide-done">✅ Fatto, torna ai passi</button>`);
   }
 
   // rilegge lo stato dal telefono e aggiorna riquadro nelle impostazioni e home
   function refreshLockBox() {
     return Lock.status().then(() => {
       const el = document.getElementById("lockbox");
+      if (lockStepsOpen && !$modal.hidden) { renderLockSteps(); return; }
       if (el && !$modal.hidden) el.outerHTML = lockBoxHtml();
       if (profile && !wiz && !game && !askCb) renderHome();
     });
@@ -1199,11 +1236,13 @@
     "toggle-sound": () => { profile.sound = profile.sound === false; Storage.saveProfile(profile); openSettings(); renderHome(); },
     "lock-toggle": () => {
       if (Lock.get().enabled) { askPin("Spegni il blocco", () => Lock.setEnabled(false).then(() => { toast("Blocco spento"); openSettings(); renderHome(); })); return; }
-      Lock.setEnabled(true).then(st => { if (st.overlay && st.usage) openSettings(); else openLockGuide(); });
+      Lock.setEnabled(true).then(st => { if (st.overlay && st.usage) openSettings(); else openLockSteps(); });
     },
-    "lock-guide": () => openLockGuide(),
+    "lock-steps": () => { Lock.status().then(openLockSteps); },
+    "lock-steps-done": () => { lockStepsOpen = false; openSettings(); renderHome(); },
+    "lock-guide": () => { lockStepsOpen = false; openLockGuide(); },
     "lock-appinfo": () => { Lock.openAppInfo(); },
-    "lock-guide-done": () => { openSettings(); },
+    "lock-guide-done": () => { openLockSteps(); },
     "lock-perm-overlay": () => { Lock.openOverlaySettings(); },
     "lock-perm-usage": () => { Lock.openUsageSettings(); },
     "lock-emergency": () => { Lock.emergency().then(() => { toast("Telefono sbloccato per 10 minuti", 4000); refreshLockBox(); }); },
