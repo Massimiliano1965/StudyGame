@@ -177,9 +177,7 @@
   // installazione nuova: prima il PIN dei genitori (a meno che sia già deciso dalla build), poi il profilo
   function beginSetup(yes) {
     pendingAuto = yes;
-    if (presetPin()) { startWizard(false); return; }
-    wiz = { step: 4, editing: false, pinOnly: true, pinForce: true, pinFirst: true, pin1: "", pin2: "", d: {} };
-    renderWizard();
+    startWizard(false);   // il PIN lo scelgono i genitori alla fine (ultimo passo della guida), non il bambino
   }
 
   function startWizard(editing, step) {
@@ -321,7 +319,7 @@
     selected = subsNow();
     showHome();
     // installazione nuova: i genitori attivano subito il blocco (impostazioni difficili, da adulti)
-    if (firstTime && Lock.available() && !Lock.ready()) setTimeout(openLockOffer, 700);
+    if (firstTime && !presetPin() && !profile.pin) setTimeout(openLockOffer, 700);
   }
 
   // ====================================================================
@@ -1023,7 +1021,7 @@
   // IMPOSTAZIONI
   // ====================================================================
   function openModal(html) { $modal.innerHTML = `<div class="card sheet">${html}</div>`; $modal.hidden = false; }
-  function closeModal() { $modal.hidden = true; $modal.innerHTML = ""; lockStepsOpen = false; }
+  function closeModal() { $modal.hidden = true; $modal.innerHTML = ""; lockStepsOpen = false; lockPinStage = false; }
 
   function openSettings() {
     const p = profile;
@@ -1066,12 +1064,30 @@
 
   // dopo la creazione del profilo: le impostazioni del blocco sono difficili, le deve fare un adulto
   function openLockOffer() {
+    const blocco = Lock.available() && !Lock.ready();
     openModal(`<h2>👨‍👩‍👧 Chiedi ai tuoi genitori!</h2>
-      <p class="center">Adesso si attiva il <b>blocco del telefono</b>: le altre app si aprono solo con i minuti guadagnati qui.</p>
+      ${blocco ? `<p class="center">Adesso si attiva il <b>blocco del telefono</b>: le altre app si aprono solo con i minuti guadagnati qui.</p>` : `<p class="center">Adesso serve il <b>PIN dei genitori</b>.</p>`}
       <p class="center">Sono impostazioni <b>molto difficili</b>, vanno fatte da un adulto.</p>
       <button class="btn big" data-act="lock-offer-go">Ci sono i miei genitori ▶</button>
-      <button class="btn ghost small" data-act="lock-steps-done">Più tardi, dalle Impostazioni</button>`);
+      <button class="btn ghost small" data-act="lock-offer-later">Più tardi: solo il PIN</button>`);
+    lockPinStage = false;
     if (profile && profile.autoRead) Voice.speak("Chiedi ai tuoi genitori. Sono impostazioni molto difficili e le deve fare un adulto.", () => {});
+  }
+
+  // ultimo passo della guida: il PIN dei genitori (il bambino non lo vede)
+  let lockPinStage = false;
+  function renderParentPin(totalSteps) {
+    lockPinStage = true; lockStepsOpen = true;
+    openModal(`<div class="step-dots">${Array.from({ length: totalSteps }, (_, i) => `<span class="${i < totalSteps - 1 ? "done" : "now"}"></span>`).join("")}</div>
+      <h2>Passo ${totalSteps} di ${totalSteps}</h2>
+      <p class="step-name">Il PIN dei genitori</p>
+      <p class="muted center" style="font-size:15px;margin:0 0 6px">Gioca e Impara blocca le altre app finché il bambino non guadagna minuti giocando. Il PIN serve per cambiare nome o classe, spegnere il blocco e ricominciare da zero. Non ditelo ai bambini e <b>ricordatelo</b>: se lo dimenticate bisogna reinstallare l'app.</p>
+      <input id="lpin1" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN (4 cifre)" aria-label="PIN a 4 cifre">
+      <input id="lpin2" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Ripeti il PIN" aria-label="Ripeti il PIN" style="margin-top:8px">
+      <button id="lpin-ok" class="btn big" data-act="lock-pin-ok" disabled>Fatto ✔</button>`);
+    const a = document.getElementById("lpin1"), b = document.getElementById("lpin2"), ok = document.getElementById("lpin-ok");
+    const chk = () => { ok.disabled = !(/^\d{4}$/.test(a.value) && a.value === b.value); };
+    a.addEventListener("input", chk); b.addEventListener("input", chk);
   }
 
   // procedura guidata dei permessi, un passo alla volta: si aggiorna da sola quando si torna dalle impostazioni di Android
@@ -1079,8 +1095,12 @@
   function openLockSteps() { lockStepsOpen = true; renderLockSteps(); }
   function renderLockSteps() {
     const s = Lock.get();
-    const dots = n => `<div class="step-dots">${[1, 2, 3].map(i => `<span class="${i < n ? "done" : i === n ? "now" : ""}"></span>`).join("")}</div>`;
+    const needPin = !(profile && profile.pin);
+    const total = needPin ? 4 : 3;
+    const dots = n => `<div class="step-dots">${Array.from({ length: total }, (_, k) => k + 1).map(i => `<span class="${i < n ? "done" : i === n ? "now" : ""}"></span>`).join("")}</div>`;
     lockStepsOpen = true;
+    if (lockPinStage) return;   // sta scrivendo il PIN: non ridisegno
+    if (s.overlay && s.usage && needPin) { renderParentPin(total); return; }
     if (s.overlay && s.usage) {
       openModal(`<h2>✅ Tutto pronto!</h2><p class="center">Il blocco è attivo: le altre app si aprono solo con i minuti guadagnati qui.</p>
         <button class="btn" data-act="lock-steps-done">Fatto</button>`);
@@ -1089,7 +1109,7 @@
     }
     // passo 1: «Consenti impostazioni con restrizioni» (Android 13+, app installate a mano) — Android non dice se è fatto, quindi si conferma a mano
     if (!(profile && profile.lockRestr)) {
-      openModal(`${dots(1)}<p class="parent-note">👨‍👩‍👧 Chiedi ai tuoi genitori: queste impostazioni sono molto difficili, le deve fare un adulto.</p><h2>Passo 1 di 3</h2>
+      openModal(`${dots(1)}<p class="parent-note">👨‍👩‍👧 Chiedi ai tuoi genitori: queste impostazioni sono molto difficili, le deve fare un adulto.</p><h2>Passo 1 di ${total}</h2>
         <p class="step-name">Consenti impostazioni con restrizioni</p>
         <ol class="guide-steps">
           <li><span class="gi">1️⃣</span><span>Tocca «Apri Info app» qui sotto.</span></li>
@@ -1105,7 +1125,7 @@
     const first = !s.overlay;
     const title = first ? "Mostra sopra le altre app" : "Accesso all'uso";
     const act = first ? "lock-perm-overlay" : "lock-perm-usage";
-    openModal(`${dots(first ? 2 : 3)}<h2>Passo ${first ? 2 : 3} di 3</h2>
+    openModal(`${dots(first ? 2 : 3)}<h2>Passo ${first ? 2 : 3} di ${total}</h2>
       <p class="step-name">${title}</p>
       <ol class="guide-steps">
         <li><span class="gi">1️⃣</span><span>Tocca il bottone qui sotto: si apre una pagina di Android.</span></li>
@@ -1324,8 +1344,20 @@
     "lock-steps": () => { Lock.status().then(openLockSteps); },
     "lock-restr-ok": () => { profile.lockRestr = true; Storage.saveProfile(profile); renderLockSteps(); },
     "lock-restr-again": () => { profile.lockRestr = false; Storage.saveProfile(profile); renderLockSteps(); },
-    "lock-offer-go": () => { Lock.setEnabled(true).then(() => openLockSteps()); },
-    "lock-steps-done": () => { lockStepsOpen = false; openSettings(); renderHome(); },
+    "lock-offer-go": () => {
+      if (Lock.available() && !Lock.ready()) Lock.setEnabled(true).then(() => openLockSteps());
+      else renderParentPin(1);
+    },
+    "lock-offer-later": () => renderParentPin(1),
+    "lock-pin-ok": () => {
+      const a = document.getElementById("lpin1"), b = document.getElementById("lpin2");
+      if (!a || !/^\d{4}$/.test(a.value) || a.value !== b.value) return;
+      profile.pin = hashPin(a.value); profile.pinFails = 0; Storage.saveProfile(profile);
+      lockPinStage = false;
+      openModal(`<h2>✅ Tutto pronto!</h2><p class="center">Ricordate il PIN. Ora si può giocare!</p><button class="btn" data-act="lock-steps-done">Fatto</button>`);
+      lockStepsOpen = false; renderHome();
+    },
+    "lock-steps-done": () => { lockStepsOpen = false; lockPinStage = false; if (profile && !profile.pin) { renderParentPin(1); return; } closeModal(); renderHome(); },
     "lock-guide": () => { lockStepsOpen = false; openLockGuide(); },
     "lock-appinfo": () => { Lock.openAppInfo(); },
     "lock-guide-done": () => { openLockSteps(); },
@@ -1404,8 +1436,8 @@
     const go = () => {
       if (!profile.pin && presetPin()) { profile.pin = presetPin(); Storage.saveProfile(profile); }
       if (profile.pin) { if (!tryResume()) showHome(); return; }
-      wiz = { step: 4, editing: true, pinOnly: true, pinForce: true, pin1: "", pin2: "", d: { ...profile } };
-      renderWizard();
+      showHome();
+      setTimeout(openLockOffer, 700);   // senza PIN: parte per i genitori (blocco e PIN), mai davanti al bambino come schermata a sé
     };
     if (profile.narrAsked) go();
     else askNarration(yes => { profile.autoRead = yes; profile.narrAsked = true; Storage.saveProfile(profile); go(); });
