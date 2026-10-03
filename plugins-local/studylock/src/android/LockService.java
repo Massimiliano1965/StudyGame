@@ -216,8 +216,19 @@ public class LockService extends Service {
     lastTick = now;
 
     if (now < p.getLong("emergencyUntil", 0)) { hideOverlay(); return; }
-    // i genitori sono nelle Impostazioni di Android aperte da qui: non coprirle
-    if (now < p.getLong("settingsUntil", 0)) { hideOverlay(); return; }
+    // i genitori sono nelle Impostazioni di Android aperte da qui: non coprirle.
+    // Ma appena tornano in Gioca e Impara la pausa finisce subito (prima durava 5 minuti pieni
+    // e dopo aver dato i permessi il blocco sembrava non funzionare). Per i primi 4 secondi non si
+    // azzera: Android ci mette un attimo a portare davanti le Impostazioni.
+    long sUntil = p.getLong("settingsUntil", 0);
+    if (now < sUntil) {
+      boolean justOpened = now > sUntil - 5 * 60 * 1000L && now < sUntil - 5 * 60 * 1000L + 4000L;
+      if (getPackageName().equals(fg) && !justOpened) {
+        p.edit().putLong("settingsUntil", 0).apply();
+      } else {
+        hideOverlay(); return;
+      }
+    }
 
     boolean ok = fg == null || allowed.contains(fg);
     boolean need = false;
