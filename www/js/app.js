@@ -1096,7 +1096,7 @@
   function renderLockSteps() {
     const s = Lock.get();
     const needPin = !(profile && profile.pin);
-    const total = needPin ? 3 : 2;
+    const total = needPin ? 5 : 4;
     const dots = n => `<div class="step-dots">${Array.from({ length: total }, (_, k) => k + 1).map(i => `<span class="${i < n ? "done" : i === n ? "now" : ""}"></span>`).join("")}</div>`;
     lockStepsOpen = true;
     if (lockPinStage) return;   // sta scrivendo il PIN: non ridisegno
@@ -1107,19 +1107,45 @@
       lockStepsOpen = true;
       return;
     }
-    const first = !s.overlay;
-    const title = first ? "Mostra sopra le altre app" : "Accesso all'uso";
-    const act = first ? "lock-perm-overlay" : "lock-perm-usage";
-    openModal(`${dots(first ? 1 : 2)}<h2>Passo ${first ? 1 : 2} di ${total}</h2>
+    const prof = profile || {};
+    const mk = (n, title, items, mainAct, mainLabel, extra) => openModal(`${dots(n)}<h2>Passo ${n} di ${total}</h2>
       <p class="step-name">${title}</p>
-      <ol class="guide-steps">
-        <li><span class="gi">1️⃣</span><span>Tocca il bottone qui sotto: si apre una pagina di Android.</span></li>
-        <li><span class="gi">2️⃣</span><span>Cerca <b>Gioca e Impara</b> nell'elenco e toccalo.</span></li>
-        <li><span class="gi">3️⃣</span><span>Attiva l'interruttore, poi torna qui con la freccia indietro.</span></li>
-      </ol>
-      <button class="btn big" data-act="${act}">📲 Apri la pagina</button>
-      <button class="btn alt small" data-act="lock-guide">❓ Android dice «Impostazione con restrizioni»</button>
+      <ol class="guide-steps">${items.map((t, i) => `<li><span class="gi">${i + 1}️⃣</span><span>${t}</span></li>`).join("")}</ol>
+      <button class="btn big" data-act="${mainAct}">${mainLabel}</button>${extra || ""}
       <button class="btn ghost small" data-act="lock-steps-done">Più tardi</button>`);
+    if (!s.overlay) {
+      if (!prof.lkTried) {
+        mk(1, "Prima prova: «Mostra sopra le altre app»", [
+          "Tocca <b>«Apri la pagina»</b> qui sotto.",
+          "Cerca <b>Gioca e Impara</b>, toccalo e prova ad attivare l'interruttore.",
+          "Android dirà di no (<b>«Impostazione con restrizioni»</b>): è normale. Chiudi e torna qui."],
+          "lock-perm-overlay", "📲 Apri la pagina",
+          `<button class="btn alt" data-act="lock-tried">✅ Fatto, Android ha detto di no</button>`);
+        return;
+      }
+      if (!prof.lkUnlocked) {
+        mk(2, "Sblocca l'app", [
+          "Tocca <b>«Apri Info app»</b> qui sotto.",
+          "In alto a destra tocca i <b>tre puntini ⋮</b>.",
+          "Tocca <b>«Consenti impostazioni con restrizioni»</b> e conferma con impronta o PIN del telefono."],
+          "lock-appinfo", "⚙️ Apri Info app",
+          `<button class="btn alt" data-act="lock-unlocked">✅ Fatto, avanti</button>`);
+        return;
+      }
+      mk(3, "Ora attiva «Mostra sopra le altre app»", [
+        "Tocca <b>«Apri la pagina»</b> qui sotto.",
+        "Cerca <b>Gioca e Impara</b> e attiva l'interruttore: adesso funziona.",
+        "Torna qui con la freccia indietro."],
+        "lock-perm-overlay", "📲 Apri la pagina",
+        `<button class="btn ghost small" data-act="lock-guide">❓ Dice ancora di no: ricomincia dal passo 1</button>`);
+      return;
+    }
+    mk(4, "Attiva «Accesso all'uso»", [
+      "Tocca <b>«Apri la pagina»</b> qui sotto.",
+      "Cerca <b>Gioca e Impara</b> e attiva l'interruttore.",
+      "Torna qui con la freccia indietro."],
+      "lock-perm-usage", "📲 Apri la pagina",
+      `<button class="btn ghost small" data-act="lock-guide">❓ Dice di no: ricomincia dal passo 1</button>`);
   }
 
   // guida per «Consenti impostazioni con restrizioni» (Android 13+, app installate a mano)
@@ -1343,7 +1369,9 @@
       lockStepsOpen = false; renderHome();
     },
     "lock-steps-done": () => { lockStepsOpen = false; lockPinStage = false; if (profile && !profile.pin) { renderParentPin(1); return; } closeModal(); renderHome(); },
-    "lock-guide": () => { lockStepsOpen = false; openLockGuide(); },
+    "lock-guide": () => { profile.lkTried = false; profile.lkUnlocked = false; Storage.saveProfile(profile); renderLockSteps(); },
+    "lock-tried": () => { profile.lkTried = true; Storage.saveProfile(profile); renderLockSteps(); },
+    "lock-unlocked": () => { profile.lkUnlocked = true; Storage.saveProfile(profile); renderLockSteps(); },
     "lock-appinfo": () => { Lock.openAppInfo(); },
     "lock-guide-done": () => { openLockSteps(); },
     "lock-perm-overlay": () => { Lock.openOverlaySettings(); },
