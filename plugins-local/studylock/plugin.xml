@@ -5,7 +5,7 @@
   version="1.0.0">
 
   <name>StudyLock</name>
-  <description>Blocco morbido del telefono per Gioca e Impara: copertura sopra le altre app finche non ci sono minuti guadagnati. Nessun amministratore del dispositivo, sempre disinstallabile, con sblocco di emergenza.</description>
+  <description>Blocco morbido del telefono per Gioca e Impara: copertura sopra le altre app finche non ci sono minuti guadagnati. Protezione dalla disinstallazione (amministratore del dispositivo + Impostazioni dietro PIN dei genitori) e sblocco di emergenza.</description>
   <license>MIT</license>
 
   <js-module src="www/studylock.js" name="StudyLock">
@@ -32,6 +32,12 @@
       <service android:name="it.massi.studylock.LockService" android:exported="false" android:foregroundServiceType="specialUse">
         <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="parental_screen_time_lock" />
       </service>
+      <receiver android:name="it.massi.studylock.StudyAdmin" android:exported="true" android:permission="android.permission.BIND_DEVICE_ADMIN">
+        <meta-data android:name="android.app.device_admin" android:resource="@xml/studylock_admin" />
+        <intent-filter>
+          <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+        </intent-filter>
+      </receiver>
       <receiver android:name="it.massi.studylock.BootReceiver" android:exported="true">
         <intent-filter>
           <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -43,5 +49,7 @@
     <source-file src="src/android/StudyLock.java" target-dir="src/it/massi/studylock" />
     <source-file src="src/android/LockService.java" target-dir="src/it/massi/studylock" />
     <source-file src="src/android/BootReceiver.java" target-dir="src/it/massi/studylock" />
+    <source-file src="src/android/StudyAdmin.java" target-dir="src/it/massi/studylock" />
+    <resource-file src="res/xml/studylock_admin.xml" target="res/xml/studylock_admin.xml" />
   </platform>
 </plugin>

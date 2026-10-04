@@ -45,7 +45,8 @@ import java.util.Set;
  * Blocco morbido: ogni secondo guarda quale app e' davanti. Se non e' una delle app sempre permesse
  * (questa, telefono, sveglia, installazione) e non ci sono minuti sbloccati, copre lo schermo con una
  * schermata che rimanda a Gioca e Impara. I minuti si consumano solo mentre si usano le ALTRE app.
- * Nessun amministratore del dispositivo: l'app si puo' sempre disinstallare.
+ * Protezione dalla disinstallazione: amministratore del dispositivo (StudyAdmin) + Impostazioni e conferma di
+ * disinstallazione coperte da un tastierino PIN (il PIN dei genitori arriva dalla parte web con setPin).
  * Il pulsante di emergenza e' qui, nativo: funziona anche se la parte web si blocca.
  */
 public class LockService extends Service {
@@ -57,6 +58,9 @@ public class LockService extends Service {
   private final Handler h = new Handler(Looper.getMainLooper());
   private WindowManager wm;
   private View overlay;
+  private View guardView;
+  private TextView guardDots, guardMsg;
+  private final StringBuilder guardPin = new StringBuilder();
   private String fg = null;
   private long lastQuery = 0;
   private long lastTick = 0;
@@ -92,6 +96,20 @@ public class LockService extends Service {
     } catch (Throwable t) {
       return false;
     }
+  }
+
+  /** Stessa impronta del PIN di hashPin() in app.js (JavaScript): "p1" + (hash senza segno in base 36). */
+  static String hashPin(String v) {
+    int h = 5381;
+    String t = "gei|" + v + "|2026";
+    for (int i = 0; i < t.length(); i++) h = ((h << 5) + h + t.charAt(i));
+    return "p1" + Long.toString(h & 0xFFFFFFFFL, 36);
+  }
+
+  /** Schermate che i bambini non devono poter aprire senza il PIN: Impostazioni di Android e conferma di disinstallazione. */
+  static boolean isDanger(String pkg) {
+    if (pkg == null) return false;
+    return pkg.contains(".settings") || pkg.contains("packageinstaller");
   }
 
   /** Nuovo giorno: minuti sbloccati e conteggio emergenze ripartono da zero. */
@@ -133,6 +151,7 @@ public class LockService extends Service {
     running = false;
     h.removeCallbacksAndMessages(null);
     hideOverlay();
+    hideGuard();
     super.onDestroy();
   }
 
@@ -201,19 +220,30 @@ public class LockService extends Service {
     long now = System.currentTimeMillis();
     rollDay(p);
 
-    if (!p.getBoolean("enabled", false)) { hideOverlay(); stopSelf(); return; }
+    if (!p.getBoolean("enabled", false)) { hideOverlay(); hideGuard(); stopSelf(); return; }
     // senza i due permessi non si blocca mai niente
-    if (!canOverlay(this) || !hasUsage(this)) { hideOverlay(); lastTick = now; return; }
+    if (!canOverlay(this) || !hasUsage(this)) { hideOverlay(); hideGuard(); lastTick = now; return; }
 
     PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
     KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
     if ((pm != null && !pm.isInteractive()) || (km != null && km.isKeyguardLocked())) {
-      hideOverlay(); lastTick = now; return;
+      hideOverlay(); hideGuard(); lastTick = now; return;
     }
 
     refreshForeground(now);
     long elapsed = Math.min(Math.max(0, now - lastTick), 5000);
     lastTick = now;
+
+    // Protezione: Impostazioni di Android e conferma di disinstallazione si aprono solo con il PIN dei genitori.
+    // Vale anche durante lo sblocco di emergenza. Esenzione: 5 minuti dopo un PIN giusto, oppure subito dopo
+    // che e' stata l'app stessa ad aprire le Impostazioni (procedura guidata dei genitori).
+    if (p.getString("pinHash", "").length() > 0 && isDanger(fg)
+        && now >= p.getLong("guardUntil", 0) && now >= p.getLong("settingsUntil", 0)) {
+      hideOverlay();
+      showGuard(p);
+      return;
+    }
+    hideGuard();
 
     if (now < p.getLong("emergencyUntil", 0)) { hideOverlay(); return; }
     // i genitori sono nelle Impostazioni di Android aperte da qui: non coprirle.
@@ -346,6 +376,133 @@ public class LockService extends Service {
     } catch (Throwable t) {
       overlay = null; // permesso tolto nel frattempo: niente blocco
     }
+  }
+
+  // ---------- schermata PIN davanti a Impostazioni / disinstallazione ----------
+
+  private Button key(String t) {
+    Button b = new Button(this);
+    b.setText(t);
+    b.setAllCaps(false);
+    b.setTextSize(24);
+    b.setTextColor(Color.WHITE);
+    GradientDrawable g = new GradientDrawable();
+    g.setColor(Color.parseColor("#3730A3"));
+    g.setCornerRadius(dp(18));
+    b.setBackground(g);
+    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(62), 1f);
+    lp.setMargins(dp(6), dp(6), dp(6), dp(6));
+    b.setLayoutParams(lp);
+    return b;
+  }
+
+  private void goHome() {
+    try {
+      Intent i = new Intent(Intent.ACTION_MAIN);
+      i.addCategory(Intent.CATEGORY_HOME);
+      i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      startActivity(i);
+    } catch (Throwable t) { /* ignora */ }
+  }
+
+  private void guardRefresh(SharedPreferences p) {
+    if (guardDots == null) return;
+    StringBuilder d = new StringBuilder();
+    for (int i = 0; i < 4; i++) d.append(i < guardPin.length() ? "●" : "○").append(i < 3 ? "  " : "");
+    guardDots.setText(d.toString());
+    long lock = p.getLong("guardLockUntil", 0);
+    long now = System.currentTimeMillis();
+    if (guardMsg != null) {
+      guardMsg.setText(now < lock ? "Troppi tentativi sbagliati. Riprova tra " + (int) Math.ceil((lock - now) / 60000.0) + " minuti." : "Per aprire le Impostazioni serve il PIN dei genitori.");
+    }
+  }
+
+  private void guardDigit(String dgt) {
+    SharedPreferences p = prefs(this);
+    long now = System.currentTimeMillis();
+    if (now < p.getLong("guardLockUntil", 0)) { guardPin.setLength(0); guardRefresh(p); return; }
+    if (guardPin.length() >= 4) return;
+    guardPin.append(dgt);
+    guardRefresh(p);
+    if (guardPin.length() == 4) {
+      String typed = guardPin.toString();
+      guardPin.setLength(0);
+      if (hashPin(typed).equals(p.getString("pinHash", ""))) {
+        p.edit().putLong("guardUntil", now + 5 * 60 * 1000L).putInt("guardFails", 0).apply();
+        hideGuard();
+      } else {
+        int f = p.getInt("guardFails", 0) + 1;
+        SharedPreferences.Editor e = p.edit();
+        if (f >= 5) { e.putLong("guardLockUntil", now + 5 * 60 * 1000L).putInt("guardFails", 0); }
+        else e.putInt("guardFails", f);
+        e.apply();
+        guardRefresh(p);
+        Toast.makeText(this, "PIN sbagliato", Toast.LENGTH_SHORT).show();
+      }
+    }
+  }
+
+  private void showGuard(SharedPreferences p) {
+    if (guardView != null || wm == null) { if (guardView != null) guardRefresh(p); return; }
+    LinearLayout root = new LinearLayout(this) {
+      @Override public boolean dispatchKeyEvent(KeyEvent ev) {
+        if (ev.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+          if (ev.getAction() == KeyEvent.ACTION_UP) { hideGuard(); goHome(); }
+          return true;
+        }
+        return super.dispatchKeyEvent(ev);
+      }
+    };
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setGravity(Gravity.CENTER);
+    root.setBackgroundColor(Color.parseColor("#1E1B4B"));
+    root.setPadding(dp(20), dp(32), dp(20), dp(20));
+
+    root.addView(label("🔐", 48, Color.WHITE, false));
+    root.addView(label("Solo per i genitori", 26, Color.WHITE, true));
+    guardMsg = label("", 16, Color.parseColor("#E0E7FF"), false);
+    root.addView(guardMsg);
+    guardDots = label("", 30, Color.WHITE, true);
+    root.addView(guardDots);
+
+    String[][] rows = { { "1", "2", "3" }, { "4", "5", "6" }, { "7", "8", "9" }, { "Esci", "0", "⌫" } };
+    for (String[] r : rows) {
+      LinearLayout row = new LinearLayout(this);
+      row.setOrientation(LinearLayout.HORIZONTAL);
+      row.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+      for (final String t : r) {
+        Button b = key(t);
+        b.setOnClickListener(new View.OnClickListener() {
+          @Override public void onClick(View v) {
+            if (t.equals("Esci")) { hideGuard(); goHome(); }
+            else if (t.equals("⌫")) { if (guardPin.length() > 0) guardPin.setLength(guardPin.length() - 1); guardRefresh(prefs(LockService.this)); }
+            else guardDigit(t);
+          }
+        });
+        row.addView(b);
+      }
+      root.addView(row);
+    }
+
+    int type = Build.VERSION.SDK_INT >= 26 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
+    WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
+      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, type,
+      WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.OPAQUE);
+    try {
+      guardPin.setLength(0);
+      wm.addView(root, lp);
+      guardView = root;
+      guardRefresh(p);
+    } catch (Throwable t) {
+      guardView = null; guardDots = null; guardMsg = null;
+    }
+  }
+
+  private void hideGuard() {
+    if (guardView == null) return;
+    try { if (wm != null) wm.removeView(guardView); } catch (Throwable t) { /* gia' tolta */ }
+    guardView = null; guardDots = null; guardMsg = null;
+    guardPin.setLength(0);
   }
 
   private void hideOverlay() {

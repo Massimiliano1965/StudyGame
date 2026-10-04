@@ -12,6 +12,23 @@ const Credit = (() => {
   const max = () => CONFIG.MAX_BY_BAND[band()];
   const clamp = v => Math.max(CONFIG.MIN_MINUTES, Math.min(max(), v));
 
+  // ---- pausa (cooldown) tra una sessione di guadagno e l'altra ----
+  // state.sess = minuti guadagnati nella sessione in corso; state.cdUntil = fine della pausa (ms).
+  const cdLeft = () => Math.max(0, (state.cdUntil || 0) - Date.now());
+  const cooling = () => CONFIG.COOLDOWN_MIN > 0 && cdLeft() > 0;
+  function endCooldown() { state.cdUntil = 0; state.sess = 0; Storage.saveDay(state); notify(); }
+  // aggiorna la sessione col guadagno netto; restituisce true se da adesso scatta la pausa
+  function trackSession(delta) {
+    if (!(CONFIG.SESSION_EARN > 0) || !(CONFIG.COOLDOWN_MIN > 0) || cooling()) return false;
+    state.sess = Math.max(0, (state.sess || 0) + delta);
+    if (state.sess >= CONFIG.SESSION_EARN) {
+      state.cdUntil = Date.now() + CONFIG.COOLDOWN_MIN * 60000;
+      state.sess = 0;
+      return true;
+    }
+    return false;
+  }
+
   function setClass(id) { classId = id == null ? 0 : id; state.minutes = clamp(state.minutes); }
   function refresh() { state = Storage.loadDay(); state.minutes = clamp(state.minutes); notify(); }
 
@@ -25,9 +42,10 @@ const Credit = (() => {
     state.minutes = clamp(before + (isCorrect ? t.ok : -t.ko));
     if (isCorrect && r > 0) state.hi = (state.hi || 0) + t.ok;
     if (isCorrect) state.correct++; else state.wrong++;
+    const cooldown = trackSession(state.minutes - before);
     Storage.saveDay(state);
     notify();
-    return { delta: state.minutes - before, minutes: state.minutes, full: state.minutes >= max(), rel: r };
+    return { delta: state.minutes - before, minutes: state.minutes, full: state.minutes >= max(), rel: r, cooldown };
   }
 
   // 3/10/2026: risultato di un esercizio = quante risposte giuste e quante sbagliate.
@@ -49,9 +67,10 @@ const Credit = (() => {
       if (m > (state.festMax || CONFIG.MIN_MINUTES) && state.minutes >= m) milestone = m;
     }
     if (milestone) state.festMax = milestone;
+    const cooldown = trackSession(state.minutes - before);
     Storage.saveDay(state);
     notify();
-    return { delta: state.minutes - before, minutes: state.minutes, full: state.minutes >= max(), rel: r, milestone };
+    return { delta: state.minutes - before, minutes: state.minutes, full: state.minutes >= max(), rel: r, milestone, cooldown };
   }
 
   // regalo di un genitore: dentro il tetto del giorno
@@ -67,6 +86,12 @@ const Credit = (() => {
   }
   // quanta parte della barra è riempita (0..1) tra minimo e tetto
   const progress = () => (state.minutes - CONFIG.MIN_MINUTES) / (max() - CONFIG.MIN_MINUTES);
+  // fotografia dei conti di oggi: base garantita, bonus guadagnato, minuti già consegnati al blocco, pausa
+  function status() {
+    const m = state.minutes, base = Math.min(m, CONFIG.MIN_MINUTES);
+    return { base, bonus: Math.max(0, m - CONFIG.MIN_MINUTES), total: m, granted: state.granted || 0, available: available(),
+      sessionEarned: state.sess || 0, cooling: cooling(), cooldownLeftMs: cdLeft() };
+  }
   const highFull = () => (state.hi || 0) >= CONFIG.HIGH_CAP;
   const onChange = fn => listeners.push(fn);
 
@@ -76,5 +101,5 @@ const Credit = (() => {
   }
   const fmtDelta = n => String(Math.abs(n)).replace(".", ",");
 
-  return { answer, result, get, available, claim, progress, onChange, refresh, format, fmtDelta, max, setClass, highFull, gift, noPenalty };
+  return { answer, result, get, available, claim, cooling, cdLeft, endCooldown, status, progress, onChange, refresh, format, fmtDelta, max, setClass, highFull, gift, noPenalty };
 })();

@@ -26,6 +26,8 @@
   const relOf = c => c < profile.classId ? -1 : c > profile.classId ? 1 : 0;
   const subsNow = () => subjectsForClass(playClass()).filter(s => isReady(s.id)).map(s => s.id);
   const hashPin = v => { let h = 5381; const t = "gei|" + v + "|2026"; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return "p1" + (h >>> 0).toString(36); };
+  // il PIN dei genitori passa anche alla parte nativa: chiede il PIN davanti a Impostazioni di Android e alla disinstallazione
+  const syncPin = () => { if (profile && profile.pin) Lock.setPin(profile.pin); };
   const presetPin = () => (typeof PIN_PRESET === "string" && PIN_PRESET) || "";
   let pendingPin = "";    // PIN scelto nella prima schermata di una installazione nuova
   let pendingCalm = false; // "figlio fotosensibile": scelta fatta nella schermata di benvenuto
@@ -325,6 +327,7 @@
     pendingPin = "";
     delete profile.setup;
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
+    syncPin();
     applyCalm();
     wiz = null;
     viewClass = null;
@@ -373,6 +376,7 @@
     let r = null;
     try { r = JSON.parse(localStorage.getItem(K_RESUME)); } catch (e) {}
     clearResume();
+    if (Credit.cooling()) return false;
     if (!r || !r.g || r.day !== Storage.today() || Date.now() - r.at > RESUME_MAX_MS || r.classId !== profile.classId) return false;
     const subjects = (r.g.subjects || []).filter(isReady);
     if (!subjects.length) return false;
@@ -395,7 +399,7 @@
 
   function showHome() {
     Games.stop();
-    game = null;
+    game = null; cdOpen = false; clearInterval(cdTimer); homeCool = Credit.cooling();
     clearResume();
     setTheme(profile.classId);
     renderHome();
@@ -429,6 +433,7 @@
       <div class="lvl-box lvl${rel}"><button class="icon-btn" data-act="lvl-down" aria-label="Esercizi più facili" ${pc <= 0 ? "disabled" : ""}>◀</button>
         <div class="lvl-mid"><small>Esercizi di</small><b>${esc(classLabel(pc))}</b><span class="lvl-tag">${esc(tag)}</span></div>
         <button class="icon-btn" data-act="lvl-up" aria-label="Esercizi più difficili" ${pc >= 7 ? "disabled" : ""}>▶</button></div>
+      ${cdBannerHtml()}
       <div class="sel-head"><h2>Scegli le sfide</h2>
         <span class="sel-btns"><button class="btn ghost small" data-act="sel-all">✔ Tutte</button><button class="btn ghost small" data-act="sel-none">✖ Nessuna</button></span></div>
       <div class="subjects">${subs.map(s => {
@@ -450,7 +455,38 @@
   const PRAISE = { piccoli: ["Bravo!", "Grande!", "Evviva!", "Che forza!"], ragazzi: ["Esatto!", "Centro!", "Che mito!", "Forte!"], teen: ["Boom!", "Esatto!", "Livello su!", "Sei un mostro!"] };
   const OOPS = ["Quasi!", "Ci sei vicino!", "Ci riprovi col prossimo!"];
 
+  // ====================================================================
+  // PAUSA DEL CERVELLO (cooldown): dopo una sessione di guadagno, per un po' non si guadagnano altri minuti
+  // ====================================================================
+  let cdOpen = false, cdTimer = 0, homeCool = false;
+  const fmtCd = ms => { const m = Math.max(1, Math.ceil(ms / 60000)), h = Math.floor(m / 60); return h ? `${h} h ${String(m % 60).padStart(2, "0")} min` : `${m} min`; };
+  const CD_SAY = "Pausa del cervello! Hai guadagnato tanti minuti. Ora il cervello deve riposare per ricordare meglio. Vai a giocare fuori e poi si riparte.";
+  function showCooldown() {
+    Games.stop(); Music.stop(); Voice.stopSpeaking();
+    game = null; clearResume(); cdOpen = true;
+    setTheme(profile.classId);
+    $app.innerHTML = `<section class="screen cd">
+      ${brandHtml()}
+      <div class="center"><div class="cd-ic">😴</div><h1>Pausa del cervello</h1>
+        <p class="muted" style="margin-top:6px">Hai guadagnato un bel po' di minuti! Ora il cervello ha bisogno di riposare, così ricorda meglio quello che hai imparato.</p></div>
+      <div class="cd-box"><small>Si riparte tra</small><b id="cd-left">${fmtCd(Credit.cdLeft())}</b></div>
+      <p class="center muted">Intanto vai a giocare fuori, a leggere o a muoverti. I minuti che hai già guadagnato restano tuoi.</p>
+      <button class="btn big flash" data-act="cd-home">🏠 Torna alla home</button>
+      <button class="btn ghost" data-act="cd-skip">🙋 Genitori: salta la pausa</button></section>`;
+    clearInterval(cdTimer);
+    cdTimer = setInterval(cdTick, 1000);
+    if (profile.autoRead) Voice.speak(CD_SAY, msg => toast(msg, 6000));
+  }
+  function cdTick() {
+    const el = document.getElementById("cd-left");
+    if (!el || !cdOpen) { clearInterval(cdTimer); return; }
+    if (!Credit.cooling()) { clearInterval(cdTimer); cdOpen = false; toast("Pausa finita: si può giocare!", 3500); showHome(); return; }
+    el.textContent = fmtCd(Credit.cdLeft());
+  }
+  const cdBannerHtml = () => Credit.cooling() ? `<p class="cd-banner">😴 Pausa del cervello: gli esercizi tornano tra <b id="cd-home-left">${fmtCd(Credit.cdLeft())}</b></p>` : "";
+
   function startGame(ids) {
+    if (Credit.cooling()) { showCooldown(); return; }
     const ok = ids.filter(isReady);
     if (!ok.length) { toast("Scegli almeno una sfida con il bollino verde."); return; }
     game = { subjects: ok, streak: 0, right: 0, listening: false, lastKind: "", round: null, cls: playClass(), rel: relOf(playClass()),
@@ -460,6 +496,7 @@
   }
 
   function nextQuestion() {
+    if (Credit.cooling()) { showCooldown(); return; }
     Games.stop();
     game.sid = pick(game.subjects);
     // lingua straniera della voce: inglese, oppure quella scelta nelle Impostazioni per la seconda lingua
@@ -696,6 +733,7 @@
     if (game.practice) text = (text ? text + " " : "") + "Ripasso: i minuti non cambiano.";
     else if (ok && r.delta === 0) text = (text ? text + " " : "") + "Hai già il massimo di oggi, ma continua pure per allenarti!";
     if (!game.practice && !ok && r.delta === 0) text = (text ? text + " " : "") + (r.rel > 0 ? "Livello più alto: non perdi minuti, e provando si impara!" : "I minuti garantiti restano tuoi.");
+    if (r.cooldown) text = (text ? text + " " : "") + "Bravissimo! Hai guadagnato tanto: ora il cervello ha bisogno di una pausa. Si riparte tra " + fmtCd(Credit.cdLeft()) + ".";
     // ogni tanto (circa 1 volta su 3) l'elogio dice anche il nome del bambino: "Bravo, Luca!"
     let title = ok ? pick(PRAISE[th]) : pick(OOPS);
     const nm = (profile.nick || "").trim();
@@ -986,6 +1024,7 @@
   }
 
   function getNarration() {
+    if (cdOpen) return CD_SAY;
     if (askCb) return "Vuoi che ti legga le domande? Tocca sì, leggimele, oppure no, grazie.";
     if (wiz && wiz.pinFirst) return STEP_SAY.pin;
     if (wiz) return stepSay(wiz.step) || "";
@@ -1067,10 +1106,13 @@
   function lockBoxHtml() {
     if (!Lock.available()) return "";
     const s = Lock.get();
-    let body = `<p class="muted lock-note">Le altre app si aprono solo con i minuti guadagnati qui. Chiamate e sveglia non si bloccano mai. L'app si può sempre disinstallare.</p>`;
+    let body = `<p class="muted lock-note">Le altre app si aprono solo con i minuti guadagnati qui. Chiamate e sveglia non si bloccano mai. Con la protezione attiva, le Impostazioni di Android e la disinstallazione dell'app chiedono il PIN dei genitori.</p>`;
     if (s.enabled && (!s.overlay || !s.usage)) body += `<button class="btn small flash" data-act="lock-steps">▶ Attiva il blocco, passo dopo passo</button>`;
     if (s.enabled && s.overlay && s.usage) body += `<p class="lock-ok">✅ Blocco attivo${s.emergencyToday ? " · sblocchi di emergenza oggi: " + s.emergencyToday : ""}</p>
       <button class="btn ghost small" data-act="lock-emergency">🆘 Emergenza: sblocca 10 minuti</button>`;
+    if (s.enabled && s.overlay && s.usage) body += s.admin
+      ? `<p class="lock-ok">🛡️ Protezione dalla disinstallazione attiva</p><button class="btn ghost small" data-act="admin-off">🔓 Togli la protezione (genitori)</button>`
+      : `<button class="btn small flash" data-act="lock-admin">🛡️ Attiva la protezione dalla disinstallazione</button>`;
     return `<div class="lock-box" id="lockbox"><div class="row-set"><span>🔒 Blocco telefono</span><button class="switch ${s.enabled ? "on" : ""}" data-act="lock-toggle" aria-pressed="${!!s.enabled}">${s.enabled ? "Sì" : "No"}</button></div>${body}</div>`;
   }
 
@@ -1111,10 +1153,23 @@
   function renderLockSteps() {
     const s = Lock.get();
     const needPin = !(profile && profile.pin);
-    const total = needPin ? 5 : 4;
+    const total = needPin ? 6 : 5;
     const dots = n => `<div class="step-dots">${Array.from({ length: total }, (_, k) => k + 1).map(i => `<span class="${i < n ? "done" : i === n ? "now" : ""}"></span>`).join("")}</div>`;
     lockStepsOpen = true;
     if (lockPinStage) return;   // sta scrivendo il PIN: non ridisegno
+    if (s.overlay && s.usage && !s.admin && !(profile && profile.adminLater)) {
+      openModal(`${dots(5)}<h2>Passo 5 di ${total}</h2>
+        <p class="step-name">Protezione dalla disinstallazione</p>
+        <ol class="guide-steps">
+          <li><span class="gi">1️⃣</span><span>Tocca <b>«Attiva la protezione»</b> qui sotto.</span></li>
+          <li><span class="gi">2️⃣</span><span>Android chiede «Attivare l'amministratore del dispositivo?»: tocca <b>Attiva</b>. Non dà nessun controllo sul telefono.</span></li>
+          <li><span class="gi">3️⃣</span><span>Poi l'app non si può più disinstallare, e le Impostazioni di Android chiedono il PIN dei genitori.</span></li>
+        </ol>
+        <button class="btn big" data-act="lock-admin">🛡️ Attiva la protezione</button>
+        <button class="btn ghost small" data-act="lock-admin-later">Non adesso</button>`);
+      lockStepsOpen = true;
+      return;
+    }
     if (s.overlay && s.usage && needPin) { renderParentPin(total); return; }
     if (s.overlay && s.usage) {
       openModal(`<h2>✅ Tutto pronto!</h2><p class="center">Il blocco è attivo: le altre app si aprono solo con i minuti guadagnati qui.</p>
@@ -1314,6 +1369,11 @@
     "narr-no": () => narrChoice(false),
     mic: () => listenForAnswer(),
     "next-q": () => nextQuestion(),
+    "cd-home": () => showHome(),
+    "cd-skip": () => {
+      if (!profile.pin) { toast("Serve il PIN dei genitori: si imposta da Impostazioni.", 4000); return; }
+      askPin("Salta la pausa", () => { Credit.endCooldown(); toast("Pausa saltata dai genitori.", 3000); showHome(); });
+    },
     "repeat-q": () => {
       if (!game || !game.orig) return;
       Voice.stopSpeaking(); Games.stop();
@@ -1379,7 +1439,7 @@
     "lock-pin-ok": () => {
       const a = document.getElementById("lpin1"), b = document.getElementById("lpin2");
       if (!a || !/^\d{4}$/.test(a.value) || a.value !== b.value) return;
-      profile.pin = hashPin(a.value); profile.pinFails = 0; Storage.saveProfile(profile);
+      profile.pin = hashPin(a.value); profile.pinFails = 0; Storage.saveProfile(profile); syncPin();
       lockPinStage = false;
       openModal(setupOn()
         ? `<h2>✅ Genitori: fatto!</h2><p class="center">Ricordate il PIN. Ora tocca al bambino: creiamo il suo profilo.</p><button class="btn big flash" data-act="lock-steps-done">Avanti ▶</button>`
@@ -1397,6 +1457,12 @@
     "lock-tried": () => { profile.lkTried = true; Storage.saveProfile(profile); renderLockSteps(); },
     "lock-unlocked": () => { profile.lkUnlocked = true; Storage.saveProfile(profile); renderLockSteps(); },
     "lock-appinfo": () => { Lock.openAppInfo(); },
+    "lock-admin": () => { if (profile) { profile.adminLater = false; Storage.saveProfile(profile); } Lock.requestAdmin(); },
+    "lock-admin-later": () => { if (profile) { profile.adminLater = true; Storage.saveProfile(profile); } renderLockSteps(); },
+    "admin-off": () => askPin("Togli la protezione", () => Lock.releaseAdmin().then(() => {
+      if (profile) { profile.adminLater = true; Storage.saveProfile(profile); }
+      toast("Protezione tolta: ora l'app si può disinstallare.", 4500); openSettings();
+    })),
     "lock-guide-done": () => { openLockSteps(); },
     "lock-perm-overlay": () => { Lock.openOverlaySettings(); },
     "lock-perm-usage": () => { Lock.openUsageSettings(); },
@@ -1425,7 +1491,7 @@
     "fx-yes": () => setFxChoice(true),
     "fx-no": () => setFxChoice(false),
     "name-mic": () => listenName(),
-    "reset-yes": () => { Storage.resetAll(); Stats.wipe(); profile = null; viewClass = null; pendingCalm = false; closeModal(); Credit.refresh(); showWelcome(); }
+    "reset-yes": () => { Lock.setPin(""); Storage.resetAll(); Stats.wipe(); profile = null; viewClass = null; pendingCalm = false; closeModal(); Credit.refresh(); showWelcome(); }
   };
 
   document.addEventListener("click", e => {
@@ -1450,6 +1516,15 @@
       if (profile && profile.autoRead) Voice.speak("Pausa! Alzati, muoviti e bevi un po' d'acqua. Poi torni più in forma!");
     }
   }, 1000);
+
+  // pausa del cervello: il conto alla rovescia in home scorre, e quando finisce la home si ridisegna
+  setInterval(() => {
+    if (!profile || setupOn() || wiz || game || cdOpen || document.hidden || !$modal.hidden) return;
+    const c = Credit.cooling();
+    if (c !== homeCool) { homeCool = c; renderHome(); return; }
+    const el = document.getElementById("cd-home-left");
+    if (el) el.textContent = fmtCd(Credit.cdLeft());
+  }, 5000);
 
   // nuovo giorno: i minuti ripartono dal minimo garantito
   document.addEventListener("visibilitychange", () => {
@@ -1477,6 +1552,8 @@
     applyCalm();
     Credit.setClass(profile.classId); Credit.refresh();
     selected = subsNow();
+    if (!profile.pin && presetPin()) { profile.pin = presetPin(); Storage.saveProfile(profile); }
+    syncPin();
     // profili senza PIN (creati prima): i genitori lo scelgono adesso
     const go = () => {
       if (!profile.pin && presetPin()) { profile.pin = presetPin(); Storage.saveProfile(profile); }
@@ -1491,6 +1568,7 @@
   // Si esce dall'app solo dalla schermata principale (non c'è niente prima).
   function onBack() {
     if (!$modal.hidden) { if (!setupOn()) closeModal(); return; }
+    if (cdOpen) { showHome(); return; }
     if (wiz) {
       if (wiz.pinForce) { if (navigator.app && navigator.app.exitApp) navigator.app.exitApp(); return; }
       if (wiz.pinOnly) { wiz = null; showHome(); return; }

@@ -1,10 +1,10 @@
 // ===== Blocco morbido del telefono (parte web) =====
 // La parte nativa è il plugin StudyLock (plugins-local/studylock): copre le altre app finché non ci sono
-// minuti sbloccati. Nessun amministratore del dispositivo: si può sempre disinstallare. In un browser
+// minuti sbloccati. Protezione dalla disinstallazione: amministratore del dispositivo + Impostazioni dietro PIN dei genitori. In un browser
 // (senza plugin) tutte le funzioni non fanno nulla e non danno errori.
 const Lock = (() => {
   const nat = () => (window.cordova && window.StudyLock) || null;
-  let st = { overlay: false, usage: false, enabled: false, running: false, leftMin: 0, emergencyLeftMin: 0, emergencyToday: 0 };
+  let st = { overlay: false, usage: false, enabled: false, running: false, leftMin: 0, emergencyLeftMin: 0, emergencyToday: 0, admin: false, guard: false };
 
   function call(name, args) {
     return new Promise(res => {
@@ -27,6 +27,9 @@ const Lock = (() => {
     unlock: min => call("unlock", [min]),
     emergency: () => call("emergency"),
     lockNow: () => call("lockNow"),
+    setPin: hash => call("setPin", [String(hash || "")]),
+    requestAdmin: () => call("requestAdmin"),
+    releaseAdmin: () => call("releaseAdmin"),
     openOverlaySettings: () => call("openOverlaySettings"),
     openUsageSettings: () => call("openUsageSettings"),
     openAppInfo: () => call("openAppInfo")

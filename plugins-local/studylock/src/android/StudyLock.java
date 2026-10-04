@@ -1,5 +1,7 @@
 package it.massi.studylock;
 
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -50,6 +52,27 @@ public class StudyLock extends CordovaPlugin {
         cb.success(status(c));
         return true;
       }
+      if (action.equals("setPin")) {
+        // impronta del PIN dei genitori (la stessa di hashPin() in app.js): serve a chiedere il PIN davanti a Impostazioni e disinstallazione
+        p.edit().putString("pinHash", args.isNull(0) ? "" : args.getString(0)).putInt("guardFails", 0).apply();
+        cb.success(status(c));
+        return true;
+      }
+      if (action.equals("requestAdmin")) {
+        Intent i = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+        i.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComp(c));
+        i.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Protegge Gioca e Impara: finche' e' attivo, l'app non si puo' disinstallare. Non da' nessun controllo sul telefono.");
+        openSettings(c, p, i);
+        cb.success(status(c));
+        return true;
+      }
+      if (action.equals("releaseAdmin")) {
+        // chiamata dalla parte web solo dopo il PIN dei genitori
+        DevicePolicyManager dpm = (DevicePolicyManager) c.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        if (dpm != null && dpm.isAdminActive(adminComp(c))) dpm.removeActiveAdmin(adminComp(c));
+        cb.success(status(c));
+        return true;
+      }
       if (action.equals("openOverlaySettings")) {
         openSettings(c, p, new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + c.getPackageName())));
         cb.success(status(c));
@@ -93,6 +116,19 @@ public class StudyLock extends CordovaPlugin {
     }
   }
 
+  private static ComponentName adminComp(Context c) {
+    return new ComponentName(c, StudyAdmin.class);
+  }
+
+  static boolean adminActive(Context c) {
+    try {
+      DevicePolicyManager dpm = (DevicePolicyManager) c.getSystemService(Context.DEVICE_POLICY_SERVICE);
+      return dpm != null && dpm.isAdminActive(adminComp(c));
+    } catch (Throwable t) {
+      return false;
+    }
+  }
+
   /** Se il blocco e' attivo e i permessi ci sono, il servizio deve girare. Altrimenti non fa niente. */
   private void ensure(Context c) {
     SharedPreferences p = LockService.prefs(c);
@@ -113,6 +149,8 @@ public class StudyLock extends CordovaPlugin {
     o.put("leftMin", (int) Math.ceil(p.getLong("left", 0) / 60000.0));
     o.put("emergencyLeftMin", (int) Math.max(0, Math.ceil((p.getLong("emergencyUntil", 0) - now) / 60000.0)));
     o.put("emergencyToday", p.getInt("emergencyCount", 0));
+    o.put("admin", adminActive(c));
+    o.put("guard", p.getBoolean("enabled", false) && p.getString("pinHash", "").length() > 0);
     return o;
   }
 }
