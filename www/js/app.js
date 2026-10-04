@@ -1284,7 +1284,7 @@
   const suggestedMax = () => Credit.bandMax();
   function openTimeSet() {
     const d = timeDraft, st = CONFIG.LIM_STEP;
-    const [a0, a1] = CONFIG.LIM_MIN_RANGE, [b0, b1] = CONFIG.LIM_MAX_RANGE;
+    const [a0, a1] = CONFIG.LIM_MIN_RANGE, [b0, b1] = CONFIG.LIM_MAX_RANGE, [c0, c1] = CONFIG.LIM_PLAY_RANGE;
     const row = (k, label, v, lo, hi, sugg) => `<div class="time-row"><div class="time-lab"><b>${label}</b><small>suggeriti: ${esc(Credit.format(sugg))}</small></div>
       <div class="time-ctl"><button class="icon-btn" data-act="time-adj" data-k="${k}" data-d="${-st}" aria-label="Meno ${label}" ${v <= lo ? "disabled" : ""}>−</button>
       <span class="time-val" aria-live="polite">${esc(Credit.format(v))}</span>
@@ -1295,6 +1295,8 @@
       <p class="muted time-note">Li ha ogni giorno, anche senza giocare.</p>
       ${row("max", "Massimo al giorno", d.max, Math.max(b0, d.min), b1, suggestedMax())}
       <p class="muted time-note">Oltre questo tetto non si guadagnano altri minuti.</p>
+      ${row("play", "Esercizi al giorno", d.play, c0, c1, Credit.playSugg())}
+      <p class="muted time-note">Dopo tanti minuti di esercizi nella giornata il «cervello esplode»: gli esercizi si fermano per ${esc(Credit.format(CONFIG.COOLDOWN_MIN))}.</p>
       <button class="btn" data-act="time-save">Salva</button>
       <button class="btn ghost" data-act="time-default">Rimetti i suggeriti</button>
       <button class="btn ghost" data-act="close">Annulla</button>`);
@@ -1304,7 +1306,7 @@
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
     Credit.setLimits(profile.lim, profile.classId); Credit.refresh();
     closeModal(); renderHome();
-    toast(`Salvato: ${Credit.minG()} min garantiti, massimo ${Credit.format(Credit.max())}.`, 3500);
+    toast(`Salvato: ${Credit.minG()} min garantiti, massimo ${Credit.format(Credit.max())}, esercizi ${Credit.format(Credit.playMin())}.`, 4000);
   }
 
   function openReport() {
@@ -1341,6 +1343,7 @@
       <p><b>Da dove vengono le domande.</b> Si basano sui programmi ministeriali italiani, consultati su internet: le <i>Indicazioni nazionali per il curricolo della scuola dell'infanzia e del primo ciclo d'istruzione</i> (D.M. 254 del 16 novembre 2012, con il documento di aggiornamento «Indicazioni nazionali e nuovi scenari» del 2018), ancora in vigore nell'anno scolastico 2026/27 per quasi tutte le classi. Le nuove Indicazioni (D.M. 221 del 9 dicembre 2025, Gazzetta Ufficiale n. 21 del 27 gennaio 2026) dal 2026/27 si applicano solo alle classi prime di primaria e media e poi, anno dopo anno, alle altre. Le domande sono state scritte per questa app e possono contenere errori.</p>
       <p><b>Come si guadagnano i minuti.</b> La classe vera si sceglie all'inizio e si cambia solo con il PIN dei genitori. Ogni esercizio vale fino a 3 risposte giuste. Gli esercizi della propria classe danno ${Credit.fmtDelta(CONFIG.RIGHT.same)} minuto a risposta giusta; quelli di classi inferiori ${Credit.fmtDelta(CONFIG.RIGHT.low)} (e le risposte sbagliate costano di più); quelli di classi superiori ${Credit.fmtDelta(CONFIG.RIGHT.high)} e le risposte sbagliate non tolgono niente. Alla 1ª e 2ª elementare le risposte sbagliate non tolgono mai minuti.</p>
       <p><b>Il tempo lo decidono i genitori.</b> Nessuno meglio di mamma e papà sa quanto telefono va bene per il proprio figlio. L'app parte con valori prudenti: ${CONFIG.MIN_MINUTES} minuti garantiti al giorno e un massimo di ${CONFIG.MAX_BY_BAND[0]} minuti alle elementari, ${CONFIG.MAX_BY_BAND[2]} alle medie. Sono solo un suggerimento: si cambiano quando volete, in su o in giù, da <b>Impostazioni → Tempo di telefono</b>, con il PIN dei genitori.</p>
+      <p><b>Il cervello che esplode.</b> Anche giocare qui dentro è tempo di schermo. Dopo un certo tempo di esercizi nella giornata (suggeriti: ${CONFIG.PLAY_MIN_BY_CLASS[0]} minuti fino alla 3ª elementare, ${Credit.format(CONFIG.PLAY_MIN_BY_CLASS[3])} in 4ª e 5ª, ${Credit.format(CONFIG.PLAY_MIN_BY_CLASS[5])} alle medie) compare il cervello che esplode e gli esercizi si fermano per ${Credit.format(CONFIG.COOLDOWN_MIN)}; i minuti già guadagnati restano. Anche questo lo decidete voi, dallo stesso posto.</p>
       <p><b>Luci ed effetti.</b> L'app usa colori vivaci, piccoli movimenti e qualche coriandolo, ma niente lampeggi rapidi. Alcune persone, anche bambini, sono sensibili alle luci intermittenti (fotosensibilità, epilessia fotosensibile): se è il vostro caso, o nel dubbio, spegnete gli effetti da <b>Impostazioni → Effetti e luci</b> e parlatene con il medico. Se durante il gioco il bambino ha disturbi (mal di testa, vista offuscata, capogiri), fermatelo subito.</p>
       <p><b>Genitori.</b> Si raccomanda a mamma e papà di tenere sotto controllo i figli quando usano il cellulare, soprattutto se sono piccoli, e di usare sempre buon senso e discrezione sul tempo davanti allo schermo.</p>
       <p><b>Un grazie speciale.</b> A Pietro: è per lui che papà ha pensato questa app, e sarà lui il primo a collaudarla.</p>
@@ -1519,15 +1522,16 @@
     },
     reset: () => askPin("Ricominciare da zero", confirmReset),
     report: () => askPin("Resoconto", openReport),
-    "time-set": () => askPin("Tempo di telefono", () => { timeDraft = { min: Credit.minG(), max: Credit.max() }; openTimeSet(); }),
+    "time-set": () => askPin("Tempo di telefono", () => { timeDraft = { min: Credit.minG(), max: Credit.max(), play: Credit.playMin() }; openTimeSet(); }),
     "time-adj": el => {
       if (!timeDraft || !el) return;
-      const k = el.dataset.k, d = +el.dataset.d, [a0, a1] = CONFIG.LIM_MIN_RANGE, [b0, b1] = CONFIG.LIM_MAX_RANGE;
-      if (k === "min") timeDraft.min = Math.max(a0, Math.min(a1, timeDraft.max, timeDraft.min + d));
+      const k = el.dataset.k, d = +el.dataset.d, [a0, a1] = CONFIG.LIM_MIN_RANGE, [b0, b1] = CONFIG.LIM_MAX_RANGE, [c0, c1] = CONFIG.LIM_PLAY_RANGE;
+      if (k === "play") timeDraft.play = Math.max(c0, Math.min(c1, timeDraft.play + d));
+      else if (k === "min") timeDraft.min = Math.max(a0, Math.min(a1, timeDraft.max, timeDraft.min + d));
       else timeDraft.max = Math.max(b0, timeDraft.min, Math.min(b1, timeDraft.max + d));
       openTimeSet();
     },
-    "time-save": () => { if (timeDraft) saveTime({ min: timeDraft.min, max: timeDraft.max }); timeDraft = null; },
+    "time-save": () => { if (timeDraft) saveTime({ min: timeDraft.min, max: timeDraft.max, play: timeDraft.play }); timeDraft = null; },
     "time-default": () => { timeDraft = null; saveTime(null); },
     help: () => askPin("Aiuto dei genitori", openHelp),
     gift: el => {

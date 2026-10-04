@@ -9,6 +9,7 @@ const CONFIG = {
   LIM_MIN_RANGE: [0, 120],     // minuti garantiti: da 0 a 2 ore
   LIM_MAX_RANGE: [10, 240],    // tetto: da 10 minuti a 4 ore
   LIM_STEP: 5,
+  LIM_PLAY_RANGE: [10, 240],   // gioco dentro l'app prima del «cervello esploso»: da 10 minuti a 4 ore (suggeriti: PLAY_MIN_BY_CLASS)
   // Minuti per risposta, secondo il livello scelto rispetto alla classe REALE (bloccata dal PIN dei genitori):
   // low = esercizi di una classe inferiore, same = della sua classe, high = di una classe superiore
   REWARD: { low: { ok: 1, ko: 1.5 }, same: { ok: 2, ko: 1 }, high: { ok: 3, ko: 0 } },
@@ -22,6 +23,7 @@ const CONFIG = {
   // (contati solo mentre è dentro gli esercizi, anche in più volte) compare il cervello che esplode e dice «basta, spegni il telefono».
   // Gli esercizi si fermano per COOLDOWN_MIN minuti; scatta a fine esercizio, mai a metà. I minuti già guadagnati restano usabili.
   // 0 = spento. Si azzera a mezzanotte. Un genitore può saltare la pausa con il PIN.
+  // 4/10/2026: sono solo i valori SUGGERITI; i genitori li cambiano in Impostazioni → Tempo di telefono (profile.lim.play).
   PLAY_MIN_BY_CLASS: [45, 45, 45, 90, 90, 120, 120, 120],  // minuti di gioco al giorno per classe: 1ª-3ª elem. 45, 4ª-5ª elem. 1h30, medie 2 ore
   COOLDOWN_MIN: 90,
   // (facoltativo) pausa anche dopo tot minuti di telefono GUADAGNATI in una tornata; 0 = spento

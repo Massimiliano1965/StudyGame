@@ -13,7 +13,10 @@ const Credit = (() => {
 
   const notify = () => listeners.forEach(fn => fn(state));
   const band = () => classId <= 1 ? 0 : classId <= 4 ? 1 : 2;
-  const playLimit = () => (CONFIG.PLAY_MIN_BY_CLASS[classId] || 0) * 60;
+  // minuti di gioco dentro l'app prima del «cervello esploso»: scelti dai genitori (lim.play), altrimenti i suggeriti per classe
+  const playSugg = () => CONFIG.PLAY_MIN_BY_CLASS[classId] || 0;
+  const playMin = () => okNum(lim.play) && lim.play > 0 ? lim.play : playSugg();
+  const playLimit = () => playMin() * 60;
   const bandMax = () => CONFIG.MAX_BY_BAND[band()];
   const max = () => Math.max(minG(), okNum(lim.max) && lim.max > 0 ? lim.max : bandMax());
   const clamp = v => Math.max(minG(), Math.min(max(), v));
@@ -56,10 +59,12 @@ const Credit = (() => {
   // cls = classe reale (va data insieme, così il tetto della fascia è quello giusto prima di ricalcolare)
   function setLimits(l, cls) {
     if (cls != null) classId = cls;
-    lim = l && typeof l === "object" ? { min: l.min, max: l.max } : {};
+    lim = l && typeof l === "object" ? { min: l.min, max: l.max, play: l.play } : {};
     const bonus = Math.max(0, state.minutes - baseOf());
     state.base = minG();
     state.minutes = clamp(state.base + bonus);
+    // gioco di oggi: se il genitore alza il limite e la pausa non è ancora partita, si può continuare; se lo abbassa sotto il già giocato, la pausa scatta a fine esercizio
+    if (!cooling() && playLimit() > 0) state.playDue = (state.play || 0) >= playLimit();
     Storage.saveDay(state);
   }
   function refresh() { state = Storage.loadDay(minG()); state.minutes = clamp(state.minutes); notify(); }
@@ -133,5 +138,5 @@ const Credit = (() => {
   }
   const fmtDelta = n => String(Math.abs(n)).replace(".", ",");
 
-  return { answer, result, get, available, claim, cooling, cdLeft, endCooldown, playTick, cooldownDue, startCooldown, status, progress, onChange, refresh, format, fmtDelta, max, minG, bandMax, setLimits, setClass, highFull, gift, noPenalty };
+  return { answer, result, get, available, claim, cooling, cdLeft, endCooldown, playTick, cooldownDue, startCooldown, status, progress, onChange, refresh, format, fmtDelta, max, minG, bandMax, playMin, playSugg, setLimits, setClass, highFull, gift, noPenalty };
 })();
