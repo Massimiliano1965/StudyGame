@@ -9,6 +9,7 @@ const Credit = (() => {
 
   const notify = () => listeners.forEach(fn => fn(state));
   const band = () => classId <= 1 ? 0 : classId <= 4 ? 1 : 2;
+  const playLimit = () => (CONFIG.PLAY_MIN_BY_CLASS[classId] || 0) * 60;
   const max = () => CONFIG.MAX_BY_BAND[band()];
   const clamp = v => Math.max(CONFIG.MIN_MINUTES, Math.min(max(), v));
 
@@ -19,9 +20,9 @@ const Credit = (() => {
   function endCooldown() { state.cdUntil = 0; state.sess = 0; state.play = 0; state.playDue = false; Storage.saveDay(state); notify(); }
   // tempo di gioco vero: chiamata una volta al secondo mentre il bambino è dentro gli esercizi
   function playTick() {
-    if (!(CONFIG.PLAY_MIN > 0) || !(CONFIG.COOLDOWN_MIN > 0) || cooling() || state.playDue) return;
+    if (!(playLimit() > 0) || !(CONFIG.COOLDOWN_MIN > 0) || cooling() || state.playDue) return;
     state.play = (state.play || 0) + 1;
-    if (state.play >= CONFIG.PLAY_MIN * 60) { state.playDue = true; Storage.saveDay(state); }
+    if (state.play >= playLimit()) { state.playDue = true; Storage.saveDay(state); }
     else if (state.play % 15 === 0) Storage.saveDay(state);
   }
   // la pausa è "dovuta" (tempo di gioco raggiunto) ma parte solo a fine esercizio
