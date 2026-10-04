@@ -1181,6 +1181,8 @@ const Games = (() => {
       const b = e.target.closest("[data-v]");
       if (!b || busy || done) return;
       busy = true; tapFn();
+      // appena si tocca Vero o Falso la voce che legge la frase si ferma subito
+      try { if (typeof Voice !== "undefined" && Voice.stopSpeaking) Voice.stopSpeaking(); } catch (e) {}
       const c = C[i], said = b.dataset.v === "1", ok = said === c.truth;
       el.querySelectorAll("[data-v]").forEach(x => { x.disabled = true; });
       const good = el.querySelector(`[data-v="${c.truth ? 1 : 0}"]`);

@@ -215,7 +215,7 @@
 
   const MUS_C = [
     S("Quale compositore appartiene al periodo barocco?", ["Johann Sebastian Bach", "Chopin", "Debussy", "Mozart"], "Bach è il grande maestro del Barocco."),
-    S("Quale compositore appartiene al Classicismo viennese?", ["Mozart", "Bach", "Debussy", "Chopin"], "Haydn, Mozart e Beethoven sono classici."),
+    S("Quale compositore appartiene al Classicismo viennese?", ["Mozart", "Bach", "Debussy", "Chopin"], "Mozart è del Classicismo viennese. Bach è barocco, Chopin romantico, Debussy impressionista."),
     S("Quale compositore è un grande del Romanticismo, famoso per il pianoforte?", ["Fryderyk Chopin", "Vivaldi", "Bach", "Monteverdi"], "Chopin scrisse notturni e polacche."),
     S("Chi compose il «Nabucco» con il coro «Va, pensiero»?", ["Giuseppe Verdi", "Puccini", "Rossini", "Bellini"], "Il coro degli schiavi ebrei è celebre."),
     S("Chi compose il «Bolero»?", ["Maurice Ravel", "Debussy", "Mozart", "Verdi"], "Il Bolero ripete lo stesso tema in crescendo."),
