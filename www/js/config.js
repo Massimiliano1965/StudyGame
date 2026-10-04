@@ -17,7 +17,7 @@ const CONFIG = {
   // (contati solo mentre è dentro gli esercizi, anche in più volte) compare il cervello che esplode e dice «basta, spegni il telefono».
   // Gli esercizi si fermano per COOLDOWN_MIN minuti; scatta a fine esercizio, mai a metà. I minuti già guadagnati restano usabili.
   // 0 = spento. Si azzera a mezzanotte. Un genitore può saltare la pausa con il PIN.
-  PLAY_MIN_BY_CLASS: [45, 45, 45, 90, 90, 115, 115, 115],  // minuti di gioco al giorno per classe: 1ª-3ª elem. 45, 4ª-5ª elem. 1h30, medie 1h55
+  PLAY_MIN_BY_CLASS: [45, 45, 45, 90, 90, 120, 120, 120],  // minuti di gioco al giorno per classe: 1ª-3ª elem. 45, 4ª-5ª elem. 1h30, medie 2 ore
   COOLDOWN_MIN: 90,
   // (facoltativo) pausa anche dopo tot minuti di telefono GUADAGNATI in una tornata; 0 = spento
   SESSION_EARN: 0,
