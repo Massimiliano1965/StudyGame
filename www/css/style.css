@@ -758,7 +758,7 @@ body.playing .voicetgl { min-height: 46px; min-width: 46px; font-size: 22px; pad
 .screen.wz { padding-top: 56px; min-height: calc(100dvh - 126px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
 
 /* rotellina delle impostazioni: colore che risalta sullo sfondo (3/10/2026) */
-.icon-btn[data-act="settings"] { width: 54px; height: 54px; font-size: 26px; background: #FF8A1F; }
+.icon-btn[data-act="settings"] { width: 54px; height: 54px; font-size: 26px; background: #5d6068; display: flex; align-items: center; justify-content: center; }
 
 /* guida permessi a passi (3/10/2026) */
 .step-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 6px; }
