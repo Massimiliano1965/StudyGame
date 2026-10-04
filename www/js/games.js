@@ -1620,7 +1620,7 @@ const Games = (() => {
       if (!cands.length) continue;
       const p = cands[0], ask = askFor(g.prompt, String(p.l), g.eng, g.rEn);
       return { kind: "impiccato", title: "Salva l'omino", eng: g.eng, rEn: g.rEn, clue: { l: String(p.l), r: String(p.r) }, ask,
-        extra: classId <= 2 ? 3 : classId <= 4 ? 4 : 6,
+        extra: classId <= 2 ? 2 : classId <= 4 ? 3 : 4,
         prompt: `${ask.text} Indovina la parola toccando le lettere.`,
         hint: "Indovina la parola toccando le lettere. Due errori si perdonano, al terzo l'omino cade in acqua.", scene: g.scene };
     }
@@ -1681,7 +1681,7 @@ const Games = (() => {
           const shown = used.get(low[i]) === "ok" || lost;
           return `<span class="hg-slot ${shown ? "on" : ""} ${lost && used.get(low[i]) !== "ok" ? "miss" : ""}">${shown ? esc(c) : ""}</span>`;
         }).join("")}</div>
-        <div class="hg-keys">${keys.map(k => `<button class="hg-key ${used.get(k) || ""}" data-k="${esc(k)}" ${used.has(k) || done ? "disabled" : ""}>${esc(k)}</button>`).join("")}</div>
+        ${done ? "" : `<div class="hg-keys">${keys.map(k => `<button class="hg-key ${used.get(k) || ""}" data-k="${esc(k)}" ${used.has(k) ? "disabled" : ""}>${esc(k)}</button>`).join("")}</div>`}
       </div>`;
     }
     el.onclick = e => {
