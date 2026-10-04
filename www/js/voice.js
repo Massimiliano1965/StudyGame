@@ -94,7 +94,7 @@ const Voice = (() => {
   // materia (inglese, oppure francese/spagnolo/tedesco per la seconda lingua): vedi setForeign.
   let LANG_EN = "en-US";
   const FOREIGN_NAMES = { en: "l'inglese", fr: "il francese", es: "lo spagnolo", de: "il tedesco" };
-  const setForeign = loc => { LANG_EN = loc || "en-US"; };
+  const setForeign = loc => { LANG_EN = loc || "en-US"; try { pickVoice(LANG_EN, ""); pickVoice(LANG, STYLE.g); } catch (e) {} };
   const hasWord = s => /[A-Za-z0-9À-ÿ]/.test(s);
 
   // Il plugin sceglie da solo la prima voce della lingua, anche se è una voce "network"
@@ -186,14 +186,14 @@ const Voice = (() => {
               catch (err) {
                 lastErr = err;
                 if (k === 2) { delete opts.identifier; }   // dalla terza volta senza voce scelta da me
-                await wait(300 + k * 450);
+                await wait(100 + k * 250);
               }
             }
             failed = lastErr;
           };
           (async () => {
             for (let i = 0; i < segs.length && my === token; i++) {
-              if (i > 0) await wait(150);
+              if (i > 0) await wait(30);
               await say(segs[i], i);
             }
             if (failed && my === token) fail(failed);

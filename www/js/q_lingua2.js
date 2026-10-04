@@ -5,9 +5,7 @@
 // così la voce legge le parole straniere con la lingua giusta (vedi Voice.setForeign).
 const L2 = (() => {
   const LANGS = {
-    fr: { name: "Francese", adj: "francese", wordAdj: "francese", loc: "fr-FR", flag: "🇫🇷", col: 1 },
-    es: { name: "Spagnolo", adj: "spagnolo", wordAdj: "spagnola", loc: "es-ES", flag: "🇪🇸", col: 2 },
-    de: { name: "Tedesco", adj: "tedesco", wordAdj: "tedesca", loc: "de-DE", flag: "🇩🇪", col: 3 }
+    fr: { name: "Francese", adj: "francese", wordAdj: "francese", loc: "fr-FR", flag: "🇫🇷", col: 1 }
   };
   const DEFAULT = "fr";
 
