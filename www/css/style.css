@@ -855,3 +855,8 @@ body.calm .cd .cd-ic { animation: none; }
 .sct-sum b { font-size: 16px; } .sct-sum span { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) { .sct-card, .sct-box.over, .sct-box.catch { animation: none; } .sct-card.in { transition: opacity .2s; } }
 body.calm .sct-card, body.calm .sct-box.over, body.calm .sct-box.catch { animation: none; }
+
+/* 5/10/2026: la schermata di gioco non deve superare lo schermo (prima scorreva di ~60px e il riquadro finiva sotto il pupazzetto) */
+.screen.play, .screen.play.quiz, .screen.play:not(.quiz) { min-height: calc(100dvh - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); box-sizing: border-box; }
+html, body { overflow-x: hidden; }
+body.playing { overscroll-behavior-y: none; }
