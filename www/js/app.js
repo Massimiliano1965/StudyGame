@@ -95,7 +95,7 @@
   Games.setTap(() => Sfx.tap());
   Games.setBoom(() => Sfx.no());
   Games.setAvatar(() => charSvg(profile, "happy"));
-  Games.setSpeak(card => Voice.speak(fin(card.words ? oddSegs(card) : vfSegs(card)), msg => toast(msg, 6000)), () => !!(profile && profile.autoRead), () => Voice.canSpeak() && !!(profile && profile.autoRead));
+  Games.setSpeak(card => Voice.speak(fin(card.sort ? sortSegs(card) : card.words ? oddSegs(card) : vfSegs(card)), msg => toast(msg, 6000)), () => !!(profile && profile.autoRead), () => Voice.canSpeak() && !!(profile && profile.autoRead));
 
   // ---------- utilità interfaccia ----------
   function toast(msg, ms) {
@@ -247,7 +247,7 @@
     } else {
       nextLabel = "Ho finito! ✔";
       canNext = pinValid();
-      body = `<div class="center"><h1>🔐 PIN dei genitori</h1>${wiz.pinFirst ? `<p class="parent-note">👨‍👩‍👧 Chiedi ai tuoi genitori! Queste impostazioni sono molto difficili e vanno fatte da un adulto.</p>` : ""}<p class="muted" style="margin-top:6px">${wiz.pinFirst ? "Genitori: Gioca e Impara blocca le altre app del telefono finché il bambino non guadagna minuti giocando. Scegliete" : "Genitori: scegliete"} un PIN di 4 cifre. Serve per cambiare nome o classe, spegnere il blocco e ricominciare da zero. Non ditelo ai bambini e <b>ricordatelo</b>: se lo dimenticate bisogna reinstallare l'app.</p></div>
+      body = `<div class="center"><h1>🔐 PIN dei genitori</h1>${wiz.pinFirst ? `<p class="parent-note">👨‍👩‍👧 Chiedi ai tuoi genitori! Queste impostazioni sono molto difficili e vanno fatte da un adulto.</p>` : ""}<p class="muted" style="margin-top:6px">${wiz.pinFirst ? "Genitori: Gioca e Impara blocca le altre app del telefono finché il bambino non guadagna minuti giocando. Scegliete" : "Genitori: scegliete"} un PIN di 4 cifre. Serve per cambiare nome o classe, decidere il tempo di telefono, spegnere il blocco e ricominciare da zero. Non ditelo ai bambini e <b>ricordatelo</b>: se lo dimenticate bisogna reinstallare l'app.</p></div>
         <input id="pin1" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN (4 cifre)" value="${esc(wiz.pin1 || "")}" aria-label="PIN a 4 cifre">
         <input id="pin2" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Ripeti il PIN" value="${esc(wiz.pin2 || "")}" aria-label="Ripeti il PIN" style="margin-top:10px">
         <p class="muted center">Se lo dimenticate, bisogna reinstallare l'app.</p>`;
@@ -331,7 +331,7 @@
     applyCalm();
     wiz = null;
     viewClass = null;
-    Credit.setClass(profile.classId);
+    Credit.setLimits(profile.lim, profile.classId); Credit.setClass(profile.classId);
     Credit.refresh();
     selected = subsNow();
     showHome();
@@ -410,7 +410,7 @@
 
   function renderHome() {
     const p = profile, th = themeFor(p.classId);
-    const min = Credit.get(), cap = Credit.max(), pct = Math.round(min / cap * 100), mark = Math.round(CONFIG.MIN_MINUTES / cap * 100);
+    const min = Credit.get(), cap = Credit.max(), pct = Math.round(min / cap * 100), mark = Math.round(Credit.minG() / cap * 100);
     const pc = playClass(), rel = relOf(pc), subs = subjectsForClass(pc);
     const hiFull = rel > 0 && Credit.highFull();
     const tag = rel < 0 ? "Più facili: " + Credit.fmtDelta(CONFIG.RIGHT.low) + " min a risposta giusta" : rel > 0 ? (hiFull ? "Tetto di oggi raggiunto: valgono come i tuoi" : "Più difficili: " + Credit.fmtDelta(CONFIG.RIGHT.high) + " min a risposta giusta e nessun minuto perso") : "Il tuo livello: " + Credit.fmtDelta(CONFIG.RIGHT.same) + " min a risposta giusta";
@@ -427,7 +427,7 @@
         <div class="row"><h3>Tempo di telefono</h3><span class="muted">oggi</span></div>
         <div class="row"><span class="num">${esc(Credit.format(min))}</span></div>
         <div class="bar" role="img" aria-label="${Math.floor(min)} minuti su ${cap}"><i style="width:${pct}%"></i><b style="left:${mark}%"></b></div>
-        <div class="bar-labels"><span>${CONFIG.MIN_MINUTES} min garantiti</span><span>massimo ${esc(Credit.format(cap))}</span></div>
+        <div class="bar-labels"><span>${Credit.minG()} min garantiti</span><span>massimo ${esc(Credit.format(cap))}</span></div>
         ${lockHomeHtml()}
       </div>
       <div class="lvl-box lvl${rel}"><button class="icon-btn" data-act="lvl-down" aria-label="Esercizi più facili" ${pc <= 0 ? "disabled" : ""}>◀</button>
@@ -571,6 +571,12 @@
     return segs;
   }
 
+  // una carta di "Smista nelle scatole": la parola (nella sua lingua) e le due scatole, senza dire dove va
+  function sortSegs(card) {
+    return [{ t: "Dove va: " }, { t: toSpeech(card.item.t), l: card.item.en ? "en" : "" },
+      { t: `? Nella scatola ${toSpeech(card.labels[0])}, o nella scatola ${toSpeech(card.labels[1])}?` }];
+  }
+
   const OPS = { "+": "più", "−": "meno", "×": "per", ":": "diviso", "=": "uguale a", "(": "apri parentesi", ")": "chiudi parentesi" };
   function roundSpeech(r) {
     if (r.kind === "frase") return "Metti le parole in ordine per fare una frase. Le parole sono: " + r.items.map(w => w.replace(/[.,;:!?]/g, "")).join(", ") + ".";
@@ -582,6 +588,8 @@
       return fin(segs);
     }
     if (r.kind === "vf") return fin([{ t: "Vero o falso. Per ogni frase tocca vero se la risposta è giusta, falso se è sbagliata. Prima frase: " }, ...vfSegs(r.cards[0])]);
+    if (r.kind === "scatole") return fin([{ t: `Smista nelle scatole. Metti ogni carta nella scatola giusta: ${toSpeech(r.labels[0])}, oppure ${toSpeech(r.labels[1])}. Trascina la carta o tocca la scatola. Due errori si perdonano, al terzo si perde. Prima carta: ` },
+      { t: toSpeech(r.items[0].t), l: r.items[0].en ? "en" : "" }, { t: "." }]);
     if (r.kind === "intruso") return fin([{ t: "Trova l'intruso. Tocca la parola che non c'entra con le altre tre. Primo giro: " }, ...oddSegs(r.rounds[0])]);
     if (r.kind === "lettere" || r.kind === "impiccato") {
       const a = r.ask, intro = r.kind === "lettere" ? "Rimetti in ordine le lettere per formare la parola. " : "Salva l'omino. Indovina la parola toccando le lettere. ";
@@ -738,7 +746,7 @@
     let text = expl || "";
     if (!single && ok && m != null && m > 0) text = (text ? text + " " : "") + "Risposte giuste: " + (3 - m) + " su 3.";
     if (game.practice) text = (text ? text + " " : "") + "Ripasso: i minuti non cambiano.";
-    else if (ok && r.delta === 0) text = (text ? text + " " : "") + "Hai già il massimo di oggi, ma continua pure per allenarti!";
+    else if (ok && r.delta === 0 && Credit.get() >= Credit.max()) text = (text ? text + " " : "") + "Hai già il massimo di oggi, ma continua pure per allenarti!";
     if (!game.practice && !ok && r.delta === 0) text = (text ? text + " " : "") + (r.rel > 0 ? "Livello più alto: non perdi minuti, e provando si impara!" : "I minuti garantiti restano tuoi.");
     if (r.cooldown || Credit.cooldownDue()) text = (text ? text + " " : "") + "Hai giocato tantissimo: il cervello sta per esplodere! Dopo questo esercizio basta, si spegne il telefono.";
     // ogni tanto (circa 1 volta su 3) l'elogio dice anche il nome del bambino: "Bravo, Luca!"
@@ -1094,6 +1102,7 @@
       <div class="row-set"><span>Suoni</span><button class="switch ${p.sound !== false ? "on" : ""}" data-act="toggle-sound" aria-pressed="${p.sound !== false}">${p.sound !== false ? "Sì" : "No"}</button></div>
       <div class="row-set"><span>Effetti e luci</span><button class="switch ${p.calm ? "" : "on"}" data-act="toggle-fx" aria-pressed="${!p.calm}">${p.calm ? "Ridotti" : "Sì"}</button></div>
       ${lockBoxHtml()}
+      <button class="btn alt" data-act="time-set">⏱ Tempo di telefono (genitori)</button>
       <button class="btn alt" data-act="report">📊 Resoconto per i genitori</button>
       <button class="btn ghost" data-act="change-pin">🔐 Cambia PIN dei genitori</button>
       <button class="btn ghost" data-act="info">ℹ️ Avvertenze</button>
@@ -1145,7 +1154,7 @@
     openModal(`<div class="step-dots">${Array.from({ length: totalSteps }, (_, i) => `<span class="${i < totalSteps - 1 ? "done" : "now"}"></span>`).join("")}</div>
       <h2>Passo ${totalSteps} di ${totalSteps}</h2>
       <p class="step-name">Il PIN dei genitori</p>
-      <p class="muted center" style="font-size:15px;margin:0 0 6px">Gioca e Impara blocca le altre app finché il bambino non guadagna minuti giocando. Il PIN serve per cambiare nome o classe, spegnere il blocco e ricominciare da zero. Non ditelo ai bambini e <b>ricordatelo</b>: se lo dimenticate bisogna reinstallare l'app.</p>
+      <p class="muted center" style="font-size:15px;margin:0 0 6px">Gioca e Impara blocca le altre app finché il bambino non guadagna minuti giocando. Il PIN serve per cambiare nome o classe, decidere il tempo di telefono, spegnere il blocco e ricominciare da zero. Non ditelo ai bambini e <b>ricordatelo</b>: se lo dimenticate bisogna reinstallare l'app.</p>
       <input id="lpin1" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN (4 cifre)" aria-label="PIN a 4 cifre">
       <input id="lpin2" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Ripeti il PIN" aria-label="Ripeti il PIN" style="margin-top:8px">
       <button id="lpin-ok" class="btn big" data-act="lock-pin-ok" disabled>Fatto ✔</button>`);
@@ -1270,6 +1279,34 @@
       <button class="btn" data-act="nopen">Oggi nessuna penalità</button>
       <button class="btn ghost" data-act="close">Chiudi</button>`);
   }
+  // ---------- tempo di telefono: lo decidono i genitori (si arriva qui solo col PIN) ----------
+  let timeDraft = null;
+  const suggestedMax = () => Credit.bandMax();
+  function openTimeSet() {
+    const d = timeDraft, st = CONFIG.LIM_STEP;
+    const [a0, a1] = CONFIG.LIM_MIN_RANGE, [b0, b1] = CONFIG.LIM_MAX_RANGE;
+    const row = (k, label, v, lo, hi, sugg) => `<div class="time-row"><div class="time-lab"><b>${label}</b><small>suggeriti: ${esc(Credit.format(sugg))}</small></div>
+      <div class="time-ctl"><button class="icon-btn" data-act="time-adj" data-k="${k}" data-d="${-st}" aria-label="Meno ${label}" ${v <= lo ? "disabled" : ""}>−</button>
+      <span class="time-val" aria-live="polite">${esc(Credit.format(v))}</span>
+      <button class="icon-btn" data-act="time-adj" data-k="${k}" data-d="${st}" aria-label="Più ${label}" ${v >= hi ? "disabled" : ""}>+</button></div></div>`;
+    openModal(`<h2>⏱ Tempo di telefono</h2>
+      <p class="muted">Quanto tempo di telefono al giorno lo decidete voi. I valori suggeriti sono prudenti: potete alzarli o abbassarli quando volete.</p>
+      ${row("min", "Minuti garantiti", d.min, a0, Math.min(a1, d.max), CONFIG.MIN_MINUTES)}
+      <p class="muted time-note">Li ha ogni giorno, anche senza giocare.</p>
+      ${row("max", "Massimo al giorno", d.max, Math.max(b0, d.min), b1, suggestedMax())}
+      <p class="muted time-note">Oltre questo tetto non si guadagnano altri minuti.</p>
+      <button class="btn" data-act="time-save">Salva</button>
+      <button class="btn ghost" data-act="time-default">Rimetti i suggeriti</button>
+      <button class="btn ghost" data-act="close">Annulla</button>`);
+  }
+  function saveTime(lim) {
+    if (lim) profile.lim = lim; else delete profile.lim;
+    if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
+    Credit.setLimits(profile.lim, profile.classId); Credit.refresh();
+    closeModal(); renderHome();
+    toast(`Salvato: ${Credit.minG()} min garantiti, massimo ${Credit.format(Credit.max())}.`, 3500);
+  }
+
   function openReport() {
     Stats.flush();
     const d = Stats.days(7), t = d[0], pc = (a, b) => (a + b) ? Math.round(a / (a + b) * 100) + "%" : "–";
@@ -1302,7 +1339,8 @@
       <p><b>Il telefono: meglio usarlo bene.</b> Sono contrario all'uso spropositato dei cellulari. Ma viviamo in un mondo tecnologico e i bambini la tecnologia la usano comunque: allora cerchiamo di usarla al meglio, e di impedire che la usino male. Qui il tempo di telefono si guadagna: prima si gioca e si impara, poi arriva il tempo per i propri giochi.</p>
       <p><b>Non sostituisce la scuola.</b> Gioca e Impara non sostituisce l'insegnamento né l'aiuto dei genitori: è solo un piccolo aiuto per fissare in mente alcune cose divertendosi, perché la ripetizione è ciò che fa davvero imparare e diventare bravi in qualcosa.</p>
       <p><b>Da dove vengono le domande.</b> Si basano sui programmi ministeriali italiani, consultati su internet: le <i>Indicazioni nazionali per il curricolo della scuola dell'infanzia e del primo ciclo d'istruzione</i> (D.M. 254 del 16 novembre 2012, con il documento di aggiornamento «Indicazioni nazionali e nuovi scenari» del 2018), ancora in vigore nell'anno scolastico 2026/27 per quasi tutte le classi. Le nuove Indicazioni (D.M. 221 del 9 dicembre 2025, Gazzetta Ufficiale n. 21 del 27 gennaio 2026) dal 2026/27 si applicano solo alle classi prime di primaria e media e poi, anno dopo anno, alle altre. Le domande sono state scritte per questa app e possono contenere errori.</p>
-      <p><b>Come si guadagnano i minuti.</b> La classe vera si sceglie all'inizio e si cambia solo con il PIN dei genitori. Gli esercizi della propria classe danno 2 minuti a risposta giusta; quelli di classi inferiori 1 minuto (e le risposte sbagliate costano di più); quelli di classi superiori ne danno 3 e le risposte sbagliate non tolgono niente. Il tetto di ogni giorno è di 1 ora per la 1ª–2ª elementare, 1 ora e mezza per la 3ª–5ª, 2 ore alle medie.</p>
+      <p><b>Come si guadagnano i minuti.</b> La classe vera si sceglie all'inizio e si cambia solo con il PIN dei genitori. Ogni esercizio vale fino a 3 risposte giuste. Gli esercizi della propria classe danno ${Credit.fmtDelta(CONFIG.RIGHT.same)} minuto a risposta giusta; quelli di classi inferiori ${Credit.fmtDelta(CONFIG.RIGHT.low)} (e le risposte sbagliate costano di più); quelli di classi superiori ${Credit.fmtDelta(CONFIG.RIGHT.high)} e le risposte sbagliate non tolgono niente. Alla 1ª e 2ª elementare le risposte sbagliate non tolgono mai minuti.</p>
+      <p><b>Il tempo lo decidono i genitori.</b> Nessuno meglio di mamma e papà sa quanto telefono va bene per il proprio figlio. L'app parte con valori prudenti: ${CONFIG.MIN_MINUTES} minuti garantiti al giorno e un massimo di ${CONFIG.MAX_BY_BAND[0]} minuti alle elementari, ${CONFIG.MAX_BY_BAND[2]} alle medie. Sono solo un suggerimento: si cambiano quando volete, in su o in giù, da <b>Impostazioni → Tempo di telefono</b>, con il PIN dei genitori.</p>
       <p><b>Luci ed effetti.</b> L'app usa colori vivaci, piccoli movimenti e qualche coriandolo, ma niente lampeggi rapidi. Alcune persone, anche bambini, sono sensibili alle luci intermittenti (fotosensibilità, epilessia fotosensibile): se è il vostro caso, o nel dubbio, spegnete gli effetti da <b>Impostazioni → Effetti e luci</b> e parlatene con il medico. Se durante il gioco il bambino ha disturbi (mal di testa, vista offuscata, capogiri), fermatelo subito.</p>
       <p><b>Genitori.</b> Si raccomanda a mamma e papà di tenere sotto controllo i figli quando usano il cellulare, soprattutto se sono piccoli, e di usare sempre buon senso e discrezione sul tempo davanti allo schermo.</p>
       <p><b>Un grazie speciale.</b> A Pietro: è per lui che papà ha pensato questa app, e sarà lui il primo a collaudarla.</p>
@@ -1481,6 +1519,16 @@
     },
     reset: () => askPin("Ricominciare da zero", confirmReset),
     report: () => askPin("Resoconto", openReport),
+    "time-set": () => askPin("Tempo di telefono", () => { timeDraft = { min: Credit.minG(), max: Credit.max() }; openTimeSet(); }),
+    "time-adj": el => {
+      if (!timeDraft || !el) return;
+      const k = el.dataset.k, d = +el.dataset.d, [a0, a1] = CONFIG.LIM_MIN_RANGE, [b0, b1] = CONFIG.LIM_MAX_RANGE;
+      if (k === "min") timeDraft.min = Math.max(a0, Math.min(a1, timeDraft.max, timeDraft.min + d));
+      else timeDraft.max = Math.max(b0, timeDraft.min, Math.min(b1, timeDraft.max + d));
+      openTimeSet();
+    },
+    "time-save": () => { if (timeDraft) saveTime({ min: timeDraft.min, max: timeDraft.max }); timeDraft = null; },
+    "time-default": () => { timeDraft = null; saveTime(null); },
     help: () => askPin("Aiuto dei genitori", openHelp),
     gift: el => {
       const n = +el.dataset.n, got = Credit.gift(n);
@@ -1557,7 +1605,7 @@
       return;
     }
     applyCalm();
-    Credit.setClass(profile.classId); Credit.refresh();
+    Credit.setLimits(profile.lim, profile.classId); Credit.setClass(profile.classId); Credit.refresh();
     selected = subsNow();
     if (!profile.pin && presetPin()) { profile.pin = presetPin(); Storage.saveProfile(profile); }
     syncPin();

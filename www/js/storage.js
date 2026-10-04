@@ -20,10 +20,12 @@ const Storage = (() => {
   const saveProfile = p => write(K_PROFILE, p);
 
   // Stato del giorno: ogni giorno si riparte dai minuti garantiti
-  function loadDay() {
+  // start = minuti garantiti di oggi (quelli scelti dai genitori, o i suggeriti)
+  function loadDay(start) {
     const s = read(K_DAY);
     if (s && s.day === today()) return s;
-    return { day: today(), minutes: CONFIG.MIN_MINUTES, correct: 0, wrong: 0, granted: 0, hi: 0 };
+    const m = typeof start === "number" ? start : CONFIG.MIN_MINUTES;
+    return { day: today(), minutes: m, base: m, correct: 0, wrong: 0, granted: 0, hi: 0 };
   }
   const saveDay = s => write(K_DAY, s);
 

@@ -713,7 +713,7 @@ body.playing .voicetgl { padding: 0 10px; font-size: 16px; }
 /* ---------- spazio sotto riempito, risultato sotto il gioco senza sovrapposizioni (3/10/2026) ---------- */
 .screen.play #gbox { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
 .screen.play #gbox > .gbuild, .screen.play #gbox > .runwrap, .screen.play #gbox > .inc, .screen.play #gbox > .vf,
-.screen.play #gbox > .lett, .screen.play #gbox > .fila, .screen.play #gbox > .hang { flex: 1 1 auto; justify-content: space-evenly; }
+.screen.play #gbox > .lett, .screen.play #gbox > .fila, .screen.play #gbox > .hang, .screen.play #gbox > .sct { flex: 1 1 auto; justify-content: space-evenly; }
 .screen.play #gbox > .lk { flex: 1 1 auto; }
 .screen.play #gbox > .lk .lk-col { justify-content: space-evenly; }
 .screen.play #gbox > .lk .lk-item { min-height: 64px; }
@@ -801,3 +801,57 @@ body.calm .cd .cd-ic { animation: none; }
 .cd-box small { font-size: 16px; color: #d9ccff; }
 .cd-box b { font-size: 34px; }
 .cd-banner { margin: 6px 0; padding: 10px 14px; border-radius: 16px; background: #efe6ff; border: 2px solid #b085ff; text-align: center; font-size: 16px; }
+
+/* ---------- tempo di telefono scelto dai genitori (4/10/2026) ---------- */
+.time-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+.time-lab { display: flex; flex-direction: column; gap: 2px; }
+.time-lab small { color: var(--muted); font-size: 14px; font-weight: 600; }
+.time-ctl { display: flex; align-items: center; gap: 8px; }
+.time-ctl .icon-btn { width: 46px; height: 46px; font-size: 26px; font-weight: 800; }
+.time-ctl .icon-btn[disabled] { opacity: .35; }
+.time-val { min-width: 92px; text-align: center; font-weight: 800; font-size: 18px; }
+.time-note { margin: 2px 0 4px; font-size: 14px; }
+
+/* ---------- Smista nelle scatole (4/10/2026) ---------- */
+.sct { display: flex; flex-direction: column; gap: 14px; }
+.sct-stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; min-height: 150px; justify-content: center; }
+.sct-card { position: relative; z-index: 5; min-width: 190px; max-width: 92%; padding: 18px 22px; font-weight: 800; line-height: 1.15; text-align: center;
+  color: #2B2D52; background: #FFF8E1; border: 3px solid var(--edge); border-radius: 18px; box-shadow: 0 6px 0 var(--edge);
+  overflow-wrap: anywhere; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none;
+  animation: sct-arrive .35s ease-out; }
+.sct-card::before { content: ""; position: absolute; top: -9px; left: 50%; width: 46px; height: 14px; margin-left: -23px; background: rgba(255, 210, 63, .85); border-radius: 3px; }
+.sct-card.drag { z-index: 30; cursor: grabbing; box-shadow: 0 16px 24px rgba(0,0,0,.35); animation: none; }
+.sct-card.bad { background: var(--bad); color: #fff; animation: shake .4s; }
+.sct-card.in { transition: transform .45s ease-in, opacity .45s ease-in; opacity: 0; }
+.sct-card.in.to0 { transform: translate(-28vw, 170px) scale(.35) rotate(-20deg); }
+.sct-card.in.to1 { transform: translate(28vw, 170px) scale(.35) rotate(20deg); }
+@keyframes sct-arrive { from { transform: translateY(-40px) scale(.8); opacity: 0; } to { transform: none; opacity: 1; } }
+.sct-boxes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: end; }
+.sct-box { position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: 150px; padding: 0; font-family: inherit;
+  background: none; border: 0; color: inherit; touch-action: manipulation; }
+.sct-front { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 92px; padding: 10px 6px;
+  background: var(--box); border: 3px solid var(--edge); border-radius: 6px 6px 16px 16px; box-shadow: 0 5px 0 var(--edge); color: #2B2D52; }
+.sct-front b { font-size: 19px; line-height: 1.15; overflow-wrap: anywhere; }
+.sct-front small { min-width: 28px; padding: 1px 8px; font-size: 14px; font-weight: 800; background: rgba(255,255,255,.7); border-radius: 999px; }
+.sct-box.b0 { --box: #FFB46B; --flap: #F29A45; }
+.sct-box.b1 { --box: #7FDCCB; --flap: #4FC2AE; }
+.sct-flap { position: absolute; z-index: 1; bottom: 86px; width: 52%; height: 34px; background: var(--flap); border: 3px solid var(--edge); border-radius: 6px; }
+.sct-flap.l { left: -4%; transform-origin: right bottom; transform: rotate(-24deg); }
+.sct-flap.r { right: -4%; transform-origin: left bottom; transform: rotate(24deg); }
+.sct-in { position: relative; z-index: 2; display: flex; flex-direction: column-reverse; align-items: center; gap: 2px; margin-bottom: -6px; min-height: 24px; }
+.sct-in i { max-width: 90%; padding: 1px 8px; font-style: normal; font-weight: 700; font-size: 12px; background: #fff; border: 2px solid var(--edge); border-radius: 8px; color: #2B2D52;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sct-in i.fix { border-style: dashed; }
+.sct-box.over .sct-front { outline: 5px solid var(--accent); }
+.sct-box.over { animation: sct-wiggle .5s ease-in-out infinite; }
+.sct-box.catch { animation: sct-catch .5s ease-out; }
+.sct-box.nope .sct-front { background: var(--bad); color: #fff; }
+.sct-box.nope { animation: shake .4s; }
+@keyframes sct-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-2deg); } 75% { transform: rotate(2deg); } }
+@keyframes sct-catch { 0% { transform: scale(1); } 40% { transform: scale(1.08, .92); } 70% { transform: scale(.97, 1.04); } 100% { transform: scale(1); } }
+.sct-sums { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; }
+.sct-sum { display: flex; flex-direction: column; gap: 4px; padding: 10px; background: var(--box); border: 3px solid var(--edge); border-radius: 14px; color: #2B2D52; }
+.sct-sum.b0 { --box: #FFD3A6; } .sct-sum.b1 { --box: #BDEFE5; }
+.sct-sum b { font-size: 16px; } .sct-sum span { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { .sct-card, .sct-box.over, .sct-box.catch { animation: none; } .sct-card.in { transition: opacity .2s; } }
+body.calm .sct-card, body.calm .sct-box.over, body.calm .sct-box.catch { animation: none; }

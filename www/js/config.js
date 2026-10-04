@@ -1,9 +1,14 @@
 // ===== Configurazione: tutte le regole del gioco stanno qui =====
 const CONFIG = {
   APP_NAME: "Gioca e Impara",
-  MIN_MINUTES: 30,    // minuti garantiti ogni giorno
-  MAX_MINUTES: 120,   // tetto assoluto (medie); il tetto vero dipende dalla fascia, vedi MAX_BY_BAND
-  MAX_BY_BAND: [60, 90, 120],   // tetto giornaliero: 1ª-2ª elementare 1 h, 3ª-5ª elementare 1 h 30, medie 2 h
+  // 4/10/2026: valori iniziali PRUDENTI. Il tempo lo decidono i genitori (Impostazioni → Tempo di telefono, con il PIN).
+  MIN_MINUTES: 10,    // minuti garantiti ogni giorno (suggeriti)
+  MAX_MINUTES: 45,    // tetto suggerito più alto (medie); il tetto vero dipende dalla fascia, vedi MAX_BY_BAND
+  MAX_BY_BAND: [30, 30, 45],   // tetto giornaliero suggerito: elementari 30 min, medie 45 min
+  // limiti che i genitori possono scegliere (minuti, a passi di LIM_STEP)
+  LIM_MIN_RANGE: [0, 120],     // minuti garantiti: da 0 a 2 ore
+  LIM_MAX_RANGE: [10, 240],    // tetto: da 10 minuti a 4 ore
+  LIM_STEP: 5,
   // Minuti per risposta, secondo il livello scelto rispetto alla classe REALE (bloccata dal PIN dei genitori):
   // low = esercizi di una classe inferiore, same = della sua classe, high = di una classe superiore
   REWARD: { low: { ok: 1, ko: 1.5 }, same: { ok: 2, ko: 1 }, high: { ok: 3, ko: 0 } },
@@ -11,7 +16,7 @@ const CONFIG = {
   // Alla 1ª-2ª elementare le sbagliate non tolgono mai niente.
   RIGHT: { low: 0.5, same: 1, high: 1.5 },
   WRONG: { low: 1.5, same: 1, high: 0 },
-  FEST_STEP: [5, 10, 30],   // festa dei traguardi ogni N minuti: 1ª-2ª elem. 5, 3ª-5ª elem. 10, medie 30 (a partire dai 30 garantiti)
+  FEST_STEP: [5, 5, 10],   // festa dei traguardi ogni N minuti: elementari 5, medie 10 (a partire dai minuti garantiti)
   HIGH_CAP: 30,       // minuti al giorno guadagnabili col livello più alto; oltre, vale come il proprio livello
   // «Il cervello esplode»: il bambino è libero di giocare quanto vuole; solo dopo i minuti di PLAY_MIN_BY_CLASS di gioco VERO nella giornata
   // (contati solo mentre è dentro gli esercizi, anche in più volte) compare il cervello che esplode e dice «basta, spegni il telefono».

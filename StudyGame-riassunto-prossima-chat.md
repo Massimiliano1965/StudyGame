@@ -1,6 +1,6 @@
 # Gioca e Impara: riassunto per la prossima chat
 
-Progetto: Gioca e Impara, app Android (Cordova) per ragazzi 6–12 anni: si risponde a quiz e giochi di scuola per guadagnare tempo di telefono (30 min garantiti al giorno, tetto 2h30, +2 min per risposta giusta, −1 per sbagliata). Autore: Massi (non è sviluppatore di mestiere, lavora dal telefono e prova tutto sul suo telefono Android).
+Progetto: Gioca e Impara, app Android (Cordova) per ragazzi 6–12 anni: si risponde a quiz e giochi di scuola per guadagnare tempo di telefono. Dal 4/10/2026 il tempo lo decidono i genitori (vedi «Pacchetto del 4 ottobre»): valori suggeriti 10 min garantiti, tetto 30 min elementari / 45 min medie. Autore: Massi (non è sviluppatore di mestiere, lavora dal telefono e prova tutto sul suo telefono Android).
 
 ## Dove sta il codice
 - Repo GitHub: Massimiliano1965/StudyGame (clone: https://github.com/Massimiliano1965/studygame). Branch unico: main.
@@ -83,7 +83,7 @@ Intestazione con avatar, nome, classe, ⚙️ e il pulsante grande che legge la 
 - Plugin nativo plugins-local/studylock (Java: StudyLock.java, LockService.java, BootReceiver.java; aggiunto in build.yml). Servizio in primo piano che ogni secondo legge l'app davanti (UsageStatsManager) e, se non ci sono minuti sbloccati, copre lo schermo con una schermata «Telefono in pausa» (permesso «Mostra sopra le altre app» + «Accesso all'uso»). SENZA i due permessi non blocca niente. Nessun amministratore del dispositivo: si può sempre disinstallare (o avviare in modalità provvisoria).
 - Mai coperte: Gioca e Impara, telefono/chiamate, sveglia, installazione/disinstallazione, permessi, SystemUI. I minuti si consumano solo mentre si usano le ALTRE app (giocare qui non li consuma). Avviso a 1 minuto dalla fine.
 - Emergenza: sulla schermata di blocco pulsante nativo «tieni premuto 3 secondi» = sblocco 10 minuti (funziona anche se la parte web si blocca); anche in Impostazioni. Il numero di emergenze di oggi si vede in Impostazioni.
-- App: Impostazioni → «Blocco telefono» (spento di default; per spegnerlo calcolo da adulti tipo 27 × 13). In home, con blocco pronto, pulsante «📱 Usa i miei minuti (N)»: Credit.claim() consegna al blocco i minuti guadagnati e non ancora usati (campo granted nel giorno). Nuovo giorno = si riparte.
+- App: Impostazioni → «Blocco telefono» (spento di default; per spegnerlo serve il PIN dei genitori di 4 cifre. ATTENZIONE: il vecchio «calcolo da adulti» NON esiste più, è stato sostituito dal PIN, che passa anche alla parte nativa e protegge Impostazioni di Android e disinstallazione). In home, con blocco pronto, pulsante «📱 Usa i miei minuti (N)»: Credit.claim() consegna al blocco i minuti guadagnati e non ancora usati (campo granted nel giorno). Nuovo giorno = si riparte.
 - Omino fluttuante: se dopo una risposta l'omino in alto è uscito dallo schermo (scroll in fondo), la sua reazione (balla o si schiaccia e piange) appare ~2,8 s al centro, senza bloccare i tocchi (showHeroFx in app.js, .hero.fx in style.css). Se si vede già non appare il doppione.
 - Schede di fine gioco (Incastro/Memory): nuovo file js/emo_words.js con le figurine per parola (EMO_WORDS, EMO_RULES, EMO_RULES_R). Regola: figurina SOLO se c'entra davvero. Se almeno 3 parole del giro hanno la figurina, la scena mostra solo quelle (castello, fabbrica, spade, quadro per Feudalesimo/Rivoluzione industriale/Crociate/Rinascimento; bandiere per gli stati, ecc.); altrimenti la scena decorata di prima. Seconda lingua: si guarda solo la parola italiana. Controllate tutte le coppie di tutte le materie (storia, geografia, scienze, tecnologia, arte, musica, civica, latino, italiano, inglese, francese/spagnolo/tedesco).
 - Splash: il difetto era lo splash di sistema Android (logo Cordova su bianco) che passava prima del nostro. Ora config.xml usa res/splash-icon.png (emblema) su viola #9B6BFF. Lo splash animato HTML in sé funziona (provato in browser).
@@ -122,3 +122,33 @@ Intestazione con avatar, nome, classe, ⚙️ e il pulsante grande che legge la 
 - Guida permessi blocco: schermata «Come dare i permessi» (5 passi, «Consenti impostazioni con restrizioni») con pulsante «Apri Info app» (nuova azione nativa openAppInfo in StudyLock.java). Si apre da sola accendendo il blocco senza permessi e dal pulsante «Android non mi fa dare il permesso» nelle Impostazioni.
 - Provato in headless: 170+ partite Memory e 160+ Linee (vittoria, errore poi vittoria), 2125 giri su tutte le materie/classi senza errori JS, guida con plugin simulato. La parte Java (openAppInfo) la dice la build; il comportamento reale solo il telefono. NON provato da Massi sul telefono.
 - Resta da fare: prova sul telefono (decide Massi).
+
+
+## Pacchetto del 4 ottobre (NON ancora su main: aspetta l'ordine di Massi)
+Non si fa push senza l'ordine esplicito di Massi. La chat claude.ai non ha le credenziali GitHub: il push va fatto da una sessione con il repo collegato (Claude Code) oppure da Massi.
+
+### Tempo di telefono deciso dai genitori
+- Idea di Massi: il tempo giusto non lo decide l'app né il pediatra, lo decide il genitore. L'app parte con valori PRUDENTI e il genitore li cambia quando vuole, in su o in giù.
+- config.js: MIN_MINUTES 10 (garantiti), MAX_BY_BAND [30, 30, 45] (elementari 30 min, medie 45), LIM_MIN_RANGE [0, 120], LIM_MAX_RANGE [10, 240], LIM_STEP 5, FEST_STEP [5, 5, 10].
+- Scelta dei genitori salvata in profile.lim = { min, max } (assente = valori suggeriti). Credit.setLimits(lim, classe) la applica: i minuti già guadagnati oggi restano, cambia la base garantita (state.base nel giorno) e il tetto. Storage.loadDay(start) fa partire la giornata dai garantiti scelti.
+- Impostazioni → «⏱ Tempo di telefono (genitori)», protetta dal PIN che c'era già (askPin): due righe − / + (garantiti, massimo), «Salva», «Rimetti i suggeriti». Il tetto non scende sotto i garantiti.
+- Avvertenze: nuovo paragrafo «Il tempo lo decidono i genitori»; corretto anche il paragrafo dei minuti, che diceva ancora 2 min a risposta e tetti 1h/1h30/2h (ora legge i valori da CONFIG).
+- Schermate del PIN: «Serve per cambiare nome o classe, decidere il tempo di telefono, …».
+- NON toccati: PIN, blocco/sblocco, emergenza, parte Java, «cervello esploso» (PLAY_MIN_BY_CLASS resta 45/90/120 min di gioco DENTRO l'app: da decidere con Massi se legarlo al tetto scelto).
+- Corretto un difetto vecchio: con due errori e i minuti già al minimo l'app diceva «Hai già il massimo di oggi»; ora lo dice solo se il tetto è davvero raggiunto.
+
+### Nuovo gioco 17: «Smista nelle scatole» (kind "scatole", tutte le materie)
+- Le carte arrivano una alla volta; si trascinano nella scatola giusta (o si tocca la scatola). Due scatole di cartone con le alette, la carta vola dentro, la scatola fa «ciuf». Errore: la scatola diventa rossa, sotto compare «Va in: …» e la carta va da sola in quella giusta. Due errori si perdonano, al terzo si perde. 6 carte (1ª–2ª el.), 7 dalla 3ª.
+- Fine partita: «N su M giuste» e le due scatole con tutte le carte al posto giusto.
+- Tre modi, tutti dai dati esistenti: «lati» (sinistra contro destra di un tema: Stato/Capitale, Singolare/Plurale, Infinito/Passato prossimo, Presente/Passato in inglese, Una volta/Oggi…: tabella SORT_SIDES), «temi» (due temi della stessa materia: Pianeti/Organi del corpo, Regioni/Stati, Verbi/Nomi in inglese, categorie del vocabolario in seconda lingua: tabelle SORT_THEMES e SORT_L2), matematica con regole generate per classe (Fa 10, Meno/Più di 10, Pari/Dispari, Multipli di k, frazioni Minore/Maggiore di 1, Numeri primi, Risultato positivo/negativo, Quadrati perfetti).
+- Esclusi apposta i temi dove i due lati si confondono (contrari, sinonimi, «parola della musica» perché «piano» sembra uno strumento, italiano 1ª–5ª dove «gatto» è sia parola sia animale) e le categorie che si sovrappongono (Colori contro Aggettivi: SORT_CLASH). Parole difficili tolte con Parole.themes, filtro classe con Questions.inClass.
+- Non parte (e ne parte un altro) in: storia 1ª media, musica 1ª–2ª elementare.
+- Voce: all'inizio legge le due scatole e la prima carta; con la lettura automatica legge ogni carta nuova («Dove va: X? Nella scatola A, o nella scatola B?»), parole straniere con la voce straniera; non dice mai la scatola giusta. Pulsante 🔊 Leggi.
+- File: js/games.js (makeScatole, mountScatole, tabelle, registro GAMES, mount; nuovo Games.make per le prove), js/app.js (sortSegs, roundSpeech, setSpeak), css/style.css (.sct…).
+
+### Provato da Claude in headless (Chromium 390×800, voce simulata)
+- Generazione: 300 giri per materia × classe (0–7) × lingua (fr, es, de): nessuna carta doppia, almeno 2 carte per scatola, etichette diverse, nessun errore JS; controllate a occhio tutte le combinazioni di scatole.
+- 14 partite vere dall'app su 12 materie e classi 0/3/4/5/6/7: vittoria, sconfitta al terzo errore, un errore poi vittoria, due errori poi vittoria, trascinamento col dito; voce controllata (non svela la soluzione); screenshot guardati.
+- Giri casuali di tutti i giochi su tutte le materie (vedi esito nel messaggio di consegna).
+- Tempo di telefono: PIN sbagliato non apre, PIN giusto apre; + e −; salvataggio che resta dopo la riapertura; minuti guadagnati conservati; tetto mai sotto i garantiti; «Rimetti i suggeriti»; giornata salvata col vecchio sistema (50 min) riportata al nuovo tetto.
+- NON provato da Massi sul telefono: tutto questo pacchetto.

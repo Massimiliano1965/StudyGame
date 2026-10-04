@@ -1905,6 +1905,313 @@ const Games = (() => {
   }
 
   // ====================================================================
+  // SMISTA NELLE SCATOLE: le carte arrivano una alla volta, si mettono nella scatola giusta
+  // (trascinandole o toccando la scatola). Due errori si perdonano, al terzo si perde.
+  // Tre modi, tutti costruiti dai dati che ci sono già:
+  //  - «lati»: da un tema di collegamento, le parole di sinistra contro quelle di destra (Stato / Capitale)
+  //  - «temi»: due temi della stessa materia, le parole di sinistra (Pianeti / Organi del corpo)
+  //  - matematica: regole generate (pari/dispari, multipli, primi, frazioni…)
+  // ====================================================================
+  // temi in cui i due lati sono due categorie chiare. Solo questi: dove i lati si confondono (contrari, sinonimi…) non si gioca.
+  const SORT_SIDES = [
+    [/al suo plurale/, "Singolare", "Plurale"],
+    [/verbo al suo passato prossimo/, "Infinito", "Passato prossimo"],
+    [/animale al suo verso/, "Animale", "Verso"],
+    [/animale al suo cucciolo/, "Adulto", "Cucciolo"],
+    [/irregolare al suo passato/, "Presente", "Passato"],
+    [/stato alla sua capitale/, "Stato", "Capitale"],
+    [/regione al suo capoluogo/, "Regione", "Capoluogo"],
+    [/fiume alla città/, "Fiume", "Città"],
+    [/montagna al suo continente/, "Montagna", "Continente"],
+    [/popolo antico al suo luogo/, "Popolo", "Luogo"],
+    [/monumento al suo popolo/, "Monumento", "Popolo"],
+    [/monumento alla sua città/, "Monumento", "Città"],
+    [/autore alla sua opera/, "Autore", "Opera"],
+    [/artista alla sua opera/, "Artista", "Opera"],
+    [/compositore a una sua opera/, "Compositore", "Opera"],
+    [/scienziato alla sua scoperta/, "Scienziato", "Scoperta"],
+    [/artista alla sua corrente/, "Artista", "Corrente"],
+    [/compositore alla sua epoca/, "Compositore", "Epoca"],
+    [/strumento alla sua famiglia/, "Strumento", "Famiglia di strumenti"],
+    [/stagione a un suo mese/, "Stagione", "Mese"],
+    [/cosa di una volta/, "Una volta", "Oggi"],
+    [/parte del corpo al suo senso/, "Parte del corpo", "Senso"],
+    [/figura retorica/, "Figura retorica", "Esempio"],
+    [/artista a ciò che usa/, "Artista", "Attrezzo"],
+    [/luogo a chi ci lavora/, "Luogo", "Chi ci lavora"]
+  ];
+  // nome della categoria delle parole di SINISTRA di un tema (per il modo «temi»); senza nome il tema non si usa
+  const SORT_THEMES = [
+    [/giorno della settimana/, "Giorni"], [/stagione a un suo mese/, "Stagioni"], [/cosa di una volta/, "Cose di una volta"],
+    [/popolo antico/, "Popoli antichi"], [/personaggio/, "Personaggi"], [/monumento/, "Monumenti"], [/evento alla/, "Eventi"], [/periodo/, "Periodi storici"],
+    [/parte del paesaggio/, "Paesaggio"], [/città italiana/, "Città"], [/regione al/, "Regioni"], [/stato alla sua capitale/, "Stati"],
+    [/parola alla sua definizione/, "Forme del territorio"], [/montagna/, "Montagne"], [/fiume/, "Fiumi"],
+    [/animale al suo cucciolo/, "Animali"], [/parte del corpo/, "Parti del corpo"], [/parte della pianta/, "Parti della pianta"],
+    [/pianeta/, "Pianeti"], [/animale alla sua classe/, "Animali"], [/organo alla/, "Organi del corpo"], [/simbolo al suo elemento/, "Simboli chimici"],
+    [/scienziato/, "Scienziati"], [/unità di misura elettrica/, "Unità elettriche"], [/unità di misura alla/, "Unità di misura"],
+    [/oggetto a ciò/, "Oggetti"], [/mezzo di trasporto/, "Mezzi di trasporto"], [/materiale a/, "Materiali"], [/parte del computer/, "Parti del computer"],
+    [/fonte di energia/, "Fonti di energia"], [/termine informatico/, "Parole dell'informatica"],
+    [/artista a ciò che usa/, "Mestieri dell'arte"], [/artista alla sua/, "Artisti"], [/opera al luogo/, "Opere d'arte"], [/tecnica/, "Tecniche"], [/stile/, "Stili"],
+    [/strumento/, "Strumenti"], [/compositore/, "Compositori"], [/segno della musica/, "Segni musicali"], [/indicazione di velocità/, "Velocità in musica"], [/voce del coro/, "Voci del coro"],
+    [/luogo a chi/, "Posti di lavoro"], [/segnale/, "Strada e segnali"], [/rifiuto/, "Rifiuti"], [/festa alla/, "Feste"], [/organo dello Stato/, "Organi dello Stato"],
+    [/simbolo italiano/, "Simboli dell'Italia"], [/articolo della Costituzione/, "Articoli della Costituzione"], [/organizzazione/, "Organizzazioni"], [/data a ciò/, "Date"],
+    [/colore inglese/, "Colori"], [/animale inglese/, "Animali"], [/numero inglese/, "Numeri"], [/parola della scuola/, "Scuola"], [/parola della famiglia/, "Famiglia"],
+    [/parola della tavola/, "Cibo e tavola"], [/verbo inglese al suo significato/, "Verbi"], [/parola inglese al suo contrario/, "Aggettivi"],
+    [/verbo inglese irregolare/, "Verbi"], [/parola inglese al suo significato/, "Congiunzioni e avverbi"],
+    [/parola latina/, "Parole"], [/frase latina/, "Frasi famose"], [/«sum»/, "Forme di «sum»"],
+    [/figura retorica/, "Figure retoriche"], [/autore alla/, "Autori"]
+  ];
+  // seconda lingua: categorie del vocabolario raggruppate (quelle che si somigliano stanno nello stesso gruppo e non si mettono contro)
+  const SORT_L2 = { "colori": "Colori", "famiglia": "Famiglia", "animali": "Animali", "altri animali": "Animali", "numeri": "Numeri",
+    "numeri fino a venti e oltre": "Numeri", "verbi": "Verbi", "altri verbi": "Verbi", "aggettivi": "Aggettivi", "altri aggettivi": "Aggettivi",
+    "vestiti": "Vestiti", "trasporti": "Trasporti", "corpo": "Corpo", "giorni della settimana": "Giorni", "mesi e stagioni": "Mesi e stagioni", "altri mesi": "Mesi e stagioni",
+    "saluti": "Saluti e cortesia", "frutta e verdura": "Frutta e verdura" };
+  const NOUNS = /^(Scuola|Famiglia|Cibo e tavola)$/;
+  // categorie che si sovrappongono (un colore è anche un aggettivo): non si mettono una contro l'altra
+  const SORT_CLASH = [["Colori", "Aggettivi"]];
+
+  function sortThemes(classId, subjectId) {
+    const band = classId <= 1 ? "A" : classId <= 4 ? "B" : "C";
+    let tl = subjectId === "inglese" ? ENG_PAIRS[band] : subjectId === "italiano" ? ITA_PAIRS[band] : (OTHER_PAIRS[subjectId] || {})[band];
+    if (!tl) return [];
+    tl = Questions.inClass(tl, classId);
+    if (!/^(inglese|lingua2|latino)$/.test(subjectId)) tl = Parole.themes(tl, classId);
+    return tl;
+  }
+  const lowT = t => String(t).toLowerCase().trim();
+  // n carte distinte: k dalla scatola 0 e n−k dalla 1
+  function sortPack(list0, list1, n, en0, en1) {
+    const lo = Math.max(2, n - list1.length), hi = Math.min(n - 2, list0.length);
+    if (lo > hi) return null;
+    const k = rnd(lo, hi);
+    const items = shuffle(list0).slice(0, k).map(t => ({ t: String(t), b: 0, en: !!en0 }))
+      .concat(shuffle(list1).slice(0, n - k).map(t => ({ t: String(t), b: 1, en: !!en1 })));
+    const seen = new Set();
+    for (const it of items) { if (seen.has(lowT(it.t))) return null; seen.add(lowT(it.t)); }
+    return shuffle(items);
+  }
+
+  // modo «lati»: sinistra contro destra dello stesso tema
+  function sortSides(classId, subjectId, n) {
+    const eng = subjectId === "inglese" || subjectId === "lingua2";
+    const cands = shuffle(sortThemes(classId, subjectId).map(T => ({ T, rule: SORT_SIDES.find(r => r[0].test(T.prompt)) })).filter(x => x.rule));
+    for (const { T, rule } of cands) {
+      const L = T.pairs.map(p => p[0]), R = T.pairs.map(p => p[1]);
+      // una parola che sta da tutte e due le parti (es. «cucciolo» sia animale sia cucciolo) non si usa
+      const l0 = [...new Set(L)].filter(w => !R.some(x => lowT(x) === lowT(w)));
+      const l1 = [...new Set(R)].filter(w => !L.some(x => lowT(x) === lowT(w)));
+      // si prende un solo lato per coppia, così le carte non sono coppie già fatte
+      const used = new Set(), a = [], b = [];
+      shuffle(T.pairs.map((p, i) => i)).forEach(i => {
+        const [x, y] = T.pairs[i];
+        const side = a.length < b.length ? 0 : b.length < a.length ? 1 : rnd(0, 1);
+        const w = side === 0 ? x : y, list = side === 0 ? l0 : l1;
+        if (list.includes(w) && !used.has(lowT(w))) { used.add(lowT(w)); (side === 0 ? a : b).push(w); }
+      });
+      // poche coppie: si aggiungono anche gli altri lati, così le carte bastano
+      if (a.length + b.length < n) shuffle(T.pairs).forEach(([x, y]) => {
+        if (a.length + b.length >= n) return;
+        if (l0.includes(x) && !used.has(lowT(x))) { used.add(lowT(x)); a.push(x); }
+        else if (l1.includes(y) && !used.has(lowT(y))) { used.add(lowT(y)); b.push(y); }
+      });
+      const m = Math.min(n, a.length + b.length);
+      if (m < 5) continue;
+      const items = sortPack(a, b, m, eng, eng && !!T.rEn);
+      if (items) return { labels: [rule[1], rule[2]], items };
+    }
+    return null;
+  }
+
+  // modo «temi»: due temi della stessa materia, parole di sinistra
+  function sortCross(classId, subjectId, n) {
+    if (subjectId === "matematica") return null;
+    const eng = subjectId === "inglese" || subjectId === "lingua2";
+    const labelOf = T => {
+      if (subjectId === "lingua2") { const m = /\(([^)]+)\)\.?$/.exec(T.prompt); return m ? SORT_L2[m[1]] || null : null; }
+      if (subjectId === "italiano" && !/figura retorica|autore alla/.test(T.prompt)) return null;   // gli altri temi di italiano si sovrappongono (gatto è parola e animale)
+      if (/parola della musica/.test(T.prompt)) return null;   // «piano» sembra uno strumento
+      const r = SORT_THEMES.find(x => x[0].test(T.prompt)); return r ? r[1] : null;
+    };
+    const ts = shuffle(sortThemes(classId, subjectId).map(T => ({ T, lab: labelOf(T) })).filter(x => x.lab));
+    for (let i = 0; i < ts.length; i++) for (let j = i + 1; j < ts.length; j++) {
+      const A = ts[i], B = ts[j];
+      if (A.lab === B.lab || SORT_CLASH.some(c => c.includes(A.lab) && c.includes(B.lab))) continue;
+      const allA = A.T.pairs.flat().map(lowT), allB = B.T.pairs.flat().map(lowT);
+      const a = [...new Set(A.T.pairs.map(p => p[0]))].filter(w => !allB.includes(lowT(w)));
+      const b = [...new Set(B.T.pairs.map(p => p[0]))].filter(w => !allA.includes(lowT(w)));
+      if (a.length < 2 || b.length < 2) continue;
+      const m = Math.min(n, a.length + b.length);
+      if (m < 5) continue;
+      let la = A.lab, lb = B.lab;
+      if (subjectId === "inglese") { if (la === "Verbi" && NOUNS.test(lb)) lb = "Nomi"; else if (lb === "Verbi" && NOUNS.test(la)) la = "Nomi"; }
+      const items = sortPack(a, b, m, eng, eng);
+      if (items) return { labels: [la, lb], items };
+    }
+    return null;
+  }
+
+  // matematica: regole generate secondo la classe
+  function sortMath(c, n) {
+    const uniqNums = (gen, test, want) => { const s = new Set(); let g = 0; while (s.size < want && g++ < 400) { const v = gen(); if (test(v)) s.add(v); } return [...s]; };
+    const isPrime = v => { if (v < 2) return false; for (let d = 2; d * d <= v; d++) if (v % d === 0) return false; return true; };
+    const rules = [];
+    const top = c === 0 ? 20 : c === 1 ? 50 : c === 2 ? 100 : 999;
+    if (c <= 4) rules.push(() => {
+      const nums = uniqNums(() => rnd(c <= 1 ? 1 : 10, top), () => true, 12);
+      return { labels: ["Pari", "Dispari"], a: nums.filter(v => v % 2 === 0), b: nums.filter(v => v % 2) };
+    });
+    if (c === 0) rules.push(() => {
+      const nums = uniqNums(() => rnd(1, 20), v => v !== 10, 12);
+      return { labels: ["Meno di 10", "Più di 10"], a: nums.filter(v => v < 10), b: nums.filter(v => v > 10) };
+    });
+    if (c <= 1) rules.push(() => {
+      const yes = uniqNums(() => { const x = rnd(1, 9); return `${x} + ${10 - x}`; }, () => true, 5);
+      const no = uniqNums(() => { const x = rnd(1, 9), y = rnd(1, 9); return x + y === 10 ? "" : `${x} + ${y}`; }, v => !!v, 5);
+      return { labels: ["Fa 10", "Non fa 10"], a: yes, b: no };
+    });
+    if (c >= 2 && c <= 5) rules.push(() => {
+      const k = pick(c === 2 ? [2, 5, 10] : c === 3 ? [3, 4, 5] : [3, 6, 7, 9]);
+      const yes = uniqNums(() => k * rnd(2, 12), () => true, 5);
+      const no = uniqNums(() => k * rnd(2, 12) + pick([-2, -1, 1, 2]), v => v % k !== 0 && v > 1, 5);
+      return { labels: [`Multipli di ${k}`, `Non multipli di ${k}`], a: yes, b: no };
+    });
+    if (c >= 4 && c <= 6) rules.push(() => {
+      const fr = (lt) => { const d = rnd(2, 9); const num = lt ? rnd(1, d - 1) : rnd(d + 1, 2 * d); return `${num}/${d}`; };
+      return { labels: ["Minore di 1", "Maggiore di 1"], a: uniqNums(() => fr(true), () => true, 5), b: uniqNums(() => fr(false), () => true, 5) };
+    });
+    if (c >= 5) rules.push(() => {
+      const yes = uniqNums(() => rnd(2, 60), isPrime, 5);
+      const no = uniqNums(() => pick([rnd(4, 60), pick([9, 15, 21, 25, 27, 33, 35, 39, 45, 49, 51, 57])]), v => !isPrime(v), 5);
+      return { labels: ["Numeri primi", "Non primi"], a: yes, b: no };
+    });
+    if (c >= 6) rules.push(() => {
+      const ex = pos => { const a = rnd(1, 20), b = rnd(1, 20); return a === b ? "" : (a > b) === pos ? `${a} − ${b}` : `${b} − ${a}`; };
+      return { labels: ["Risultato positivo", "Risultato negativo"], a: uniqNums(() => ex(true), v => !!v, 5), b: uniqNums(() => ex(false), v => !!v, 5) };
+    });
+    if (c >= 6) rules.push(() => {
+      const yes = uniqNums(() => { const x = rnd(2, 12); return x * x; }, () => true, 5);
+      const no = uniqNums(() => rnd(5, 150), v => Math.round(Math.sqrt(v)) ** 2 !== v, 5);
+      return { labels: ["Quadrati perfetti", "Non quadrati"], a: yes, b: no };
+    });
+    for (const rule of shuffle(rules)) {
+      const r = rule();
+      const items = sortPack(r.a.map(String), r.b.map(String), n, false, false);
+      if (items) return { labels: r.labels, items };
+    }
+    return null;
+  }
+
+  function makeScatole(classId, subjectId) {
+    if (typeof Questions === "undefined") return null;
+    const n = classId <= 1 ? 6 : 7;
+    let g = null;
+    if (subjectId === "matematica") g = sortMath(classId, n);
+    else {
+      const ways = shuffle([sortSides, sortCross]);
+      g = ways[0](classId, subjectId, n) || ways[1](classId, subjectId, n);
+    }
+    if (!g) return null;
+    const eng = g.items.some(it => it.en);
+    return { kind: "scatole", title: "Smista nelle scatole", eng, labels: g.labels, items: g.items,
+      prompt: `Metti ogni carta nella scatola giusta: «${g.labels[0]}» o «${g.labels[1]}»?`,
+      hint: "Trascina la carta nella scatola giusta, oppure tocca la scatola. Due errori si perdonano, al terzo si perde." };
+  }
+
+  function mountScatole(el, r, onDone) {
+    const I = r.items, L = r.labels;
+    let i = 0, mistakes = 0, right = 0, busy = false, done = false, justDragged = false;
+    const inBox = [[], []], wrongList = [];
+    const fs = t => t.length > 22 ? 17 : t.length > 14 ? 21 : t.length > 8 ? 26 : 32;
+    const boxHtml = b => `<button class="sct-box b${b}" data-b="${b}" aria-label="Scatola ${esc(L[b])}">
+        <span class="sct-flap l"></span><span class="sct-flap r"></span>
+        <span class="sct-in">${inBox[b].slice(-3).map(x => `<i class="${x.ok ? "" : "fix"}">${esc(x.t)}</i>`).join("")}</span>
+        <span class="sct-front"><b>${esc(L[b])}</b>${inBox[b].length ? `<small>${inBox[b].length}</small>` : ""}</span>
+      </button>`;
+    function draw() {
+      const it = I[i];
+      el.innerHTML = `<div class="sct">
+        <div class="vf-dots">${I.map((_, k) => `<i class="${k < i ? "done" : k === i ? "now" : ""}"></i>`).join("")}</div>
+        <div class="sct-stage">
+          <div class="sct-card" data-card style="font-size:${fs(it.t)}px">${esc(it.t)}</div>
+          ${canSpeakFn() ? `<button class="btn ghost vf-say" data-say>🔊 Leggi</button>` : ""}
+        </div>
+        <div class="sct-boxes">${boxHtml(0)}${boxHtml(1)}</div>
+      </div>`;
+      if (i > 0 && autoSpeakFn() && speakFn) speakFn(say());
+    }
+    const say = () => ({ sort: true, item: I[i], labels: L });
+    function finish() {
+      done = true;
+      const ok = mistakes <= 2;
+      const col = b => `<div class="sct-sum b${b}"><b>${esc(L[b])}</b>${I.filter(x => x.b === b).map(x => `<span>${esc(x.t)}</span>`).join("")}</div>`;
+      el.innerHTML = `<div class="sct"><div class="vf-dots">${I.map(() => `<i class="done"></i>`).join("")}</div>
+        <div class="vf-card"><div class="vf-end">${ok ? "🎉" : "😅"} ${right} su ${I.length} giuste</div>
+        <div class="sct-sums">${col(0)}${col(1)}</div></div></div>`;
+      onDone(ok, wrongList.join(" · "), ok ? (mistakes === 0 ? "Tutte nella scatola giusta: magazziniere perfetto!" : "Bravo, scatole sistemate!") : "", mistakes);
+    }
+    function drop(b) {
+      if (busy || done) return;
+      busy = true; tapFn();
+      const it = I[i], ok = b === it.b;
+      const card = el.querySelector("[data-card]"), box = el.querySelector(`.sct-box[data-b="${b}"]`), good = el.querySelector(`.sct-box[data-b="${it.b}"]`);
+      if (ok) {
+        right++;
+        if (card) card.classList.add("in", "to" + b);
+        if (box) { box.classList.add("catch"); cheer(box); }
+      } else {
+        mistakes++; boomFn();
+        wrongList.push(`${it.t} va in «${L[it.b]}»`);
+        if (box) box.classList.add("nope");
+        if (card) card.classList.add("bad");
+        const st = el.querySelector(".sct-stage");
+        if (st) st.insertAdjacentHTML("beforeend", `<div class="vf-fix">Va in: <b>${esc(L[it.b])}</b></div>`);
+        setTimeout(() => { if (!el.isConnected) return; if (card) card.classList.add("in", "to" + it.b); if (good) good.classList.add("catch"); }, 700);
+      }
+      inBox[it.b].push({ t: it.t, ok });
+      setTimeout(() => {
+        if (!el.isConnected) return;
+        busy = false;
+        if (mistakes > 2 || i >= I.length - 1) { finish(); return; }
+        i++; draw();
+      }, ok ? 900 : 1700);
+    }
+    // trascinamento della carta (dito o mouse)
+    el.onpointerdown = e => {
+      const card = e.target.closest("[data-card]");
+      if (!card || busy || done) return;
+      const x0 = e.clientX, y0 = e.clientY;
+      let dragging = false, over = null;
+      try { card.setPointerCapture(e.pointerId); } catch (err) {}
+      const boxAt = ev => { card.style.visibility = "hidden"; const u = document.elementFromPoint(ev.clientX, ev.clientY); card.style.visibility = ""; return u && u.closest && u.closest(".sct-box"); };
+      const move = ev => {
+        const dx = ev.clientX - x0, dy = ev.clientY - y0;
+        if (!dragging && Math.hypot(dx, dy) > 8) { dragging = true; card.classList.add("drag"); }
+        if (!dragging) return;
+        card.style.transform = `translate(${dx}px, ${dy}px) rotate(${Math.max(-12, Math.min(12, dx / 12))}deg)`;
+        const bx = boxAt(ev);
+        if (bx !== over) { if (over) over.classList.remove("over"); over = bx; if (over) over.classList.add("over"); }
+      };
+      const end = ev => {
+        card.removeEventListener("pointermove", move); card.removeEventListener("pointerup", end); card.removeEventListener("pointercancel", end);
+        if (over) over.classList.remove("over");
+        if (!dragging) return;
+        justDragged = true; setTimeout(() => { justDragged = false; }, 60);
+        const bx = ev.type === "pointerup" ? boxAt(ev) : null;
+        card.classList.remove("drag"); card.style.transform = "";
+        if (bx) drop(+bx.dataset.b);
+      };
+      card.addEventListener("pointermove", move); card.addEventListener("pointerup", end); card.addEventListener("pointercancel", end);
+    };
+    el.onclick = e => {
+      if (e.target.closest("[data-say]")) { if (speakFn && !done) speakFn(say()); return; }
+      const bx = e.target.closest(".sct-box");
+      if (!bx || justDragged) return;
+      drop(+bx.dataset.b);
+    };
+    draw();
+  }
+
+  // ====================================================================
   // SCELTA E COLLEGAMENTO CON L'APP
   // ====================================================================
   const ALL = ["italiano", "matematica", "inglese", "storia", "geografia", "scienze", "tecnologia", "arte", "musica", "civica", "lingua2", "latino"];
@@ -1924,7 +2231,8 @@ const Games = (() => {
     intruso:    { subjects: ALL.filter(x => x !== "matematica" && x !== "italiano"), make: (c, s) => makeIntruso(c, s) },
     impiccato:  { subjects: ALL, make: (c, s) => makeImpiccato(c, s) },
     taglia:     { subjects: ALL, make: (c, s) => makeTaglia(c, s) },
-    linee:      { subjects: ALL, make: (c, s) => makeLinee(c, s) }
+    linee:      { subjects: ALL, make: (c, s) => makeLinee(c, s) },
+    scatole:    { subjects: ALL, make: (c, s) => makeScatole(c, s) }
   };
 
   // Un giro di gioco per la materia e la classe, oppure null (allora si fa una domanda normale).
@@ -1975,8 +2283,11 @@ const Games = (() => {
       mountTaglia(el, r, onDone);
     } else if (r.kind === "linee") {
       mountLinee(el, r, onDone);
+    } else if (r.kind === "scatole") {
+      mountScatole(el, r, onDone);
     }
   }
 
-  return { pick: pickRound, mount, stop, setTap, setBoom, setAvatar, setSpeak, isTrue, calc };
+  // make: crea un giro di un gioco preciso (serve alle prove automatiche)
+  return { pick: pickRound, make: (kind, c, s) => GAMES[kind] ? GAMES[kind].make(c, s) : null, mount, stop, setTap, setBoom, setAvatar, setSpeak, isTrue, calc };
 })();

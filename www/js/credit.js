@@ -1,17 +1,24 @@
 // ===== Minuti di telefono guadagnati =====
-// Si parte da MIN_MINUTES (garantiti). Il premio dipende dal livello scelto rispetto alla classe reale:
+// Si parte dai minuti garantiti (scelti dai genitori, altrimenti CONFIG.MIN_MINUTES). Il premio dipende dal livello scelto rispetto alla classe reale:
 // livello più basso +1 / −1,5; il proprio +2 / −1; più alto +3 / 0 (con tetto giornaliero HIGH_CAP).
 // Non si scende mai sotto il minimo garantito e non si supera il tetto della fascia.
 const Credit = (() => {
-  let state = Storage.loadDay();
   let classId = 0;
+  // limiti scelti dai genitori (profile.lim = { min, max }); senza scelta valgono i suggeriti di CONFIG
+  let lim = {};
+  const okNum = v => typeof v === "number" && isFinite(v) && v >= 0;
+  const minG = () => okNum(lim.min) ? lim.min : CONFIG.MIN_MINUTES;
+  let state = Storage.loadDay(minG());
   const listeners = [];
 
   const notify = () => listeners.forEach(fn => fn(state));
   const band = () => classId <= 1 ? 0 : classId <= 4 ? 1 : 2;
   const playLimit = () => (CONFIG.PLAY_MIN_BY_CLASS[classId] || 0) * 60;
-  const max = () => CONFIG.MAX_BY_BAND[band()];
-  const clamp = v => Math.max(CONFIG.MIN_MINUTES, Math.min(max(), v));
+  const bandMax = () => CONFIG.MAX_BY_BAND[band()];
+  const max = () => Math.max(minG(), okNum(lim.max) && lim.max > 0 ? lim.max : bandMax());
+  const clamp = v => Math.max(minG(), Math.min(max(), v));
+  // minuti garantiti con cui è partita la giornata (le giornate salvate prima del 4/10/2026 non lo hanno)
+  const baseOf = () => okNum(state.base) ? state.base : Math.min(state.minutes, minG());
 
   // ---- pausa (cooldown) tra una sessione di guadagno e l'altra ----
   // state.sess = minuti guadagnati nella sessione in corso; state.cdUntil = fine della pausa (ms).
@@ -45,7 +52,17 @@ const Credit = (() => {
   }
 
   function setClass(id) { classId = id == null ? 0 : id; state.minutes = clamp(state.minutes); }
-  function refresh() { state = Storage.loadDay(); state.minutes = clamp(state.minutes); notify(); }
+  // nuovi limiti: i minuti guadagnati oggi restano, cambia solo la base garantita e il tetto
+  // cls = classe reale (va data insieme, così il tetto della fascia è quello giusto prima di ricalcolare)
+  function setLimits(l, cls) {
+    if (cls != null) classId = cls;
+    lim = l && typeof l === "object" ? { min: l.min, max: l.max } : {};
+    const bonus = Math.max(0, state.minutes - baseOf());
+    state.base = minG();
+    state.minutes = clamp(state.base + bonus);
+    Storage.saveDay(state);
+  }
+  function refresh() { state = Storage.loadDay(minG()); state.minutes = clamp(state.minutes); notify(); }
 
   // rel: -1 livello più basso, 0 il proprio, +1 più alto
   function answer(isCorrect, rel) {
@@ -78,8 +95,8 @@ const Credit = (() => {
     state.correct += right; state.wrong += wrong;
     let milestone = 0;
     const step = CONFIG.FEST_STEP[band()];
-    for (let m = CONFIG.MIN_MINUTES + step; m <= max(); m += step) {
-      if (m > (state.festMax || CONFIG.MIN_MINUTES) && state.minutes >= m) milestone = m;
+    for (let m = minG() + step; m <= max(); m += step) {
+      if (m > (state.festMax || minG()) && state.minutes >= m) milestone = m;
     }
     if (milestone) state.festMax = milestone;
     const cooldown = trackSession(state.minutes - before);
@@ -100,11 +117,11 @@ const Credit = (() => {
     return n;
   }
   // quanta parte della barra è riempita (0..1) tra minimo e tetto
-  const progress = () => (state.minutes - CONFIG.MIN_MINUTES) / (max() - CONFIG.MIN_MINUTES);
+  const progress = () => max() > minG() ? (state.minutes - minG()) / (max() - minG()) : 1;
   // fotografia dei conti di oggi: base garantita, bonus guadagnato, minuti già consegnati al blocco, pausa
   function status() {
-    const m = state.minutes, base = Math.min(m, CONFIG.MIN_MINUTES);
-    return { base, bonus: Math.max(0, m - CONFIG.MIN_MINUTES), total: m, granted: state.granted || 0, available: available(),
+    const m = state.minutes, base = Math.min(m, minG());
+    return { base, bonus: Math.max(0, m - minG()), total: m, granted: state.granted || 0, available: available(),
       sessionEarned: state.sess || 0, playedSec: state.play || 0, due: cooldownDue(), cooling: cooling(), cooldownLeftMs: cdLeft() };
   }
   const highFull = () => (state.hi || 0) >= CONFIG.HIGH_CAP;
@@ -116,5 +133,5 @@ const Credit = (() => {
   }
   const fmtDelta = n => String(Math.abs(n)).replace(".", ",");
 
-  return { answer, result, get, available, claim, cooling, cdLeft, endCooldown, playTick, cooldownDue, startCooldown, status, progress, onChange, refresh, format, fmtDelta, max, setClass, highFull, gift, noPenalty };
+  return { answer, result, get, available, claim, cooling, cdLeft, endCooldown, playTick, cooldownDue, startCooldown, status, progress, onChange, refresh, format, fmtDelta, max, minG, bandMax, setLimits, setClass, highFull, gift, noPenalty };
 })();
