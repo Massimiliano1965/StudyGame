@@ -16,7 +16,21 @@ const Credit = (() => {
   // state.sess = minuti guadagnati nella sessione in corso; state.cdUntil = fine della pausa (ms).
   const cdLeft = () => Math.max(0, (state.cdUntil || 0) - Date.now());
   const cooling = () => CONFIG.COOLDOWN_MIN > 0 && cdLeft() > 0;
-  function endCooldown() { state.cdUntil = 0; state.sess = 0; Storage.saveDay(state); notify(); }
+  function endCooldown() { state.cdUntil = 0; state.sess = 0; state.play = 0; state.playDue = false; Storage.saveDay(state); notify(); }
+  // tempo di gioco vero: chiamata una volta al secondo mentre il bambino è dentro gli esercizi
+  function playTick() {
+    if (!(CONFIG.PLAY_MIN > 0) || !(CONFIG.COOLDOWN_MIN > 0) || cooling() || state.playDue) return;
+    state.play = (state.play || 0) + 1;
+    if (state.play >= CONFIG.PLAY_MIN * 60) { state.playDue = true; Storage.saveDay(state); }
+    else if (state.play % 15 === 0) Storage.saveDay(state);
+  }
+  // la pausa è "dovuta" (tempo di gioco raggiunto) ma parte solo a fine esercizio
+  const cooldownDue = () => !!state.playDue && !cooling();
+  function startCooldown() {
+    state.cdUntil = Date.now() + CONFIG.COOLDOWN_MIN * 60000;
+    state.play = 0; state.playDue = false; state.sess = 0;
+    Storage.saveDay(state); notify();
+  }
   // aggiorna la sessione col guadagno netto; restituisce true se da adesso scatta la pausa
   function trackSession(delta) {
     if (!(CONFIG.SESSION_EARN > 0) || !(CONFIG.COOLDOWN_MIN > 0) || cooling()) return false;
@@ -90,7 +104,7 @@ const Credit = (() => {
   function status() {
     const m = state.minutes, base = Math.min(m, CONFIG.MIN_MINUTES);
     return { base, bonus: Math.max(0, m - CONFIG.MIN_MINUTES), total: m, granted: state.granted || 0, available: available(),
-      sessionEarned: state.sess || 0, cooling: cooling(), cooldownLeftMs: cdLeft() };
+      sessionEarned: state.sess || 0, playedSec: state.play || 0, due: cooldownDue(), cooling: cooling(), cooldownLeftMs: cdLeft() };
   }
   const highFull = () => (state.hi || 0) >= CONFIG.HIGH_CAP;
   const onChange = fn => listeners.push(fn);
@@ -101,5 +115,5 @@ const Credit = (() => {
   }
   const fmtDelta = n => String(Math.abs(n)).replace(".", ",");
 
-  return { answer, result, get, available, claim, cooling, cdLeft, endCooldown, status, progress, onChange, refresh, format, fmtDelta, max, setClass, highFull, gift, noPenalty };
+  return { answer, result, get, available, claim, cooling, cdLeft, endCooldown, playTick, cooldownDue, startCooldown, status, progress, onChange, refresh, format, fmtDelta, max, setClass, highFull, gift, noPenalty };
 })();

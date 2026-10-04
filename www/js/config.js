@@ -13,11 +13,14 @@ const CONFIG = {
   WRONG: { low: 1.5, same: 1, high: 0 },
   FEST_STEP: [5, 10, 30],   // festa dei traguardi ogni N minuti: 1ª-2ª elem. 5, 3ª-5ª elem. 10, medie 30 (a partire dai 30 garantiti)
   HIGH_CAP: 30,       // minuti al giorno guadagnabili col livello più alto; oltre, vale come il proprio livello
-  // Pausa obbligatoria tra una sessione di guadagno e la successiva (i minuti già guadagnati restano usabili):
-  // quando in una sessione si guadagnano SESSION_EARN minuti scatta una pausa di COOLDOWN_MIN minuti senza esercizi che danno minuti.
-  // 0 = pausa spenta. Si azzera a mezzanotte. Un genitore può saltarla con il PIN.
-  SESSION_EARN: 20,
+  // «Il cervello esplode»: il bambino è libero di giocare quanto vuole; solo dopo PLAY_MIN minuti di gioco VERO nella giornata
+  // (contati solo mentre è dentro gli esercizi, anche in più volte) compare il cervello che esplode e dice «basta, spegni il telefono».
+  // Gli esercizi si fermano per COOLDOWN_MIN minuti; scatta a fine esercizio, mai a metà. I minuti già guadagnati restano usabili.
+  // 0 = spento. Si azzera a mezzanotte. Un genitore può saltare la pausa con il PIN.
+  PLAY_MIN: 115,
   COOLDOWN_MIN: 90,
+  // (facoltativo) pausa anche dopo tot minuti di telefono GUADAGNATI in una tornata; 0 = spento
+  SESSION_EARN: 0,
   PIN_TRIES: 5,       // tentativi sbagliati di PIN prima della pausa
   PIN_PAUSE_MIN: 5,   // minuti di pausa dopo troppi tentativi
   GAME_SHARE: 0.7,    // quota di giri che sono giochi (il resto sono domande a risposta multipla)

@@ -460,18 +460,18 @@
   // ====================================================================
   let cdOpen = false, cdTimer = 0, homeCool = false;
   const fmtCd = ms => { const m = Math.max(1, Math.ceil(ms / 60000)), h = Math.floor(m / 60); return h ? `${h} h ${String(m % 60).padStart(2, "0")} min` : `${m} min`; };
-  const CD_SAY = "Pausa del cervello! Hai guadagnato tanti minuti. Ora il cervello deve riposare per ricordare meglio. Vai a giocare fuori e poi si riparte.";
+  const CD_SAY = "Basta così! Il tuo cervello è esploso! Hai giocato tantissimo. Adesso spegni il telefono e vai a fare qualcos'altro.";
   function showCooldown() {
     Games.stop(); Music.stop(); Voice.stopSpeaking();
     game = null; clearResume(); cdOpen = true;
     setTheme(profile.classId);
     $app.innerHTML = `<section class="screen cd">
       ${brandHtml()}
-      <div class="center"><div class="cd-ic">😴</div><h1>Pausa del cervello</h1>
-        <p class="muted" style="margin-top:6px">Hai guadagnato un bel po' di minuti! Ora il cervello ha bisogno di riposare, così ricorda meglio quello che hai imparato.</p></div>
-      <div class="cd-box"><small>Si riparte tra</small><b id="cd-left">${fmtCd(Credit.cdLeft())}</b></div>
-      <p class="center muted">Intanto vai a giocare fuori, a leggere o a muoverti. I minuti che hai già guadagnato restano tuoi.</p>
-      <button class="btn big flash" data-act="cd-home">🏠 Torna alla home</button>
+      <div class="center"><div class="cd-ic">🤯</div><h1>Il tuo cervello è esploso!</h1>
+        <p class="muted" style="margin-top:6px">Hai giocato tantissimo. Basta così: spegni il telefono e vai a fare qualcos'altro, a giocare fuori, a leggere, a muoverti.</p></div>
+      <div class="cd-box"><small>Gli esercizi tornano tra</small><b id="cd-left">${fmtCd(Credit.cdLeft())}</b></div>
+      <p class="center muted">I minuti che hai già guadagnato restano tuoi.</p>
+      <button class="btn big flash" data-act="cd-home">🏠 Vai alla home</button>
       <button class="btn ghost" data-act="cd-skip">🙋 Genitori: salta la pausa</button></section>`;
     clearInterval(cdTimer);
     cdTimer = setInterval(cdTick, 1000);
@@ -480,13 +480,20 @@
   function cdTick() {
     const el = document.getElementById("cd-left");
     if (!el || !cdOpen) { clearInterval(cdTimer); return; }
-    if (!Credit.cooling()) { clearInterval(cdTimer); cdOpen = false; toast("Pausa finita: si può giocare!", 3500); showHome(); return; }
+    if (!Credit.cooling()) { clearInterval(cdTimer); cdOpen = false; toast("Il cervello si è riposato: si può giocare!", 3500); showHome(); return; }
     el.textContent = fmtCd(Credit.cdLeft());
   }
-  const cdBannerHtml = () => Credit.cooling() ? `<p class="cd-banner">😴 Pausa del cervello: gli esercizi tornano tra <b id="cd-home-left">${fmtCd(Credit.cdLeft())}</b></p>` : "";
+  const cdBannerHtml = () => Credit.cooling() ? `<p class="cd-banner">🤯 Basta telefono per ora: gli esercizi tornano tra <b id="cd-home-left">${fmtCd(Credit.cdLeft())}</b></p>` : "";
+
+  // la pausa parte a fine esercizio: se il tempo di gioco è raggiunto si avvia ora, e si mostra la schermata
+  function cdGate() {
+    if (Credit.cooldownDue()) Credit.startCooldown();
+    if (Credit.cooling()) { showCooldown(); return true; }
+    return false;
+  }
 
   function startGame(ids) {
-    if (Credit.cooling()) { showCooldown(); return; }
+    if (cdGate()) return;
     const ok = ids.filter(isReady);
     if (!ok.length) { toast("Scegli almeno una sfida con il bollino verde."); return; }
     game = { subjects: ok, streak: 0, right: 0, listening: false, lastKind: "", round: null, cls: playClass(), rel: relOf(playClass()),
@@ -496,7 +503,7 @@
   }
 
   function nextQuestion() {
-    if (Credit.cooling()) { showCooldown(); return; }
+    if (cdGate()) return;
     Games.stop();
     game.sid = pick(game.subjects);
     // lingua straniera della voce: inglese, oppure quella scelta nelle Impostazioni per la seconda lingua
@@ -733,7 +740,7 @@
     if (game.practice) text = (text ? text + " " : "") + "Ripasso: i minuti non cambiano.";
     else if (ok && r.delta === 0) text = (text ? text + " " : "") + "Hai già il massimo di oggi, ma continua pure per allenarti!";
     if (!game.practice && !ok && r.delta === 0) text = (text ? text + " " : "") + (r.rel > 0 ? "Livello più alto: non perdi minuti, e provando si impara!" : "I minuti garantiti restano tuoi.");
-    if (r.cooldown) text = (text ? text + " " : "") + "Bravissimo! Hai guadagnato tanto: ora il cervello ha bisogno di una pausa. Si riparte tra " + fmtCd(Credit.cdLeft()) + ".";
+    if (r.cooldown || Credit.cooldownDue()) text = (text ? text + " " : "") + "Hai giocato tantissimo: il cervello sta per esplodere! Dopo questo esercizio basta, si spegne il telefono.";
     // ogni tanto (circa 1 volta su 3) l'elogio dice anche il nome del bambino: "Bravo, Luca!"
     let title = ok ? pick(PRAISE[th]) : pick(OOPS);
     const nm = (profile.nick || "").trim();
@@ -1506,7 +1513,7 @@
   // tempo passato nelle sfide (solo con l'app davanti) + pausa ogni 45 minuti di gioco
   setInterval(() => {
     if (!game || document.hidden) return;
-    game.sec++; Stats.tick();
+    game.sec++; Stats.tick(); Credit.playTick();
     if (game.sec % 15 === 0) { Stats.flush(); saveResume(); }
     if (game.sec >= game.nextBreak && $modal.hidden) {
       game.nextBreak += 2700;
