@@ -124,8 +124,8 @@ Intestazione con avatar, nome, classe, ⚙️ e il pulsante grande che legge la 
 - Resta da fare: prova sul telefono (decide Massi).
 
 
-## Pacchetto del 4 ottobre (NON ancora su main: aspetta l'ordine di Massi)
-Non si fa push senza l'ordine esplicito di Massi. La chat claude.ai non ha le credenziali GitHub: il push va fatto da una sessione con il repo collegato (Claude Code) oppure da Massi.
+## Pacchetto del 4 ottobre (su main, commit 7b752f8, build «Build APK» riuscita)
+Non si fa push senza l'ordine esplicito di Massi. La chat claude.ai non ha credenziali GitHub sue: il 4/10 il push è stato fatto con un token temporaneo dato da Massi (da cancellare subito dopo).
 
 ### Tempo di telefono deciso dai genitori
 - Idea di Massi: il tempo giusto non lo decide l'app né il pediatra, lo decide il genitore. L'app parte con valori PRUDENTI e il genitore li cambia quando vuole, in su o in giù.
