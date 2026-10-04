@@ -175,9 +175,22 @@
   }
 
   // installazione nuova: prima il PIN dei genitori (a meno che sia già deciso dalla build), poi il profilo
+  // Ordine: 1) informazioni (restano aperte finché si tocca OK) 2) configurazione genitori (blocco e PIN) 3) profilo del bambino.
+  // Nel frattempo esiste un profilo provvisorio (setup:true) che tiene PIN e permessi anche se Android chiude l'app.
+  const setupOn = () => !!(profile && profile.setup);
   function beginSetup(yes) {
     pendingAuto = yes;
-    startWizard(false);   // il PIN lo scelgono i genitori alla fine (ultimo passo della guida), non il bambino
+    profile = { setup: true, autoRead: !!yes, narrAsked: true, sound: true, calm: pendingCalm, infoSeen: true, fxSeen: true };
+    Storage.saveProfile(profile);
+    setTheme(null);
+    $app.innerHTML = `<section class="screen wz">${brandHtml()}</section>`;
+    openInfo(true);
+  }
+  function startChildSetup() {
+    closeModal();
+    pendingCalm = !!(profile && profile.calm);
+    pendingAuto = profile ? profile.autoRead !== false : true;
+    startWizard(false);
   }
 
   function startWizard(editing, step) {
@@ -303,13 +316,14 @@
 
   function finishWizard() {
     const d = wiz.d, seen = !!(profile && profile.infoSeen);
-    const firstTime = !wiz.editing && !profile;
+    const firstTime = !wiz.editing && (!profile || setupOn() && !profile.pin);
     const old = profile || {};
     profile = { ...old, nick: d.nick.trim(), classId: d.classId, family: d.family, color: d.color, photo: d.photo || null,
       autoRead: !!d.autoRead, narrAsked: true,
       sound: d.sound !== false, l2: d.l2 || undefined, infoSeen: seen, calm: !!d.calm,
       pin: pinValid() ? hashPin(wiz.pin1) : (old.pin || pendingPin || presetPin()) };
     pendingPin = "";
+    delete profile.setup;
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
     applyCalm();
     wiz = null;
@@ -1065,13 +1079,14 @@
   // dopo la creazione del profilo: le impostazioni del blocco sono difficili, le deve fare un adulto
   function openLockOffer() {
     const blocco = Lock.available() && !Lock.ready();
-    openModal(`<h2>👨‍👩‍👧 Chiedi ai tuoi genitori!</h2>
+    const setup = setupOn();
+    openModal(`<h2>👨‍👩‍👧 ${setup ? "Configurazione dei genitori" : "Chiedi ai tuoi genitori!"}</h2>
       ${blocco ? `<p class="center">Adesso si attiva il <b>blocco del telefono</b>: le altre app si aprono solo con i minuti guadagnati qui.</p>` : `<p class="center">Adesso serve il <b>PIN dei genitori</b>.</p>`}
-      <p class="center">Sono impostazioni <b>molto difficili</b>, vanno fatte da un adulto.</p>
-      <button class="btn big" data-act="lock-offer-go">Ci sono i miei genitori ▶</button>
+      <p class="center">${setup ? "Prima si configura l'app per i genitori (blocco e PIN); poi si crea il profilo del bambino." : "Sono impostazioni <b>molto difficili</b>, vanno fatte da un adulto."}</p>
+      <button class="btn big" data-act="lock-offer-go">${setup ? "Avanti ▶" : "Ci sono i miei genitori ▶"}</button>
       <button class="btn ghost small" data-act="lock-offer-later">Più tardi: solo il PIN</button>`);
     lockPinStage = false;
-    if (profile && profile.autoRead) Voice.speak("Chiedi ai tuoi genitori. Sono impostazioni molto difficili e le deve fare un adulto.", () => {});
+    if (profile && profile.autoRead && !setup) Voice.speak("Chiedi ai tuoi genitori. Sono impostazioni molto difficili e le deve fare un adulto.", () => {});
   }
 
   // ultimo passo della guida: il PIN dei genitori (il bambino non lo vede)
@@ -1169,7 +1184,7 @@
       const el = document.getElementById("lockbox");
       if (lockStepsOpen && !$modal.hidden) { renderLockSteps(); return; }
       if (el && !$modal.hidden) el.outerHTML = lockBoxHtml();
-      if (profile && !wiz && !game && !askCb) renderHome();
+      if (profile && !setupOn() && !wiz && !game && !askCb) renderHome();
     });
   }
 
@@ -1218,7 +1233,7 @@
       <button class="btn" data-act="close">Chiudi</button>`);
   }
 
-  function openInfo() {
+  function openInfo(setup) {
     openModal(`<h2>ℹ️ Avvertenze e informazioni</h2>
       <p><b>Chi l'ha pensata.</b> Gioca e Impara è stata ideata e creata da <b>Massimiliano Previtali</b>, educatore linguistico con 20 anni di esperienza nell'insegnamento delle lingue.</p>
       <p><b>L'idea.</b> Sono convinto che la ripetizione faccia la perfezione, e che il divertimento abbia un potere d'insegnamento infinitamente superiore a quello «imposto»: ciò che si impara giocando resta. Per questo il nome comincia con «Gioca».</p>
@@ -1229,7 +1244,8 @@
       <p><b>Luci ed effetti.</b> L'app usa colori vivaci, piccoli movimenti e qualche coriandolo, ma niente lampeggi rapidi. Alcune persone, anche bambini, sono sensibili alle luci intermittenti (fotosensibilità, epilessia fotosensibile): se è il vostro caso, o nel dubbio, spegnete gli effetti da <b>Impostazioni → Effetti e luci</b> e parlatene con il medico. Se durante il gioco il bambino ha disturbi (mal di testa, vista offuscata, capogiri), fermatelo subito.</p>
       <p><b>Genitori.</b> Si raccomanda a mamma e papà di tenere sotto controllo i figli quando usano il cellulare, soprattutto se sono piccoli, e di usare sempre buon senso e discrezione sul tempo davanti allo schermo.</p>
       <p><b>Un grazie speciale.</b> A Pietro: è per lui che papà ha pensato questa app, e sarà lui il primo a collaudarla.</p>
-      <button class="btn" data-act="close">Ho capito</button>`);
+      ${setup ? `<button class="btn big flash" data-act="info-setup-ok">Ok, ho letto ▶</button>` : `<button class="btn" data-act="close">Ho capito</button>`}`);
+    const sh = document.querySelector("#modal .sheet"); if (sh) sh.scrollTop = 0;
   }
 
   function maybeShowInfo() {
@@ -1365,10 +1381,18 @@
       if (!a || !/^\d{4}$/.test(a.value) || a.value !== b.value) return;
       profile.pin = hashPin(a.value); profile.pinFails = 0; Storage.saveProfile(profile);
       lockPinStage = false;
-      openModal(`<h2>✅ Tutto pronto!</h2><p class="center">Ricordate il PIN. Ora si può giocare!</p><button class="btn" data-act="lock-steps-done">Fatto</button>`);
-      lockStepsOpen = false; renderHome();
+      openModal(setupOn()
+        ? `<h2>✅ Genitori: fatto!</h2><p class="center">Ricordate il PIN. Ora tocca al bambino: creiamo il suo profilo.</p><button class="btn big flash" data-act="lock-steps-done">Avanti ▶</button>`
+        : `<h2>✅ Tutto pronto!</h2><p class="center">Ricordate il PIN. Ora si può giocare!</p><button class="btn" data-act="lock-steps-done">Fatto</button>`);
+      lockStepsOpen = false; if (!setupOn()) renderHome();
     },
-    "lock-steps-done": () => { lockStepsOpen = false; lockPinStage = false; if (profile && !profile.pin) { renderParentPin(1); return; } closeModal(); renderHome(); },
+    "info-setup-ok": () => openLockOffer(),
+    "lock-steps-done": () => {
+      lockStepsOpen = false; lockPinStage = false;
+      if (profile && !profile.pin) { renderParentPin(1); return; }
+      if (setupOn()) { startChildSetup(); return; }
+      closeModal(); renderHome();
+    },
     "lock-guide": () => { profile.lkTried = false; profile.lkUnlocked = false; Storage.saveProfile(profile); renderLockSteps(); },
     "lock-tried": () => { profile.lkTried = true; Storage.saveProfile(profile); renderLockSteps(); },
     "lock-unlocked": () => { profile.lkUnlocked = true; Storage.saveProfile(profile); renderLockSteps(); },
@@ -1411,7 +1435,7 @@
     const fn = actions[el.dataset.act];
     if (fn) fn(el);
   });
-  $modal.addEventListener("click", e => { if (e.target === $modal) closeModal(); });
+  $modal.addEventListener("click", e => { if (e.target === $modal && !setupOn()) closeModal(); });   // durante la prima configurazione non si chiude toccando fuori
 
   // tempo passato nelle sfide (solo con l'app davanti) + pausa ogni 45 minuti di gioco
   setInterval(() => {
@@ -1432,7 +1456,7 @@
     if (document.hidden) { Voice.stopSpeaking(); Stats.flush(); saveResume(); return; }
     Credit.refresh();
     if (Lock.available()) { refreshLockBox(); return; }
-    if (profile && !wiz && !game && !askCb) renderHome();
+    if (profile && !setupOn() && !wiz && !game && !askCb) renderHome();
   });
 
   // ---------- avvio ----------
@@ -1440,8 +1464,16 @@
     Splash.done();
     refreshNarrate();
     if (Lock.available()) refreshLockBox();
-    if (profile && typeof profile.classId !== "number") { Storage.resetAll(); profile = null; }
+    if (profile && !profile.setup && typeof profile.classId !== "number") { Storage.resetAll(); profile = null; }
     if (!profile) { showWelcome(); return; }
+    if (profile.setup) {   // prima configurazione interrotta (Android ha chiuso l'app): si riprende da dove era
+      pendingCalm = !!profile.calm; pendingAuto = profile.autoRead !== false;
+      applyCalm(); setTheme(null);
+      if (profile.pin) { startChildSetup(); return; }
+      $app.innerHTML = `<section class="screen wz">${brandHtml()}</section>`;
+      openLockOffer();
+      return;
+    }
     applyCalm();
     Credit.setClass(profile.classId); Credit.refresh();
     selected = subsNow();
@@ -1458,12 +1490,12 @@
   // Tasto indietro di Android: torna alla pagina precedente invece di chiudere l'app.
   // Si esce dall'app solo dalla schermata principale (non c'è niente prima).
   function onBack() {
-    if (!$modal.hidden) { closeModal(); return; }
+    if (!$modal.hidden) { if (!setupOn()) closeModal(); return; }
     if (wiz) {
       if (wiz.pinForce) { if (navigator.app && navigator.app.exitApp) navigator.app.exitApp(); return; }
       if (wiz.pinOnly) { wiz = null; showHome(); return; }
       if (wiz.step > 0) { wiz.step--; renderWizard(); window.scrollTo(0, 0); return; }
-      if (profile) { wiz = null; showHome(); return; }
+      if (profile && !setupOn()) { wiz = null; showHome(); return; }
     } else if (game) { Voice.stopSpeaking(); Music.stop(); showHome(); return; }
     if (navigator.app && navigator.app.exitApp) navigator.app.exitApp();
   }
