@@ -786,7 +786,7 @@ const Games = (() => {
       }
     }
 
-    // secondo errore: il puzzle esplode e si ricomincia da capo
+    // terzo errore: il puzzle esplode e il gioco finisce (non si ricomincia)
     function explode() {
       boomFn();
       el.querySelectorAll(".nope").forEach(n => n.classList.remove("nope"));
@@ -797,13 +797,10 @@ const Games = (() => {
         p.classList.add("boom");
       });
       const box = el.querySelector(".inc");
-      if (box) box.insertAdjacentHTML("beforeend", `<div class="boom-msg"><span>💥 BOOM!<small>Si ricomincia da capo</small></span></div>`);
+      if (box) box.insertAdjacentHTML("beforeend", `<div class="boom-msg"><span>💥 BOOM!<small>Troppi errori</small></span></div>`);
       setTimeout(() => {
         if (!el.isConnected) return;
-        let o = shuffle(P.map((_, i) => i)), g = 0;
-        while (o.every((v, i) => v === i) && g++ < 20) o = shuffle(o);
-        r.order = o;
-        mountIncastro(el, r, onDone);
+        onDone(false, r.solution, "", mistakes);
       }, 1500);
     }
 
@@ -857,7 +854,7 @@ const Games = (() => {
     const g = pairsFor(classId, subjectId);
     if (g.pairs.length < 3) return null;
     return { kind: "memory", title: "Memory", eng: g.eng, rEn: g.rEn, prompt: "Gira le carte e trova le coppie!",
-      hint: g.prompt.replace(/^Collega/, "Abbina") + " Le coppie trovate restano scoperte.", pairs: g.pairs, scene: g.scene,
+      hint: g.prompt.replace(/^Collega/, "Abbina") + " Le coppie trovate restano scoperte. Due errori si perdonano, al terzo si perde.", pairs: g.pairs, scene: g.scene,
       solution: g.pairs.map(p => `${p.l} → ${p.r}`).join(" · ") };
   }
 
@@ -875,7 +872,7 @@ const Games = (() => {
     let first = null, lock = false, found = 0, mistakes = 0, done = false;
     function finish() {
       done = true;
-      const ok = mistakes <= 5;
+      const ok = mistakes <= 2;
       if (ok) { el.innerHTML = `<div class="inc">${sceneHtml(r.scene, P)}</div>`; }
       onDone(ok, r.solution, ok ? (mistakes === 0 ? "Memoria perfetta: nessun errore!" : "Tutte le coppie trovate!") : `Troppi errori (${mistakes}).`, mistakes);
     }
@@ -888,8 +885,14 @@ const Games = (() => {
         els[a].classList.add("match"); card.classList.add("match"); found++;
         if (found === P.length) setTimeout(finish, 450);
       } else {
-        mistakes++; lock = true;
+        mistakes++; lock = true; boomFn();
         els[a].classList.add("miss"); card.classList.add("miss");
+        if (mistakes > 2) {
+          // terzo errore: il gioco finisce subito, non si continua a cercare la combinazione giusta
+          done = true;
+          setTimeout(() => { if (el.isConnected) finish(); }, 900);
+          return;
+        }
         setTimeout(() => { [els[a], card].forEach(c => c.classList.remove("up", "miss")); lock = false; }, 850);
       }
     }));
