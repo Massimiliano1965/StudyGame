@@ -860,3 +860,7 @@ body.calm .sct-card, body.calm .sct-box.over, body.calm .sct-box.catch { animati
 .screen.play, .screen.play.quiz, .screen.play:not(.quiz) { min-height: calc(100dvh - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); box-sizing: border-box; }
 html, body { overflow-x: hidden; }
 body.playing { overscroll-behavior-y: none; }
+
+/* 5/10/2026: nelle domande il pupazzetto è agganciato al riquadro (scorrono insieme), così non si sovrappongono mai */
+.screen.play.quiz { position: relative; }
+.screen.play.quiz .hero.narr { position: absolute; top: 38px; left: 2px; }
