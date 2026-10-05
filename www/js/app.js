@@ -427,7 +427,7 @@
         <div class="row"><h3>Tempo di telefono</h3><span class="muted">oggi</span></div>
         <div class="row"><span class="num">${esc(Credit.format(min))}</span></div>
         <div class="bar" role="img" aria-label="${Math.floor(min)} minuti su ${cap}"><i style="width:${pct}%"></i><b style="left:${mark}%"></b></div>
-        <div class="bar-labels"><span>${Credit.minG()} min garantiti</span><span>massimo ${esc(Credit.format(cap))}</span></div>
+        <div class="bar-labels"><span>${esc(Credit.format(Credit.minG()))} garantiti</span><span>massimo ${esc(Credit.format(cap))}</span></div>
         ${lockHomeHtml()}
       </div>
       <div class="lvl-box lvl${rel}"><button class="icon-btn" data-act="lvl-down" aria-label="Esercizi più facili" ${pc <= 0 ? "disabled" : ""}>◀</button>
@@ -1309,7 +1309,7 @@
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
     Credit.setLimits(profile.lim, profile.classId); Credit.refresh();
     closeModal(); renderHome();
-    toast(`Salvato: ${Credit.minG()} min garantiti, massimo ${Credit.format(Credit.max())}, esercizi ${Credit.format(Credit.playMin())}.`, 4000);
+    toast(`Salvato: ${Credit.format(Credit.minG())} garantiti, massimo ${Credit.format(Credit.max())}, esercizi ${Credit.format(Credit.playMin())}.`, 4000);
   }
 
   function openReport() {
