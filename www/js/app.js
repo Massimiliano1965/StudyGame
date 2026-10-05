@@ -1284,6 +1284,7 @@
   const suggestedMax = () => Credit.bandMax();
   function openTimeSet() {
     const d = timeDraft, st = CONFIG.LIM_STEP;
+    const oldSheet = document.querySelector("#modal .sheet"), keepScroll = oldSheet ? oldSheet.scrollTop : 0;
     const [a0, a1] = CONFIG.LIM_MIN_RANGE, [b0, b1] = CONFIG.LIM_MAX_RANGE, [c0, c1] = CONFIG.LIM_PLAY_RANGE;
     const row = (k, label, v, lo, hi, sugg) => `<div class="time-row"><div class="time-lab"><b>${label}</b><small>suggeriti: ${esc(Credit.format(sugg))}</small></div>
       <div class="time-ctl"><button class="icon-btn" data-act="time-adj" data-k="${k}" data-d="${-st}" aria-label="Meno ${label}" ${v <= lo ? "disabled" : ""}>−</button>
@@ -1291,7 +1292,7 @@
       <button class="icon-btn" data-act="time-adj" data-k="${k}" data-d="${st}" aria-label="Più ${label}" ${v >= hi ? "disabled" : ""}>+</button></div></div>`;
     openModal(`<h2>⏱ Tempo di telefono</h2>
       <p class="muted">Quanto tempo di telefono al giorno lo decidete voi. I valori suggeriti sono prudenti: potete alzarli o abbassarli quando volete.</p>
-      ${row("min", "Minuti garantiti", d.min, a0, Math.min(a1, d.max), CONFIG.MIN_MINUTES)}
+      ${row("min", "Minuti garantiti", d.min, a0, a1, CONFIG.MIN_MINUTES)}
       <p class="muted time-note">Li ha ogni giorno, anche senza giocare.</p>
       ${row("max", "Massimo al giorno", d.max, Math.max(b0, d.min), b1, suggestedMax())}
       <p class="muted time-note">Oltre questo tetto non si guadagnano altri minuti.</p>
@@ -1300,6 +1301,8 @@
       <button class="btn" data-act="time-save">Salva</button>
       <button class="btn ghost" data-act="time-default">Rimetti i suggeriti</button>
       <button class="btn ghost" data-act="close">Annulla</button>`);
+    // la scheda viene ricreata a ogni tocco: rimetti lo scorrimento dov'era, senza farla tornare in cima
+    const newSheet = document.querySelector("#modal .sheet"); if (newSheet) newSheet.scrollTop = keepScroll;
   }
   function saveTime(lim) {
     if (lim) profile.lim = lim; else delete profile.lim;
@@ -1527,7 +1530,7 @@
       if (!timeDraft || !el) return;
       const k = el.dataset.k, d = +el.dataset.d, [a0, a1] = CONFIG.LIM_MIN_RANGE, [b0, b1] = CONFIG.LIM_MAX_RANGE, [c0, c1] = CONFIG.LIM_PLAY_RANGE;
       if (k === "play") timeDraft.play = Math.max(c0, Math.min(c1, timeDraft.play + d));
-      else if (k === "min") timeDraft.min = Math.max(a0, Math.min(a1, timeDraft.max, timeDraft.min + d));
+      else if (k === "min") { timeDraft.min = Math.max(a0, Math.min(a1, timeDraft.min + d)); if (timeDraft.max < timeDraft.min) timeDraft.max = Math.min(b1, timeDraft.min); }
       else timeDraft.max = Math.max(b0, timeDraft.min, Math.min(b1, timeDraft.max + d));
       openTimeSet();
     },
