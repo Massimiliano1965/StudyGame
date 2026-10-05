@@ -1599,6 +1599,7 @@
   // ---------- avvio ----------
   function boot() {
     Splash.done();
+    Voice.warmUp();
     refreshNarrate();
     if (Lock.available()) refreshLockBox();
     if (profile && !profile.setup && typeof profile.classId !== "number") { Storage.resetAll(); profile = null; }

@@ -109,16 +109,31 @@ const Voice = (() => {
   function pickVoice(loc, g) {
     const ck = loc + "|" + (g || "");
     if (voiceCache[ck] !== undefined) return Promise.resolve(voiceCache[ck]);
-    if (!voicesP) voicesP = window.TTS && window.TTS.getVoices ? window.TTS.getVoices().catch(() => []) : Promise.resolve([]);
-    return voicesP.then(list => {
+    return loadVoices().then(list => {
       const key = loc.toLowerCase();
       const names = (list || []).map(v => String(v && (v.identifier || v.name) || "")).filter(n => n.toLowerCase().includes(key));
       const pref = g && loc.slice(0, 2) === "it" ? GENDER_IDS[g] : null;
       const byGender = pref && (names.find(n => /local/i.test(n) && pref.some(k => n.toLowerCase().includes(k))) || names.find(n => pref.some(k => n.toLowerCase().includes(k)) && !/network/i.test(n)));
       const best = byGender || names.find(n => /local/i.test(n)) || names.find(n => !/network/i.test(n)) || "";
-      voiceCache[ck] = best;
+      if (names.length) voiceCache[ck] = best;   // lista vuota (motore ancora freddo): non la ricordo, si riprova al prossimo pezzo
       return best;
     });
+  }
+  // Al primo avvio dopo l'installazione il motore vocale del telefono può rispondere con una lista vuota:
+  // prima restava vuota fino alla chiusura dell'app (per questo bisognava chiudere e riaprire). Ora si rilegge.
+  function loadVoices() {
+    if (!voicesP) {
+      voicesP = (window.TTS && window.TTS.getVoices ? window.TTS.getVoices().catch(() => []) : Promise.resolve([]))
+        .then(list => { list = Array.isArray(list) ? list : []; if (!list.length) voicesP = null; return list; });
+    }
+    return voicesP;
+  }
+  // scalda il motore all'avvio: prova a leggere le voci fino a 6 volte, una ogni 2 secondi
+  function warmUp() {
+    if (!window.TTS || !window.TTS.getVoices) return;
+    let n = 0;
+    const tick = () => loadVoices().then(list => { if (!list.length && ++n < 6) setTimeout(tick, 2000); });
+    tick();
   }
 
   function toSegments(input) {
@@ -253,5 +268,5 @@ const Voice = (() => {
     });
   }
 
-  return { speak, stopSpeaking, isSpeaking, onState, listen, canSpeak, canListen, matchOption, numerify, setForeign, setStyle };
+  return { speak, stopSpeaking, isSpeaking, onState, listen, canSpeak, canListen, matchOption, numerify, setForeign, setStyle, warmUp };
 })();

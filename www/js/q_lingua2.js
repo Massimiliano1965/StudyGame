@@ -167,6 +167,51 @@ const L2 = (() => {
       ["mercato", "marché", "mercado", "Markt"], ["ristorante", "restaurant", "restaurante", "Restaurant"], ["farmacia", "pharmacie", "farmacia", "Apotheke"],
       ["aeroporto", "aéroport", "aeropuerto", "Flughafen"], ["castello", "château", "castillo", "Schloss"], ["museo", "musée", "museo", "Museum"],
       ["cinema", "cinéma", "cine", "Kino"]
+    ] },
+    { name: "emozioni", rows: [
+      ["arrabbiato", "fâché", "enfadado", "wütend"], ["contento", "content", "contento", "zufrieden"], ["spaventato", "effrayé", "asustado", "erschrocken"],
+      ["stanco", "fatigué", "cansado", "müde"], ["innamorato", "amoureux", "enamorado", "verliebt"], ["calmo", "calme", "tranquilo", "ruhig"],
+      ["sorpreso", "surpris", "sorprendido", "überrascht"], ["timido", "timide", "tímido", "schüchtern"], ["allegro", "joyeux", "alegre", "fröhlich"]
+    ] },
+    { name: "che tempo fa", rows: [
+      ["temporale", "orage", "tormenta", "Gewitter"], ["nebbia", "brouillard", "niebla", "Nebel"], ["arcobaleno", "arc-en-ciel", "arcoíris", "Regenbogen"],
+      ["fulmine", "éclair", "rayo", "Blitz"], ["tuono", "tonnerre", "trueno", "Donner"], ["grandine", "grêle", "granizo", "Hagel"],
+      ["nuvoloso", "nuageux", "nublado", "bewölkt"], ["soleggiato", "ensoleillé", "soleado", "sonnig"]
+    ] },
+    { name: "parole per fare domande", rows: [
+      ["chi", "qui", "quién", "wer"], ["che cosa", "quoi", "qué", "was"], ["dove", "où", "dónde", "wo"], ["quando", "quand", "cuándo", "wann"],
+      ["perché", "pourquoi", "por qué", "warum"], ["come", "comment", "cómo", "wie"], ["quanto", "combien", "cuánto", "wie viel"], ["quale", "quel", "cuál", "welcher"]
+    ] },
+    { name: "dove si trova", rows: [
+      ["sopra", "sur", "encima", "auf"], ["sotto", "sous", "debajo", "unter"], ["dentro", "dedans", "dentro", "drinnen"], ["fuori", "dehors", "fuera", "draußen"],
+      ["davanti", "devant", "delante", "vor"], ["dietro", "derrière", "detrás", "hinter"], ["vicino", "près", "cerca", "nah"], ["lontano", "loin", "lejos", "fern"],
+      ["destra", "droite", "derecha", "rechts"], ["sinistra", "gauche", "izquierda", "links"]
+    ] },
+    { name: "strumenti musicali", rows: [
+      ["chitarra", "guitare", "guitarra", "Gitarre"], ["pianoforte", "piano", "piano", "Klavier"], ["violino", "violon", "violín", "Geige"],
+      ["tamburo", "tambour", "tambor", "Trommel"], ["flauto", "flûte", "flauta", "Flöte"], ["tromba", "trompette", "trompeta", "Trompete"], ["arpa", "harpe", "arpa", "Harfe"]
+    ] },
+    { name: "materie di scuola", rows: [
+      ["matematica", "mathématiques", "matemáticas", "Mathematik"], ["storia", "histoire", "historia", "Geschichte"], ["geografia", "géographie", "geografía", "Erdkunde"],
+      ["scienze", "sciences", "ciencias", "Naturwissenschaften"], ["inglese", "anglais", "inglés", "Englisch"], ["arte", "art", "arte", "Kunst"],
+      ["educazione fisica", "éducation physique", "educación física", "Sport"], ["compiti", "devoirs", "deberes", "Hausaufgaben"], ["ricreazione", "récréation", "recreo", "Pause"]
+    ] },
+    { name: "forme", rows: [
+      ["cerchio", "cercle", "círculo", "Kreis"], ["quadrato", "carré", "cuadrado", "Quadrat"], ["triangolo", "triangle", "triángulo", "Dreieck"],
+      ["rettangolo", "rectangle", "rectángulo", "Rechteck"], ["linea", "ligne", "línea", "Linie"], ["punto", "point", "punto", "Punkt"]
+    ] },
+    { name: "altri colori", rows: [
+      ["rosa", "rose", "rosa", "rosa"], ["viola", "violet", "morado", "lila"], ["azzurro", "bleu clair", "celeste", "hellblau"],
+      ["dorato", "doré", "dorado", "golden"], ["argentato", "argenté", "plateado", "silbern"], ["turchese", "turquoise", "turquesa", "türkis"]
+    ] },
+    { name: "azioni di ogni giorno", rows: [
+      ["svegliarsi", "se réveiller", "despertarse", "aufwachen"], ["lavarsi", "se laver", "lavarse", "sich waschen"], ["vestirsi", "s'habiller", "vestirse", "sich anziehen"],
+      ["studiare", "étudier", "estudiar", "lernen"], ["lavorare", "travailler", "trabajar", "arbeiten"], ["ascoltare", "écouter", "escuchar", "hören"],
+      ["guardare", "regarder", "mirar", "schauen"], ["cucinare", "cuisiner", "cocinar", "kochen"], ["nuotare", "nager", "nadar", "schwimmen"], ["disegnare", "dessiner", "dibujar", "zeichnen"]
+    ] },
+    { name: "altre parti del corpo", rows: [
+      ["braccio", "bras", "brazo", "Arm"], ["gamba", "jambe", "pierna", "Bein"], ["capelli", "cheveux", "cabello", "Haare"], ["dente", "dent", "diente", "Zahn"],
+      ["dito", "doigt", "dedo", "Finger"], ["pancia", "ventre", "barriga", "Bauch"], ["schiena", "dos", "espalda", "Rücken"], ["collo", "cou", "cuello", "Hals"], ["ginocchio", "genou", "rodilla", "Knie"]
     ] }
   ];
 
@@ -196,7 +241,18 @@ const L2 = (() => {
     ["Buon viaggio", "Bon voyage", "Buen viaje", "Gute Reise"],
     ["Che tempo fa?", "Quel temps fait-il ?", "¿Qué tiempo hace?", "Wie ist das Wetter?"],
     ["Oggi piove", "Il pleut aujourd'hui", "Hoy llueve", "Heute regnet es"],
-    ["Ho un fratello", "J'ai un frère", "Tengo un hermano", "Ich habe einen Bruder"]
+    ["Ho un fratello", "J'ai un frère", "Tengo un hermano", "Ich habe einen Bruder"],
+    ["Mi piace il gelato", "J'aime la glace", "Me gusta el helado", "Ich mag Eis"],
+    ["Non mi piace", "Je n'aime pas ça", "No me gusta", "Das mag ich nicht"],
+    ["Per favore", "S'il te plaît", "Por favor", "Bitte"],
+    ["Ripeti, per favore", "Répète, s'il te plaît", "Repite, por favor", "Wiederhole bitte"],
+    ["Quanti anni hai?", "Quel âge as-tu ?", "¿Cuántos años tienes?", "Wie alt bist du?"],
+    ["Ho un cane", "J'ai un chien", "Tengo un perro", "Ich habe einen Hund"],
+    ["Fa freddo", "Il fait froid", "Hace frío", "Es ist kalt"],
+    ["Fa caldo", "Il fait chaud", "Hace calor", "Es ist heiß"],
+    ["Andiamo!", "Allons-y !", "¡Vamos!", "Los geht's!"],
+    ["Dov'è il bagno?", "Où sont les toilettes ?", "¿Dónde está el baño?", "Wo ist die Toilette?"],
+    ["Posso andare in bagno?", "Je peux aller aux toilettes ?", "¿Puedo ir al baño?", "Darf ich auf die Toilette?"]
   ];
   const ESSERE = [
     ["io sono", "Je suis", "Yo soy", "Ich bin"], ["tu sei", "Tu es", "Tú eres", "Du bist"],
