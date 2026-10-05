@@ -1294,10 +1294,10 @@
       <p class="muted">Quanto tempo di telefono al giorno lo decidete voi. I valori suggeriti sono prudenti: potete alzarli o abbassarli quando volete.</p>
       ${row("min", "Minuti garantiti", d.min, a0, a1, CONFIG.MIN_MINUTES)}
       <p class="muted time-note">Li ha ogni giorno, anche senza giocare.</p>
-      ${row("max", "Massimo al giorno", d.max, Math.max(b0, d.min), b1, suggestedMax())}
-      <p class="muted time-note">Oltre questo tetto non si guadagnano altri minuti.</p>
       ${row("play", "Esercizi al giorno", d.play, c0, c1, Credit.playSugg())}
       <p class="muted time-note">Dopo tanti minuti di esercizi nella giornata il «cervello esplode»: gli esercizi si fermano per ${esc(Credit.format(CONFIG.COOLDOWN_MIN))}.</p>
+      ${row("max", "Massimo al giorno", d.max, Math.max(b0, d.min), b1, suggestedMax())}
+      <p class="muted time-note">Oltre questo tetto non si guadagnano altri minuti.</p>
       <button class="btn" data-act="time-save">Salva</button>
       <button class="btn ghost" data-act="time-default">Rimetti i suggeriti</button>
       <button class="btn ghost" data-act="close">Annulla</button>`);
