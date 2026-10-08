@@ -8,6 +8,7 @@ module.exports = {
   setEnabled: function (on, ok, err) { call("setEnabled", [!!on])(ok, err); },
   unlock: function (minutes, ok, err) { call("unlock", [minutes | 0])(ok, err); },
   emergency: function (ok, err) { call("emergency")(ok, err); },
+  setContacts: function (list, ok, err) { call("setContacts", [list || []])(ok, err); },
   setPin: function (hash, ok, err) { call("setPin", [String(hash || "")])(ok, err); },
   requestAdmin: function (ok, err) { call("requestAdmin")(ok, err); },
   releaseAdmin: function (ok, err) { call("releaseAdmin")(ok, err); },

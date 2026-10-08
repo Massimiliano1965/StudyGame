@@ -27,7 +27,8 @@
   const subsNow = () => subjectsForClass(playClass()).filter(s => isReady(s.id)).map(s => s.id);
   const hashPin = v => { let h = 5381; const t = "gei|" + v + "|2026"; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return "p1" + (h >>> 0).toString(36); };
   // il PIN dei genitori passa anche alla parte nativa: chiede il PIN davanti a Impostazioni di Android e alla disinstallazione
-  const syncPin = () => { if (profile && profile.pin) Lock.setPin(profile.pin); };
+  const syncPin = () => { if (profile && profile.pin) Lock.setPin(profile.pin); syncContacts(); };
+  const syncContacts = () => { if (profile && Array.isArray(profile.contacts)) Lock.setContacts(profile.contacts); };
   const presetPin = () => (typeof PIN_PRESET === "string" && PIN_PRESET) || "";
   let pendingPin = "";    // PIN scelto nella prima schermata di una installazione nuova
   let pendingCalm = false; // "figlio fotosensibile": scelta fatta nella schermata di benvenuto
@@ -1103,6 +1104,7 @@
       <div class="row-set"><span>Effetti e luci</span><button class="switch ${p.calm ? "" : "on"}" data-act="toggle-fx" aria-pressed="${!p.calm}">${p.calm ? "Ridotti" : "Sì"}</button></div>
       ${lockBoxHtml()}
       <button class="btn alt" data-act="time-set">⏱ Tempo di telefono (genitori)</button>
+      ${Lock.available() ? `<button class="btn alt" data-act="em-open">📞 Numeri per chiamare mamma e papà</button>` : ""}
       <button class="btn alt" data-act="report">📊 Resoconto per i genitori</button>
       <button class="btn ghost" data-act="change-pin">🔐 Cambia PIN dei genitori</button>
       <button class="btn ghost" data-act="info">ℹ️ Avvertenze</button>
@@ -1261,6 +1263,18 @@
 
   // PIN dei genitori: serve per cambiare nome/classe, spegnere il blocco e ricominciare da zero
   function pinWait() { const u = (profile && profile.pinLock) || 0; return u > Date.now() ? Math.ceil((u - Date.now()) / 60000) : 0; }
+  // ---------- numeri di emergenza: dalla schermata di blocco si può chiamare mamma, papà o un altro numero ----------
+  function openContacts() {
+    const c = (profile.contacts || []).slice(0, 3), def = ["Mamma", "Papà", "Altro"];
+    const row = i => { const x = c[i] || {}; return `<div class="row-set" style="flex-direction:column;align-items:stretch;gap:6px">
+      <input id="em-n${i}" class="adult-in" type="text" maxlength="20" autocomplete="off" placeholder="Nome (${def[i]})" value="${esc(x.n || "")}">
+      <input id="em-t${i}" class="adult-in" type="tel" inputmode="tel" maxlength="20" autocomplete="off" placeholder="Numero di telefono" value="${esc(x.t || "")}"></div>`; };
+    openModal(`<h2>📞 Numeri per chiamare</h2>
+      <p class="muted">Quando il telefono è in pausa, questi tre tasti permettono di chiamare lo stesso. Finita la chiamata, il telefono si riblocca. Lascia vuoto un numero per non mostrarlo.</p>
+      ${row(0)}${row(1)}${row(2)}
+      <button class="btn" data-act="em-save">Salva</button>
+      <button class="btn ghost" data-act="close">Annulla</button>`);
+  }
   function askPin(title, cb) {
     if (!profile.pin) { cb(); return; }
     const w = pinWait();
@@ -1517,7 +1531,15 @@
     "lock-guide-done": () => { openLockSteps(); },
     "lock-perm-overlay": () => { Lock.openOverlaySettings(); },
     "lock-perm-usage": () => { Lock.openUsageSettings(); },
-    "lock-emergency": () => { Lock.emergency().then(() => { toast("Telefono sbloccato per 10 minuti", 4000); refreshLockBox(); }); },
+    "lock-emergency": () => askPin("Sblocca 10 minuti", () => { Lock.emergency().then(() => { toast("Telefono sbloccato per 10 minuti", 4000); refreshLockBox(); }); }),
+    "em-open": openContacts,
+    "em-save": () => {
+      const g = id => (document.getElementById(id) || {}).value || "";
+      const list = [0, 1, 2].map(i => ({ n: g("em-n" + i).trim(), t: g("em-t" + i).replace(/[^0-9+*#]/g, "") }));
+      profile.contacts = list; Storage.saveProfile(profile); syncContacts();
+      toast(list.some(x => x.t) ? "Numeri salvati. Compaiono quando il telefono è in pausa." : "Numeri tolti.", 3500);
+      closeModal(); openSettings();
+    },
     "lock-claim": () => {
       const n = Credit.claim();
       if (!n) return;

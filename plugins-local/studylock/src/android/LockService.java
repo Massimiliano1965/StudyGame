@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Typeface;
@@ -61,6 +62,7 @@ public class LockService extends Service {
   private View guardView;
   private TextView guardDots, guardMsg;
   private final StringBuilder guardPin = new StringBuilder();
+  private boolean padUnlock = false;   // true = tastierino PIN aperto dalla schermata di blocco (sblocca 10 minuti), false = davanti alle Impostazioni
   private String fg = null;
   private long lastQuery = 0;
   private long lastTick = 0;
@@ -119,6 +121,10 @@ public class LockService extends Service {
       p.edit().putString("day", d).putLong("left", 0).putInt("emergencyCount", 0).apply();
     }
   }
+
+  /** Numeri di emergenza (mamma, papa', altro): nome e numero scelti da loro, salvati dalla parte web. */
+  static String contactName(SharedPreferences p, int i) { return p.getString("em" + i + "n", ""); }
+  static String contactNum(SharedPreferences p, int i) { return p.getString("em" + i + "t", ""); }
 
   static void startEmergency(Context c) {
     SharedPreferences p = prefs(c);
@@ -243,9 +249,11 @@ public class LockService extends Service {
       showGuard(p);
       return;
     }
-    hideGuard();
+    if (!padUnlock) hideGuard();
 
-    if (now < p.getLong("emergencyUntil", 0)) { hideOverlay(); return; }
+    // appena toccato un numero di emergenza: per qualche secondo non si copre niente, poi il telefono si riblocca da solo
+    if (now < p.getLong("callUntil", 0)) { hideOverlay(); return; }
+    if (now < p.getLong("emergencyUntil", 0)) { hideOverlay(); hideGuard(); return; }
     // i genitori sono nelle Impostazioni di Android aperte da qui: non coprirle.
     // Ma appena tornano in Gioca e Impara la pausa finisce subito (prima durava 5 minuti pieni
     // e dopo aver dato i permessi il blocco sembrava non funzionare). Per i primi 4 secondi non si
@@ -277,7 +285,7 @@ public class LockService extends Service {
         need = true;
       }
     }
-    if (need) showOverlay(); else hideOverlay();
+    if (need) showOverlay(); else { hideOverlay(); if (padUnlock) hideGuard(); }
   }
 
   // ---------- schermata di blocco ----------
@@ -342,29 +350,63 @@ public class LockService extends Service {
     });
     root.addView(open);
 
-    final String emLabel = "🆘  Emergenza (adulti): tieni premuto 3 secondi";
-    final Button em = pill(emLabel, Color.parseColor("#3730A3"), Color.WHITE, 15);
-    final Runnable fire = new Runnable() {
-      @Override public void run() {
-        startEmergency(LockService.this);
-        hideOverlay();
-        Toast.makeText(LockService.this, "Telefono sbloccato per 10 minuti", Toast.LENGTH_LONG).show();
+    final SharedPreferences sp = prefs(this);
+
+    // numeri di emergenza: chiamano mamma, papa' o l'altro numero scelto; dopo la chiamata il telefono si riblocca
+    boolean anyNum = false;
+    for (int i = 0; i < 3; i++) if (contactNum(sp, i).length() > 0) anyNum = true;
+    if (anyNum) {
+      TextView hint = label("Se hai bisogno, chiama:", 15, Color.parseColor("#E0E7FF"), false);
+      ((LinearLayout.LayoutParams) hint.getLayoutParams()).topMargin = dp(14);
+      root.addView(hint);
+      for (int i = 0; i < 3; i++) {
+        final String num = contactNum(sp, i);
+        if (num.length() == 0) continue;
+        String nm = contactName(sp, i);
+        if (nm.length() == 0) nm = i == 0 ? "Mamma" : i == 1 ? "Papà" : "Altro";
+        Button call = pill("📞  " + nm, Color.parseColor("#16A34A"), Color.WHITE, 18);
+        ((LinearLayout.LayoutParams) call.getLayoutParams()).height = dp(54);
+        ((LinearLayout.LayoutParams) call.getLayoutParams()).topMargin = dp(8);
+        call.setOnClickListener(new View.OnClickListener() {
+          @Override public void onClick(View v) { callNumber(num); }
+        });
+        root.addView(call);
       }
-    };
-    em.setOnTouchListener(new View.OnTouchListener() {
-      @Override public boolean onTouch(View v, MotionEvent ev) {
-        int a = ev.getAction();
-        if (a == MotionEvent.ACTION_DOWN) {
-          em.setText("Continua a tenere premuto…");
-          h.postDelayed(fire, 3000);
-        } else if (a == MotionEvent.ACTION_UP || a == MotionEvent.ACTION_CANCEL) {
-          h.removeCallbacks(fire);
-          em.setText(emLabel);
+    }
+
+    if (sp.getString("pinHash", "").length() > 0) {
+      // sblocco dei genitori: tastierino PIN (sblocca 10 minuti)
+      Button pin = pill("🔐  PIN dei genitori", Color.parseColor("#3730A3"), Color.WHITE, 15);
+      pin.setOnClickListener(new View.OnClickListener() {
+        @Override public void onClick(View v) { showGuard(prefs(LockService.this), true); }
+      });
+      root.addView(pin);
+    } else {
+      // nessun PIN impostato (non dovrebbe succedere): per non restare chiusi fuori resta lo sblocco col tocco lungo
+      final String emLabel = "🆘  Adulti: tieni premuto 3 secondi";
+      final Button em = pill(emLabel, Color.parseColor("#3730A3"), Color.WHITE, 15);
+      final Runnable fire = new Runnable() {
+        @Override public void run() {
+          startEmergency(LockService.this);
+          hideOverlay();
+          Toast.makeText(LockService.this, "Telefono sbloccato per 10 minuti", Toast.LENGTH_LONG).show();
         }
-        return true;
-      }
-    });
-    root.addView(em);
+      };
+      em.setOnTouchListener(new View.OnTouchListener() {
+        @Override public boolean onTouch(View v, MotionEvent ev) {
+          int a = ev.getAction();
+          if (a == MotionEvent.ACTION_DOWN) {
+            em.setText("Continua a tenere premuto…");
+            h.postDelayed(fire, 3000);
+          } else if (a == MotionEvent.ACTION_UP || a == MotionEvent.ACTION_CANCEL) {
+            h.removeCallbacks(fire);
+            em.setText(emLabel);
+          }
+          return true;
+        }
+      });
+      root.addView(em);
+    }
 
     int type = Build.VERSION.SDK_INT >= 26 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
     WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
@@ -413,7 +455,7 @@ public class LockService extends Service {
     long lock = p.getLong("guardLockUntil", 0);
     long now = System.currentTimeMillis();
     if (guardMsg != null) {
-      guardMsg.setText(now < lock ? "Troppi tentativi sbagliati. Riprova tra " + (int) Math.ceil((lock - now) / 60000.0) + " minuti." : "Per aprire le Impostazioni serve il PIN dei genitori.");
+      guardMsg.setText(now < lock ? "Troppi tentativi sbagliati. Riprova tra " + (int) Math.ceil((lock - now) / 60000.0) + " minuti." : padUnlock ? "Con il PIN dei genitori il telefono si sblocca per 10 minuti." : "Per aprire le Impostazioni serve il PIN dei genitori.");
     }
   }
 
@@ -429,7 +471,14 @@ public class LockService extends Service {
       guardPin.setLength(0);
       if (hashPin(typed).equals(p.getString("pinHash", ""))) {
         p.edit().putLong("guardUntil", now + 5 * 60 * 1000L).putInt("guardFails", 0).apply();
-        hideGuard();
+        if (padUnlock) {
+          startEmergency(this);
+          hideGuard();
+          hideOverlay();
+          Toast.makeText(this, "Telefono sbloccato per 10 minuti", Toast.LENGTH_LONG).show();
+        } else {
+          hideGuard();
+        }
       } else {
         int f = p.getInt("guardFails", 0) + 1;
         SharedPreferences.Editor e = p.edit();
@@ -442,12 +491,15 @@ public class LockService extends Service {
     }
   }
 
-  private void showGuard(SharedPreferences p) {
+  private void showGuard(SharedPreferences p) { showGuard(p, false); }
+
+  private void showGuard(SharedPreferences p, final boolean unlock) {
     if (guardView != null || wm == null) { if (guardView != null) guardRefresh(p); return; }
+    padUnlock = unlock;
     LinearLayout root = new LinearLayout(this) {
       @Override public boolean dispatchKeyEvent(KeyEvent ev) {
         if (ev.getKeyCode() == KeyEvent.KEYCODE_BACK) {
-          if (ev.getAction() == KeyEvent.ACTION_UP) { hideGuard(); goHome(); }
+          if (ev.getAction() == KeyEvent.ACTION_UP) { hideGuard(); if (!unlock) goHome(); }
           return true;
         }
         return super.dispatchKeyEvent(ev);
@@ -459,13 +511,13 @@ public class LockService extends Service {
     root.setPadding(dp(20), dp(32), dp(20), dp(20));
 
     root.addView(label("🔐", 48, Color.WHITE, false));
-    root.addView(label("Solo per i genitori", 26, Color.WHITE, true));
+    root.addView(label(unlock ? "PIN dei genitori" : "Solo per i genitori", 26, Color.WHITE, true));
     guardMsg = label("", 16, Color.parseColor("#E0E7FF"), false);
     root.addView(guardMsg);
     guardDots = label("", 30, Color.WHITE, true);
     root.addView(guardDots);
 
-    String[][] rows = { { "1", "2", "3" }, { "4", "5", "6" }, { "7", "8", "9" }, { "Esci", "0", "⌫" } };
+    String[][] rows = { { "1", "2", "3" }, { "4", "5", "6" }, { "7", "8", "9" }, { unlock ? "Indietro" : "Esci", "0", "⌫" } };
     for (String[] r : rows) {
       LinearLayout row = new LinearLayout(this);
       row.setOrientation(LinearLayout.HORIZONTAL);
@@ -474,7 +526,7 @@ public class LockService extends Service {
         Button b = key(t);
         b.setOnClickListener(new View.OnClickListener() {
           @Override public void onClick(View v) {
-            if (t.equals("Esci")) { hideGuard(); goHome(); }
+            if (t.equals("Esci") || t.equals("Indietro")) { hideGuard(); if (!unlock) goHome(); }
             else if (t.equals("⌫")) { if (guardPin.length() > 0) guardPin.setLength(guardPin.length() - 1); guardRefresh(prefs(LockService.this)); }
             else guardDigit(t);
           }
@@ -494,15 +546,26 @@ public class LockService extends Service {
       guardView = root;
       guardRefresh(p);
     } catch (Throwable t) {
-      guardView = null; guardDots = null; guardMsg = null;
+      guardView = null; guardDots = null; guardMsg = null; padUnlock = false;
     }
   }
 
   private void hideGuard() {
     if (guardView == null) return;
     try { if (wm != null) wm.removeView(guardView); } catch (Throwable t) { /* gia' tolta */ }
-    guardView = null; guardDots = null; guardMsg = null;
+    guardView = null; guardDots = null; guardMsg = null; padUnlock = false;
     guardPin.setLength(0);
+  }
+
+  private void callNumber(String num) {
+    prefs(this).edit().putLong("callUntil", System.currentTimeMillis() + 12000L).apply();
+    hideOverlay();
+    try {
+      boolean can = Build.VERSION.SDK_INT < 23 || checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED;
+      Intent i = new Intent(can ? Intent.ACTION_CALL : Intent.ACTION_DIAL, Uri.fromParts("tel", num, null));
+      i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      startActivity(i);
+    } catch (Throwable t) { /* nessuna app telefono: ignora */ }
   }
 
   private void hideOverlay() {

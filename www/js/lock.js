@@ -27,6 +27,7 @@ const Lock = (() => {
     unlock: min => call("unlock", [min]),
     emergency: () => call("emergency"),
     lockNow: () => call("lockNow"),
+    setContacts: list => call("setContacts", [list || []]),
     setPin: hash => call("setPin", [String(hash || "")]),
     requestAdmin: () => call("requestAdmin"),
     releaseAdmin: () => call("releaseAdmin"),

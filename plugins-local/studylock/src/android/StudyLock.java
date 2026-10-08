@@ -1,6 +1,7 @@
 package it.massi.studylock;
 
 import android.app.admin.DevicePolicyManager;
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -49,6 +50,26 @@ public class StudyLock extends CordovaPlugin {
       }
       if (action.equals("lockNow")) {
         p.edit().putLong("left", 0).putLong("emergencyUntil", 0).apply();
+        cb.success(status(c));
+        return true;
+      }
+      if (action.equals("setContacts")) {
+        // tre numeri di emergenza [{n: nome, t: numero}]: li chiama la schermata di blocco anche senza minuti
+        JSONArray l = args.getJSONArray(0);
+        SharedPreferences.Editor e = p.edit();
+        boolean any = false;
+        for (int i = 0; i < 3; i++) {
+          JSONObject o = i < l.length() ? l.optJSONObject(i) : null;
+          String n = o == null ? "" : o.optString("n", "").trim();
+          String t = o == null ? "" : o.optString("t", "").replaceAll("[^0-9+*#]", "");
+          if (n.length() > 20) n = n.substring(0, 20);
+          if (t.length() > 0) any = true;
+          e.putString("em" + i + "n", n).putString("em" + i + "t", t);
+        }
+        e.apply();
+        if (any && Build.VERSION.SDK_INT >= 23 && !cordova.hasPermission(Manifest.permission.CALL_PHONE)) {
+          cordova.requestPermission(this, 7001, Manifest.permission.CALL_PHONE);
+        }
         cb.success(status(c));
         return true;
       }
@@ -150,6 +171,9 @@ public class StudyLock extends CordovaPlugin {
     o.put("emergencyLeftMin", (int) Math.max(0, Math.ceil((p.getLong("emergencyUntil", 0) - now) / 60000.0)));
     o.put("emergencyToday", p.getInt("emergencyCount", 0));
     o.put("admin", adminActive(c));
+    JSONArray cs = new JSONArray();
+    for (int i = 0; i < 3; i++) cs.put(new JSONObject().put("n", LockService.contactName(p, i)).put("t", LockService.contactNum(p, i)));
+    o.put("contacts", cs);
     o.put("guard", p.getBoolean("enabled", false) && p.getString("pinHash", "").length() > 0);
     return o;
   }
