@@ -19,6 +19,16 @@ const Characters = (() => {
     { id: "robot",       name: "Robot e spazio",    pet: "Bip",  hi: "Bip bip! Sono Bip. Sono pronto a giocare!" },
     { id: "esploratore", name: "Hip hop",           pet: "Rudy", hi: "Hey Bro! Sono Rudy. Facciamo il botto!" }
   ];
+  // personaggi delle medie (dalla 1ª media in su)
+  const TEEN_FAMILIES = [
+    { id: "visiera",    name: "Cyber",    pet: "Zero", hi: "Yo! Sono Zero. Sistema pronto, si gioca?" },
+    { id: "cappellino", name: "Street",   pet: "Kai",  hi: "Ehi! Sono Kai. Facciamo il punteggio?" },
+    { id: "volpe",      name: "Furbo",    pet: "Fox",  hi: "Ciao! Sono Fox. Vediamo chi è più furbo!" },
+    { id: "casco",      name: "Racer",    pet: "Rex",  hi: "Ehi! Sono Rex. Ti sfido, ci stai?" },
+    { id: "cuffie",     name: "Music",    pet: "Nia",  hi: "Ciao! Sono Nia. Metti le cuffie e partiamo!" }
+  ];
+  const familiesFor = stage => (stage >= 5 ? TEEN_FAMILIES : FAMILIES);
+  const allFamilies = () => FAMILIES.concat(TEEN_FAMILIES);
 
   // ---------- utilità colore ----------
   function toRgb(h) {
@@ -291,22 +301,134 @@ const Characters = (() => {
     return s;
   }
 
+
+  // ---------- Look per le medie: personaggi da gamer, con faccia e carattere ----------
+  const SKIN = ["#F2C4A0", "#C98B62", "#8D5A3B", "#F6D5BD", "#E0A97F", "#B67A52"];
+  const INK = "#14162a";
+  const skinOf = c => SKIN[Math.max(0, COLORS.findIndex(x => x.hex === c)) % SKIN.length];
+  function body(c, dark) {   // spalle con felpa, cappuccio, catenina
+    return `<path d="M14 200 Q16 148 62 140 L138 140 Q184 148 186 200Z" fill="${dark}"/>
+      <path d="M62 140 Q100 164 138 140 L134 150 Q100 176 66 150Z" fill="${shade(dark, .12)}"/>
+      <path d="M78 150 L82 186 M122 150 L118 186" stroke="${c}" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="82" cy="188" r="3.5" fill="${c}"/><circle cx="118" cy="188" r="3.5" fill="${c}"/>
+      <path d="M62 170 L72 170 M128 170 L138 170" stroke="${shade(dark, .25)}" stroke-width="3" stroke-linecap="round"/>`;
+  }
+  function mouth(mood, x, y, w, col) {
+    if (mood === "cheer") return `<path d="M${x - w} ${y} Q${x} ${y + w * 1.1} ${x + w} ${y}Z" fill="#fff" stroke="${col}" stroke-width="3" stroke-linejoin="round"/>`;
+    if (mood === "sad") return `<path d="M${x - w * .7} ${y + 4} Q${x} ${y - 5} ${x + w * .7} ${y + 4}" fill="none" stroke="${col}" stroke-width="3.2" stroke-linecap="round"/>`;
+    return `<path d="M${x - w} ${y} Q${x - w * .1} ${y + 7} ${x + w} ${y - 3}" fill="none" stroke="${col}" stroke-width="3.2" stroke-linecap="round"/>`;
+  }
+  function eyeRow(mood, x1, x2, y, col, wide) {   // occhi con sopracciglio
+    const brow = mood === "sad" ? [[-1, -5], [1, -5]] : mood === "cheer" ? [[-1, 0], [1, 0]] : [[-1, 3], [1, -2]];
+    const one = (x, i) => {
+      const bw = wide || 12, b = brow[i];
+      const lid = `<path d="M${x - bw} ${y - 12 + b[1] * (i ? 1 : 0)} L${x + bw} ${y - 12 + b[1] * (i ? 0 : 1)}" stroke="${INK}" stroke-width="4.5" stroke-linecap="round"/>`;
+      if (mood === "cheer") return `<path d="M${x - 8} ${y + 3} Q${x} ${y - 9} ${x + 8} ${y + 3}" fill="none" stroke="${INK}" stroke-width="4.5" stroke-linecap="round"/>` + lid;
+      return `<ellipse cx="${x}" cy="${y}" rx="7" ry="${mood === "sad" ? 6 : 8}" fill="#fff"/><circle cx="${x + 1}" cy="${y + 1}" r="4.2" fill="${INK}"/><circle cx="${x + 2.5}" cy="${y - .5}" r="1.4" fill="#fff"/>` + lid;
+    };
+    return one(x1, 0) + one(x2, 1);
+  }
+  const DARK = "#1b1f33";
+  const TEEN = {
+    // Zero: cappuccio e visiera luminosa con due occhi digitali
+    visiera(c, st, mood) {
+      const e = mood === "cheer" ? `<path d="M72 98 Q80 88 88 98 M112 98 Q120 88 128 98" fill="none" stroke="#06101a" stroke-width="5" stroke-linecap="round"/>`
+        : mood === "sad" ? `<path d="M72 96 L88 102 M128 96 L112 102" stroke="#06101a" stroke-width="5" stroke-linecap="round"/><circle cx="80" cy="102" r="4" fill="#06101a"/><circle cx="120" cy="102" r="4" fill="#06101a"/>`
+        : `<rect x="72" y="90" width="16" height="14" rx="5" fill="#06101a"/><rect x="112" y="90" width="16" height="14" rx="5" fill="#06101a"/>`;
+      return body(c, DARK) + `<path d="M46 108 Q44 36 100 34 Q156 36 154 108 L152 134 Q146 152 100 152 Q54 152 48 134Z" fill="#2a3050"/>
+        <path d="M50 70 Q100 20 150 70" fill="none" stroke="${shade(c, .1)}" stroke-width="3" opacity=".7"/>
+        <path d="M58 84 Q100 70 142 84 L138 118 Q100 130 62 118Z" fill="${c}"/><path d="M58 84 Q100 70 142 84" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2.5"/>
+        <path d="M66 112 Q100 122 134 112" stroke="#fff" stroke-opacity=".25" stroke-width="2" fill="none"/>${e}
+        ${mouth(mood, 100, 140, 11, shade(c, .5))}
+        <rect x="150" y="82" width="9" height="30" rx="4" fill="${c}"/><path d="M155 82 L155 62" stroke="${c}" stroke-width="3"/><circle cx="155" cy="60" r="4" fill="${shade(c, .5)}"/>
+        <path d="M60 52 L70 56 M64 44 L76 50" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>`;
+    },
+    // Kai: cappellino girato, cuffie, orecchino, sorriso furbo
+    cappellino(c, st, mood) {
+      const sk = skinOf(c);
+      return body(c, DARK) + `<rect x="87" y="120" width="26" height="28" rx="9" fill="${shade(sk, -.1)}"/>
+        <ellipse cx="62" cy="102" rx="6" ry="9" fill="${sk}"/><ellipse cx="138" cy="102" rx="6" ry="9" fill="${sk}"/>
+        <path d="M100 56 Q142 56 140 100 Q138 140 100 142 Q62 140 60 100 Q58 56 100 56Z" fill="${sk}"/>
+        <circle cx="138" cy="116" r="3.2" fill="#FFD23F"/>
+        ${eyeRow(mood, 84, 116, 100, INK)}
+        <path d="M100 104 L97 114 L103 114" fill="none" stroke="${shade(sk, -.25)}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        ${mouth(mood, 100, 126, 12, INK)}
+        <path d="M56 92 Q58 46 100 44 Q142 46 144 92 Q122 70 100 72 Q76 70 56 92Z" fill="${c}"/>
+        <path d="M60 90 Q100 60 140 90" fill="none" stroke="${shade(c, -.25)}" stroke-width="3"/>
+        <path d="M64 72 Q40 78 36 90 L72 86Z" fill="${shade(c, -.2)}"/>
+        <circle cx="100" cy="47" r="4" fill="${shade(c, .4)}"/>
+        <path d="M52 100 Q48 40 100 36 Q152 40 148 100" fill="none" stroke="#2c3250" stroke-width="6" stroke-linecap="round"/>
+        <rect x="42" y="92" width="18" height="30" rx="9" fill="${c}"/><rect x="140" y="92" width="18" height="30" rx="9" fill="${c}"/>
+        <rect x="46" y="98" width="6" height="18" rx="3" fill="${shade(c, .5)}" opacity=".7"/><rect x="148" y="98" width="6" height="18" rx="3" fill="${shade(c, .5)}" opacity=".7"/>`;
+    },
+    // Volpe: cappuccio con orecchie da volpe, faccia furba, baffi
+    volpe(c, st, mood) {
+      const sk = skinOf(c);
+      return body(c, DARK) + `<path d="M44 74 L36 14 L86 48Z M156 74 L164 14 L114 48Z" fill="#242a45"/><path d="M48 66 L44 28 L76 48Z M152 66 L156 28 L124 48Z" fill="${c}"/>
+        <path d="M44 110 Q40 44 100 40 Q160 44 156 110 L150 138 Q100 164 50 138Z" fill="#242a45"/>
+        <path d="M62 82 Q100 66 138 82 Q146 118 128 136 Q100 152 72 136 Q54 118 62 82Z" fill="${sk}"/>
+        <path d="M62 100 L40 94 M62 108 L38 112 M138 100 L160 94 M138 108 L162 112" stroke="${c}" stroke-width="2.8" stroke-linecap="round"/>
+        <path d="M62 82 Q100 70 100 100 Q100 70 138 82" fill="${c}" opacity=".9"/>
+        ${eyeRow(mood, 82, 118, 102, INK, 11)}
+        <path d="M94 114 L106 114 L100 121Z" fill="${INK}"/>
+        ${mood === "cheer" ? `<path d="M84 126 Q100 144 116 126Z" fill="#fff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M92 128 L95 135 L98 128 M102 128 L105 135 L108 128" fill="#fff" stroke="${INK}" stroke-width="1.5"/>` : mouth(mood, 100, 128, 13, INK)}
+        <path d="M66 56 L72 62 M60 66 L68 70" stroke="#fff" stroke-opacity=".3" stroke-width="3" stroke-linecap="round"/>`;
+    },
+    // Rex: casco con visiera alzata, sticker e sorriso da sfida
+    casco(c, st, mood) {
+      const sk = skinOf(c);
+      return body(c, DARK) + `<rect x="88" y="124" width="24" height="26" rx="8" fill="${shade(sk, -.1)}"/>
+        <path d="M66 100 Q66 76 100 76 Q134 76 134 100 L134 124 Q134 142 100 144 Q66 142 66 124Z" fill="${sk}"/>
+        ${eyeRow(mood, 86, 114, 108, INK, 10)}
+        ${mouth(mood, 100, 130, 11, INK)}
+        <path d="M44 106 Q40 34 100 32 Q160 34 156 106 L152 124 Q146 140 128 138 L128 96 Q100 84 72 96 L72 138 Q54 140 48 124Z" fill="#323a60"/>
+        <path d="M72 84 Q100 70 128 84 L130 96 Q100 84 70 96Z" fill="${c}"/>
+        <path d="M100 32 L100 58" stroke="${c}" stroke-width="7" stroke-linecap="round"/>
+        <path d="M58 70 Q62 50 80 44" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="4" stroke-linecap="round"/>
+        <path d="M134 56 L146 52 L142 66Z M140 74 L152 72" fill="${c}" stroke="${c}" stroke-width="2" stroke-linejoin="round"/>
+        <rect x="42" y="92" width="14" height="34" rx="7" fill="${c}"/><rect x="144" y="92" width="14" height="34" rx="7" fill="${c}"/>`;
+    },
+    // Nia: capelli lunghi con ciocca colorata, cuffie grandi, cerchietto all'orecchio, occhiolino
+    cuffie(c, st, mood) {
+      const sk = skinOf(c), hair = "#2a1d3d";
+      const wink = mood === "happy" ? `<path d="M110 100 Q116 94 122 100" fill="none" stroke="${INK}" stroke-width="4.5" stroke-linecap="round"/>` : "";
+      return `<path d="M44 108 Q34 40 100 36 Q166 40 156 108 L164 170 Q132 160 134 122 L66 122 Q68 160 36 170Z" fill="${hair}"/>
+        <path d="M58 60 Q50 100 46 150" fill="none" stroke="${c}" stroke-width="7" stroke-linecap="round"/>` + body(c, DARK) +
+        `<rect x="87" y="120" width="26" height="28" rx="9" fill="${shade(sk, -.1)}"/>
+        <path d="M100 58 Q140 58 138 102 Q136 140 100 142 Q64 140 62 102 Q60 58 100 58Z" fill="${sk}"/>
+        <path d="M62 96 Q60 60 100 56 Q140 60 138 96 Q124 74 108 72 Q86 70 62 96Z" fill="${hair}"/>
+        ${mood === "happy" ? eyeRow("happy", 84, 116, 102, INK).split("<ellipse")[0] + `<ellipse cx="84" cy="102" rx="7" ry="8" fill="#fff"/><circle cx="85" cy="103" r="4.2" fill="${INK}"/><circle cx="86.5" cy="101.5" r="1.4" fill="#fff"/>` + wink : eyeRow(mood, 84, 116, 102, INK)}
+        <circle cx="76" cy="118" r="5" fill="#ff7a9a" opacity=".35"/><circle cx="124" cy="118" r="5" fill="#ff7a9a" opacity=".35"/>
+        ${mouth(mood, 100, 126, 11, "#c0405f")}
+        <circle cx="140" cy="116" r="5" fill="none" stroke="#FFD23F" stroke-width="2.5"/>
+        <path d="M50 102 Q46 38 100 34 Q154 38 150 102" fill="none" stroke="#2c3250" stroke-width="6" stroke-linecap="round"/>
+        <rect x="38" y="88" width="22" height="38" rx="11" fill="${c}"/><rect x="140" y="88" width="22" height="38" rx="11" fill="${c}"/>
+        <rect x="44" y="96" width="8" height="22" rx="4" fill="${shade(c, .5)}" opacity=".7"/><rect x="148" y="96" width="8" height="22" rx="4" fill="${shade(c, .5)}" opacity=".7"/>`;
+    }
+  };
+  const TEEN_IDS = ["visiera", "cappellino", "volpe", "casco", "cuffie"];
+  const TEEN_FROM_OLD = { creatura: "cappellino", robot: "visiera", esploratore: "volpe" };
+  const OLD_FROM_TEEN = { visiera: "robot", cappellino: "creatura", volpe: "esploratore", casco: "robot", cuffie: "creatura" };
+
   const DRAW = { creatura, robot, esploratore };
 
   // Ritorna l'SVG come stringa. opts: { family, color(hex), stage(0..7), mood(happy|cheer|sad), label }
   function svg(opts) {
-    const family = DRAW[opts.family] ? opts.family : "creatura";
     const color = opts.color || COLORS[0].hex;
     const stage = Math.max(0, Math.min(7, opts.stage | 0));
+    let family = opts.family;
+    if (stage >= 5) { if (!TEEN[family]) family = TEEN_FROM_OLD[family] || "cappellino"; }
+    else if (TEEN[family]) family = OLD_FROM_TEEN[family];
+    if (!TEEN[family] && !DRAW[family]) family = "creatura";
     const mood = opts.mood || "happy";
     const k = 0.82 + stage * 0.026;   // il personaggio cresce
     const sty = stage <= 2 ? "kawaii" : stage <= 4 ? "cool" : "teen";
     const sx = sty === "teen" ? 0.95 : 1, sy = sty === "teen" ? 1.05 : 1;   // più slanciato alle medie
-    const body = DRAW[family](color, stage, mood, sty);
-    const name = (FAMILIES.find(f => f.id === family) || {}).pet || "Compagno";
+    const bodySvg = TEEN[family] ? TEEN[family](color, stage, mood) : DRAW[family](color, stage, mood, sty);
+    const name = (allFamilies().find(f => f.id === family) || {}).pet || "Compagno";
     return `<svg class="char ${sty}" viewBox="${opts.viewBox || "0 0 200 200"}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${opts.label || name}">` +
-           shadow + `<g transform="translate(100 182) scale(${(k * sx).toFixed(3)} ${(k * sy).toFixed(3)}) translate(-100 -182)">${body}</g></svg>`;
+           shadow + `<g transform="translate(100 182) scale(${(k * sx).toFixed(3)} ${(k * sy).toFixed(3)}) translate(-100 -182)">${bodySvg}</g></svg>`;
   }
 
-  return { svg, COLORS, FAMILIES };
+  return { svg, COLORS, FAMILIES, TEEN_FAMILIES, familiesFor, allFamilies, teenOf: id => TEEN[id] ? id : (TEEN_FROM_OLD[id] || "cappellino"), oldOf: id => TEEN[id] ? OLD_FROM_TEEN[id] : id };
 })();

@@ -84,7 +84,7 @@
   function applyVoiceStyle() {
     const g = profile && profile.voiceG === "m" ? "m" : "f";
     const fam = profile ? profile.family : (typeof wiz !== "undefined" && wiz && wiz.d && wiz.d.family);
-    const t = (VOICE_TONES[fam] || VOICE_TONES.creatura)[g];
+    const t = (VOICE_TONES[Characters.oldOf(fam)] || VOICE_TONES.creatura)[g];
     Voice.setStyle({ ...t, g });
   }
   Voice.speak = function (...a) { if (profile && !profile.autoRead) return; applyVoiceStyle(); return _speak.apply(Voice, a); };
@@ -233,8 +233,8 @@
     } else if (s === 2) {
       const st = d.classId == null ? 0 : d.classId;
       body = `<div class="center"><h1>Scegli il tuo compagno</h1><p class="muted" style="margin-top:6px">Crescerà con te, classe dopo classe!</p></div>
-        ${wiz.say ? `<div id="intro" class="bubble intro" style="--tail:${[17, 50, 83][Math.max(0, Characters.FAMILIES.findIndex(f => f.id === d.family))]}%">${esc(wiz.say)}</div>` : ""}
-        <div class="grid2" style="grid-template-columns:repeat(3,1fr);gap:10px">${Characters.FAMILIES.map(f =>
+        ${wiz.say ? `<div id="intro" class="bubble intro" style="--tail:${[17, 50, 83][Math.max(0, Characters.familiesFor(d.classId == null ? 0 : d.classId).findIndex(f => f.id === d.family)) % 3]}%">${esc(wiz.say)}</div>` : ""}
+        <div class="grid2" style="grid-template-columns:repeat(3,1fr);gap:10px">${Characters.familiesFor(st).map(f =>
           `<button class="choice family ${d.family === f.id ? "sel" : ""}" data-act="family" data-id="${f.id}" aria-label="${f.name}">${Characters.svg({ family: f.id, color: d.color, stage: st, mood: "happy" })}<span><b>${f.pet}</b><small>${f.name}</small></span></button>`).join("")}</div>
         <div class="colors" role="group" aria-label="Colore">${Characters.COLORS.map(c =>
           `<button class="dot ${d.color === c.hex ? "sel" : ""}" data-act="color" data-hex="${c.hex}" style="background:${c.hex}" aria-label="${c.name}"></button>`).join("")}</div>`;
@@ -321,7 +321,7 @@
     const d = wiz.d, seen = !!(profile && profile.infoSeen);
     const firstTime = !wiz.editing && (!profile || setupOn() && !profile.pin);
     const old = profile || {};
-    profile = { ...old, nick: d.nick.trim(), classId: d.classId, family: d.family, color: d.color, photo: d.photo || null,
+    profile = { ...old, nick: d.nick.trim(), classId: d.classId, family: d.classId >= 5 ? Characters.teenOf(d.family) : Characters.oldOf(d.family), color: d.color, photo: d.photo || null,
       autoRead: !!d.autoRead, narrAsked: true,
       sound: d.sound !== false, l2: d.l2 || undefined, infoSeen: seen, calm: !!d.calm,
       pin: pinValid() ? hashPin(wiz.pin1) : (old.pin || pendingPin || presetPin()) };
@@ -840,7 +840,7 @@
     }
   };
   function heroSay(hero, kind) {
-    const set = hero && profile && SAY[profile.family];
+    const set = hero && profile && SAY[Characters.oldOf(profile.family)];
     if (!set) return;
     hero.querySelectorAll(".rudy-say").forEach(n => n.remove());
     const b = document.createElement("span");
@@ -852,7 +852,7 @@
     setTimeout(() => { if (b.parentNode) b.remove(); }, 2700);
   }
   function heroIntro(hero) {
-    const f = profile && Characters.FAMILIES.find(x => x.id === profile.family);
+    const f = profile && Characters.allFamilies().find(x => x.id === profile.family);
     if (!f) return;
     const greet = document.querySelector(".bubble:not(.intro)");
     if (greet) {
@@ -1100,7 +1100,7 @@
       <button class="btn alt" data-act="edit">✏️ Cambia nome o classe</button>
       <button class="btn alt" data-act="editphoto">📷 Cambia foto</button>
       ${L2.codes().length < 2 ? "" : `<div class="row-set l2-set"><span class="set-label">Seconda lingua</span><div class="l2-pick">${L2.codes().map(c => `<button class="switch ${(p.l2 || L2.DEFAULT) === c ? "on" : ""}" data-act="set-l2" data-id="${c}" aria-pressed="${(p.l2 || L2.DEFAULT) === c}"><span class="fl">${L2.LANGS[c].flag}</span><span>${L2.LANGS[c].name}</span></button>`).join("")}</div></div>`}
-      <div class="row-set voice-set"><span class="set-label">Voce di ${esc(((Characters.FAMILIES.find(f => f.id === p.family) || {}).pet) || "")}</span><div class="l2-pick"><button class="switch ${p.voiceG !== "m" ? "on" : ""}" data-act="set-voice" data-id="f" aria-pressed="${p.voiceG !== "m"}">👧 Femmina</button><button class="switch ${p.voiceG === "m" ? "on" : ""}" data-act="set-voice" data-id="m" aria-pressed="${p.voiceG === "m"}">👦 Maschio</button><button class="switch" data-act="test-voice">▶ Prova</button></div></div>
+      <div class="row-set voice-set"><span class="set-label">Voce di ${esc(((Characters.allFamilies().find(f => f.id === p.family) || {}).pet) || "")}</span><div class="l2-pick"><button class="switch ${p.voiceG !== "m" ? "on" : ""}" data-act="set-voice" data-id="f" aria-pressed="${p.voiceG !== "m"}">👧 Femmina</button><button class="switch ${p.voiceG === "m" ? "on" : ""}" data-act="set-voice" data-id="m" aria-pressed="${p.voiceG === "m"}">👦 Maschio</button><button class="switch" data-act="test-voice">▶ Prova</button></div></div>
       <div class="row-set"><span>Suoni</span><button class="switch ${p.sound !== false ? "on" : ""}" data-act="toggle-sound" aria-pressed="${p.sound !== false}">${p.sound !== false ? "Sì" : "No"}</button></div>
       <div class="row-set"><span>Effetti e luci</span><button class="switch ${p.calm ? "" : "on"}" data-act="toggle-fx" aria-pressed="${!p.calm}">${p.calm ? "Ridotti" : "Sì"}</button></div>
       ${lockBoxHtml()}
@@ -1386,10 +1386,10 @@
   // ====================================================================
   const actions = {
     // creazione profilo
-    class: el => { wiz.d.classId = +el.dataset.id; setTheme(wiz.d.classId); renderWizard(); },
+    class: el => { wiz.d.classId = +el.dataset.id; if (wiz.d.family) wiz.d.family = wiz.d.classId >= 5 ? Characters.teenOf(wiz.d.family) : Characters.oldOf(wiz.d.family); setTheme(wiz.d.classId); renderWizard(); },
     family: el => {
       wiz.d.family = el.dataset.id;
-      const f = Characters.FAMILIES.find(x => x.id === wiz.d.family);
+      const f = Characters.allFamilies().find(x => x.id === wiz.d.family);
       wiz.say = f ? f.hi : "";
       clearTimeout(wiz.sayT);
       wiz.sayT = setTimeout(() => { if (wiz) wiz.say = ""; const i = document.getElementById("intro"); if (i) i.remove(); }, 4500);
@@ -1473,7 +1473,7 @@
     "sel-none": () => { selected = []; Sfx.tap(); renderHome(); },
     info: () => openInfo(),
     "set-voice": el => { profile.voiceG = el.dataset.id === "m" ? "m" : "f"; Storage.saveProfile(profile); openSettings(); applyVoiceStyle(); _speak.call(Voice, "Ciao! Questa è la mia voce.", msg => toast(msg, 6000)); },
-    "test-voice": () => { applyVoiceStyle(); const f = Characters.FAMILIES.find(x => x.id === profile.family); _speak.call(Voice, (f && f.hi) || "Ciao! Giochiamo insieme?", msg => toast(msg, 6000)); },
+    "test-voice": () => { applyVoiceStyle(); const f = Characters.allFamilies().find(x => x.id === profile.family); _speak.call(Voice, (f && f.hi) || "Ciao! Giochiamo insieme?", msg => toast(msg, 6000)); },
     "toggle-read": () => { profile.autoRead = !profile.autoRead; Storage.saveProfile(profile); refreshVoiceToggle(); openSettings(); },
     "voice-toggle": () => {
       profile.autoRead = !profile.autoRead; Storage.saveProfile(profile);
