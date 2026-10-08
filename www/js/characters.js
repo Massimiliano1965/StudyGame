@@ -27,8 +27,8 @@ const Characters = (() => {
     { id: "casco",      name: "Racer",    pet: "Rex",  hi: "Ehi! Sono Rex. Ti sfido, ci stai?" },
     { id: "cuffie",     name: "Music",    pet: "Nia",  hi: "Ciao! Sono Nia. Metti le cuffie e partiamo!" }
   ];
-  const familiesFor = stage => (stage >= 5 ? TEEN_FAMILIES : FAMILIES);
-  const allFamilies = () => FAMILIES.concat(TEEN_FAMILIES);
+  const familiesFor = stage => (stage >= 5 ? TEEN_FAMILIES : stage >= 3 ? MID_FAMILIES : FAMILIES);
+  const allFamilies = () => FAMILIES.concat(MID_FAMILIES, TEEN_FAMILIES);
 
   // ---------- utilità colore ----------
   function toRgb(h) {
@@ -413,9 +413,90 @@ const Characters = (() => {
         <rect x="44" y="96" width="8" height="22" rx="4" fill="${shade(c, .5)}" opacity=".7"/><rect x="148" y="96" width="8" height="22" rx="4" fill="${shade(c, .5)}" opacity=".7"/>`;
     }
   };
+
+  // ---------- Look di 4ª e 5ª elementare: a metà strada, simpatici ma non più «da piccoli» ----------
+  function tee(c) {   // maglietta colorata con colletto e stellina
+    return `<path d="M16 200 Q18 152 62 142 L138 142 Q182 152 184 200Z" fill="${c}"/>
+      <path d="M78 142 Q100 168 122 142 L116 146 Q100 160 84 146Z" fill="${shade(c, -.25)}"/>
+      <path d="M100 176 l4 9 9.5 1 -7 6.5 2 9.5 -8.5 -5 -8.5 5 2 -9.5 -7 -6.5 9.5 -1z" fill="#fff" opacity=".9" transform="translate(0 -10) scale(.9) translate(11 0)"/>`;
+  }
+  const hairOf = c => ["#3b2417", "#1f1a2e", "#6b3d1f", "#2a1d3d", "#8a5a2b", "#1d2438"][Math.max(0, COLORS.findIndex(x => x.hex === c)) % 6];
+  const neck = sk => `<rect x="87" y="124" width="26" height="24" rx="9" fill="${shade(sk, -.1)}"/>`;
+  const head = sk => `<ellipse cx="62" cy="104" rx="6" ry="9" fill="${sk}"/><ellipse cx="138" cy="104" rx="6" ry="9" fill="${sk}"/><path d="M100 54 Q144 54 142 102 Q140 144 100 146 Q60 144 58 102 Q56 54 100 54Z" fill="${sk}"/>`;
+  const cheeksM = `<circle cx="73" cy="120" r="6" fill="#ff7a9a" opacity=".3"/><circle cx="127" cy="120" r="6" fill="#ff7a9a" opacity=".3"/>`;
+  const MID = {
+    // Leo: cappellino sportivo, sorriso aperto
+    leo(c, st, mood) {
+      const sk = skinOf(c);
+      return tee(c) + neck(sk) + head(sk) + cheeksM + eyeRow(mood, 84, 116, 102, INK, 10) + mouth(mood, 100, 128, 13, INK) +
+        `<path d="M56 90 Q58 42 100 40 Q142 42 144 90 Q122 70 100 72 Q78 70 56 90Z" fill="${shade(c, .15)}"/><path d="M96 66 L152 78 Q150 90 142 88 L96 78Z" fill="${shade(c, -.2)}"/><circle cx="100" cy="43" r="4" fill="#fff"/>
+         <path d="M70 62 Q82 52 96 52" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>`;
+    },
+    // Mia: coda di cavallo e cuffie colorate
+    mia(c, st, mood) {
+      const sk = skinOf(c), hair = hairOf(c);
+      return `<path d="M130 70 Q176 70 168 120 Q164 150 146 160 Q158 120 128 96Z" fill="${hair}"/>` + tee(c) + neck(sk) + head(sk) + cheeksM +
+        `<path d="M58 98 Q56 48 100 46 Q144 48 142 98 Q128 66 100 70 Q72 66 58 98Z" fill="${hair}"/>` +
+        eyeRow(mood, 84, 116, 104, INK, 10) + mouth(mood, 100, 130, 13, "#c0405f") +
+        `<circle cx="128" cy="62" r="7" fill="${c}"/><path d="M54 100 Q50 40 100 38 Q150 40 146 100" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+         <rect x="40" y="90" width="20" height="34" rx="10" fill="${shade(c, .2)}"/><rect x="140" y="90" width="20" height="34" rx="10" fill="${shade(c, .2)}"/>`;
+    },
+    // Gio: capelli ricci e occhiali tondi
+    gio(c, st, mood) {
+      const sk = skinOf(c), hair = hairOf(c);
+      const curls = [[64, 66], [80, 52], [100, 46], [120, 52], [136, 66], [56, 86], [144, 86]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="15" fill="${hair}"/>`).join("");
+      return tee(c) + neck(sk) + curls + head(sk) +
+        `<path d="M62 92 Q70 62 100 60 Q130 62 138 92 Q120 76 100 76 Q80 76 62 92Z" fill="${hair}"/>` + cheeksM +
+        eyeRow(mood, 84, 116, 104, INK, 10) +
+        `<circle cx="84" cy="104" r="15" fill="#fff" fill-opacity=".15" stroke="${INK}" stroke-width="3.5"/><circle cx="116" cy="104" r="15" fill="#fff" fill-opacity=".15" stroke="${INK}" stroke-width="3.5"/><path d="M99 104 L101 104" stroke="${INK}" stroke-width="3.5"/>` +
+        mouth(mood, 100, 130, 12, INK);
+    },
+    // Bit: robottino fresco, schermo-faccia con occhi LED
+    bot(c, st, mood) {
+      const eyes = mood === "cheer" ? `<path d="M72 98 Q80 88 88 98 M112 98 Q120 88 128 98" fill="none" stroke="#06101a" stroke-width="6" stroke-linecap="round"/>`
+        : mood === "sad" ? `<path d="M72 98 L88 92 M128 98 L112 92" stroke="#06101a" stroke-width="5" stroke-linecap="round"/><circle cx="80" cy="102" r="6" fill="#06101a"/><circle cx="120" cy="102" r="6" fill="#06101a"/>`
+        : `<circle cx="80" cy="98" r="8" fill="#06101a"/><circle cx="120" cy="98" r="8" fill="#06101a"/><circle cx="83" cy="95" r="2.5" fill="#fff"/><circle cx="123" cy="95" r="2.5" fill="#fff"/>`;
+      return `<path d="M16 200 Q18 154 60 144 L140 144 Q182 154 184 200Z" fill="${shade(c, -.15)}"/><rect x="72" y="156" width="56" height="30" rx="8" fill="${shade(c, .35)}"/><circle cx="88" cy="171" r="5" fill="${c}"/><circle cx="104" cy="171" r="5" fill="#FFC94A"/><circle cx="120" cy="171" r="5" fill="#34a847"/>
+        <rect x="88" y="136" width="24" height="14" rx="4" fill="#8B91A6"/>
+        <rect x="52" y="52" width="96" height="88" rx="28" fill="${c}"/><rect x="60" y="62" width="80" height="62" rx="20" fill="#0f1430"/><rect x="64" y="66" width="72" height="54" rx="17" fill="${shade(c, .55)}"/>${eyes}
+        ${mouth(mood, 100, 114, 10, "#06101a")}
+        <rect x="40" y="82" width="14" height="30" rx="7" fill="${shade(c, -.2)}"/><rect x="146" y="82" width="14" height="30" rx="7" fill="${shade(c, -.2)}"/>
+        <path d="M100 52 L100 34" stroke="#8B91A6" stroke-width="4"/><circle cx="100" cy="30" r="7" fill="#FFC94A"/>`;
+    },
+    // Dino: felpa con cappuccio e cresta da dinosauro
+    dino(c, st, mood) {
+      const sk = skinOf(c);
+      return `<path d="M16 200 Q18 152 62 142 L138 142 Q182 152 184 200Z" fill="${c}"/><path d="M78 142 L84 186 M122 142 L116 186" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <path d="M60 60 L72 30 L84 52 L100 22 L116 52 L128 30 L140 60Z" fill="${shade(c, .3)}"/>
+        <path d="M46 108 Q42 44 100 40 Q158 44 154 108 L150 138 Q100 162 50 138Z" fill="${shade(c, -.15)}"/>
+        <path d="M64 86 Q100 70 136 86 Q146 120 126 138 Q100 150 74 138 Q54 120 64 86Z" fill="${sk}"/>` + cheeksM +
+        eyeRow(mood, 84, 116, 104, INK, 10) +
+        (mood === "cheer" ? `<path d="M82 124 Q100 144 118 124Z" fill="#fff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>` : mouth(mood, 100, 128, 14, INK)) +
+        `<circle cx="100" cy="46" r="3.5" fill="#fff" opacity=".6"/>`;
+    }
+  };
+  const MID_FAMILIES = [
+    { id: "leo",  name: "Sport",   pet: "Leo",  hi: "Ciao! Sono Leo. Si parte?" },
+    { id: "mia",  name: "Musica",  pet: "Mia",  hi: "Ciao! Sono Mia. Giochiamo insieme?" },
+    { id: "gio",  name: "Genio",   pet: "Gio",  hi: "Ehi! Sono Gio. Ho una gran voglia di sfide!" },
+    { id: "bot",  name: "Robot",   pet: "Bit",  hi: "Bip! Sono Bit. Sistemi pronti!" },
+    { id: "dino", name: "Dino",    pet: "Dino", hi: "Ciao! Sono Dino. Facciamo il botto!" }
+  ];
+  const BASE_OF = { visiera: "robot", cappellino: "creatura", beanie: "esploratore", casco: "robot", cuffie: "creatura", leo: "esploratore", mia: "creatura", gio: "creatura", bot: "robot", dino: "creatura" };
+  const MID_FROM_OLD = { creatura: "dino", robot: "bot", esploratore: "leo" };
+
   const TEEN_IDS = ["visiera", "cappellino", "beanie", "casco", "cuffie"];
   const TEEN_FROM_OLD = { creatura: "cappellino", robot: "visiera", esploratore: "beanie" };
   const OLD_FROM_TEEN = { visiera: "robot", cappellino: "creatura", beanie: "esploratore", casco: "robot", cuffie: "creatura" };
+
+
+  // porta un personaggio nella fascia giusta per la classe (elementari piccole / 4ª-5ª / medie)
+  function familyFor(id, stage) {
+    const base = BASE_OF[id] || (DRAW[id] ? id : "creatura");
+    if (stage >= 5) return TEEN[id] ? id : TEEN_FROM_OLD[base] || "cappellino";
+    if (stage >= 3) return MID[id] ? id : MID_FROM_OLD[base];
+    return base;
+  }
 
   const DRAW = { creatura, robot, esploratore };
 
@@ -423,19 +504,16 @@ const Characters = (() => {
   function svg(opts) {
     const color = opts.color || COLORS[0].hex;
     const stage = Math.max(0, Math.min(7, opts.stage | 0));
-    let family = opts.family;
-    if (stage >= 5) { if (!TEEN[family]) family = TEEN_FROM_OLD[family] || "cappellino"; }
-    else if (TEEN[family]) family = OLD_FROM_TEEN[family];
-    if (!TEEN[family] && !DRAW[family]) family = "creatura";
+    const family = familyFor(opts.family, stage);
     const mood = opts.mood || "happy";
     const k = 0.82 + stage * 0.026;   // il personaggio cresce
     const sty = stage <= 2 ? "kawaii" : stage <= 4 ? "cool" : "teen";
     const sx = sty === "teen" ? 0.95 : 1, sy = sty === "teen" ? 1.05 : 1;   // più slanciato alle medie
-    const bodySvg = TEEN[family] ? TEEN[family](color, stage, mood) : DRAW[family](color, stage, mood, sty);
+    const bodySvg = TEEN[family] ? TEEN[family](color, stage, mood) : MID[family] ? MID[family](color, stage, mood) : DRAW[family](color, stage, mood, sty);
     const name = (allFamilies().find(f => f.id === family) || {}).pet || "Compagno";
     return `<svg class="char ${sty}" viewBox="${opts.viewBox || "0 0 200 200"}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${opts.label || name}">` +
            shadow + `<g transform="translate(100 182) scale(${(k * sx).toFixed(3)} ${(k * sy).toFixed(3)}) translate(-100 -182)">${bodySvg}</g></svg>`;
   }
 
-  return { svg, COLORS, FAMILIES, TEEN_FAMILIES, familiesFor, allFamilies, teenOf: id => TEEN[id] ? id : (TEEN_FROM_OLD[id] || "cappellino"), oldOf: id => TEEN[id] ? OLD_FROM_TEEN[id] : id };
+  return { svg, COLORS, FAMILIES, TEEN_FAMILIES, familiesFor, allFamilies, familyFor, teenOf: id => familyFor(id, 5), oldOf: id => BASE_OF[id] || id };
 })();

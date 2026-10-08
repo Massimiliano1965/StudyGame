@@ -321,7 +321,7 @@
     const d = wiz.d, seen = !!(profile && profile.infoSeen);
     const firstTime = !wiz.editing && (!profile || setupOn() && !profile.pin);
     const old = profile || {};
-    profile = { ...old, nick: d.nick.trim(), classId: d.classId, family: d.classId >= 5 ? Characters.teenOf(d.family) : Characters.oldOf(d.family), color: d.color, photo: d.photo || null,
+    profile = { ...old, nick: d.nick.trim(), classId: d.classId, family: Characters.familyFor(d.family, d.classId), color: d.color, photo: d.photo || null,
       autoRead: !!d.autoRead, narrAsked: true,
       sound: d.sound !== false, l2: d.l2 || undefined, infoSeen: seen, calm: !!d.calm,
       pin: pinValid() ? hashPin(wiz.pin1) : (old.pin || pendingPin || presetPin()) };
@@ -1386,7 +1386,7 @@
   // ====================================================================
   const actions = {
     // creazione profilo
-    class: el => { wiz.d.classId = +el.dataset.id; if (wiz.d.family) wiz.d.family = wiz.d.classId >= 5 ? Characters.teenOf(wiz.d.family) : Characters.oldOf(wiz.d.family); setTheme(wiz.d.classId); renderWizard(); },
+    class: el => { wiz.d.classId = +el.dataset.id; if (wiz.d.family) wiz.d.family = Characters.familyFor(wiz.d.family, wiz.d.classId); setTheme(wiz.d.classId); renderWizard(); },
     family: el => {
       wiz.d.family = el.dataset.id;
       const f = Characters.allFamilies().find(x => x.id === wiz.d.family);
