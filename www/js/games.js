@@ -2240,6 +2240,10 @@ const Games = (() => {
     scatole:    { subjects: ALL, make: (c, s) => makeScatole(c, s) }
   };
 
+  // Giochi aggiuntivi (games2.js): ognuno registra { subjects, make, mount }
+  const EXT = {};
+  const register = (kind, def) => { EXT[kind] = def; GAMES[kind] = { subjects: def.subjects, make: def.make }; };
+
   // Un giro di gioco per la materia e la classe, oppure null (allora si fa una domanda normale).
   // share = quota di giri che sono giochi (0..1); lastKind = gioco precedente, per non ripeterlo.
   function pickRound(subjectId, classId, lastKind, share) {
@@ -2290,9 +2294,12 @@ const Games = (() => {
       mountLinee(el, r, onDone);
     } else if (r.kind === "scatole") {
       mountScatole(el, r, onDone);
+    } else if (EXT[r.kind]) {
+      EXT[r.kind].mount(el, r, onDone);
     }
   }
 
   // make: crea un giro di un gioco preciso (serve alle prove automatiche)
-  return { pick: pickRound, make: (kind, c, s) => GAMES[kind] ? GAMES[kind].make(c, s) : null, mount, stop, setTap, setBoom, setAvatar, setSpeak, isTrue, calc };
+  const internals = { esc, shuffle, pick, rnd, makeScatole, makeImpiccato, tap: () => tapFn(), boom: () => boomFn() };
+  return { pick: pickRound, make: (kind, c, s) => GAMES[kind] ? GAMES[kind].make(c, s) : null, mount, stop, setTap, setBoom, setAvatar, setSpeak, isTrue, calc, register, internals };
 })();
