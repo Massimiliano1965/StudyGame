@@ -1038,3 +1038,53 @@ body[data-theme="teen"] .icon-btn svg { fill: #8CF59E; }
 body[data-theme="teen"] .tile { padding: 8px 34px 8px 10px; gap: 8px; font-size: 15px; overflow-wrap: normal; hyphens: none; }
 body[data-theme="teen"] .tile .ic { font-size: 22px; }
 body[data-theme="teen"] .tile.sel::after { right: 8px; width: 22px; height: 22px; margin-top: -11px; font-size: 13px; }
+
+/* ===== 4ª e 5ª elementare: a metà strada tra bambini e ragazzi (colorato ma più «da grandi») ===== */
+body[data-theme="ragazzi"] {
+  --bg-a: #101a52; --bg-b: #22378f;
+  --ink: #F4F6FF; --edge: rgba(255,255,255,.2);
+  --card: rgba(255,255,255,.10); --card-soft: rgba(255,255,255,.08);
+  --accent: #34a847; --on-accent: #04140A;
+  --accent2: #FFC94A; --on-accent2: #2a1d00;
+  --good: #34a847; --bad: #FF5C8A;
+  --muted: #B6C0F0;
+  background: radial-gradient(380px 300px at 85% 0%, rgba(89,215,255,.28), transparent 65%), radial-gradient(360px 300px at 0% 40%, rgba(155,123,255,.22), transparent 65%), linear-gradient(180deg, var(--bg-a), var(--bg-b));
+  background-attachment: fixed;
+}
+body[data-theme="ragazzi"] .btn, body[data-theme="ragazzi"] .icon-btn, body[data-theme="ragazzi"] .card, body[data-theme="ragazzi"] .chip,
+body[data-theme="ragazzi"] .bubble, body[data-theme="ragazzi"] .tile, body[data-theme="ragazzi"] .ans, body[data-theme="ragazzi"] .switch { border-width: 2px; box-shadow: 0 3px 0 rgba(0,0,0,.28); }
+body[data-theme="ragazzi"] .btn:active, body[data-theme="ragazzi"] .icon-btn:active, body[data-theme="ragazzi"] .tile:active, body[data-theme="ragazzi"] .ans:active { transform: none; filter: brightness(1.2); box-shadow: 0 3px 0 rgba(0,0,0,.28); }
+body[data-theme="ragazzi"] .btn { border-radius: 18px; font-size: 18px; }
+body[data-theme="ragazzi"] .btn:not(.alt):not(.ghost) { background: linear-gradient(180deg, #46d160, #2c9a40); border-color: rgba(255,255,255,.25); color: #04140A; }
+body[data-theme="ragazzi"] .btn.alt { background: rgba(255,255,255,.14); color: var(--ink); }
+body[data-theme="ragazzi"] .btn.flash:not(:disabled) { animation: none; box-shadow: 0 3px 0 rgba(0,0,0,.28), 0 0 20px rgba(52,168,71,.45); }
+body[data-theme="ragazzi"] .card { border-radius: 24px; backdrop-filter: blur(8px); }
+body[data-theme="ragazzi"] .bubble { background: rgba(255,255,255,.14); }
+body[data-theme="ragazzi"] .bubble::after { background: #3a4aa0; border-width: 0 2px 2px 0; }
+body[data-theme="ragazzi"] .bar { height: 20px; border-width: 2px; background: rgba(255,255,255,.12); }
+body[data-theme="ragazzi"] .bar > i { background: linear-gradient(90deg, #34a847, #8CF59E); border-right: 0; }
+body[data-theme="ragazzi"] .bar > b { background: rgba(255,255,255,.6); width: 2px; }
+body[data-theme="ragazzi"] .pill { border-width: 2px; background: rgba(255,201,74,.2); border-color: #FFC94A; color: #FFC94A; }
+body[data-theme="ragazzi"] .lvl-box { border-width: 2px; border-radius: 18px; }
+body[data-theme="ragazzi"] .lvl-box.lvl1 .lvl-tag { color: #8CF59E; } body[data-theme="ragazzi"] .lvl-box.lvl-1 .lvl-tag { color: #FFC94A; }
+body[data-theme="ragazzi"] .brand .b1 { color: #FFC94A; }
+body[data-theme="ragazzi"] .dock { background: linear-gradient(to bottom, rgba(34,55,143,0), #22378f 38%); }
+/* materie: colorate ma con sfumatura, testo bianco, icona grande */
+body[data-theme="ragazzi"] .tile { min-height: 84px; border-radius: 20px; color: #fff; font-size: 17px; text-shadow: 0 1px 2px rgba(0,0,0,.35);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--tc) 85%, #fff 0%), color-mix(in srgb, var(--tc) 55%, #101a52)); border-color: rgba(255,255,255,.3); }
+body[data-theme="ragazzi"] .tile.sel { border-color: #fff; box-shadow: 0 3px 0 rgba(0,0,0,.28), 0 0 16px rgba(255,255,255,.3); }
+body[data-theme="ragazzi"] .tile.sel::after { border-width: 2px; border-color: #fff; background: #34a847; color: #04140A; }
+body[data-theme="ragazzi"] .tile.soon { background: rgba(255,255,255,.07); color: var(--muted); }
+/* risposte */
+body[data-theme="ragazzi"] .ans { background: rgba(255,255,255,.11); color: var(--ink); border-radius: 18px; font-weight: 600; }
+body[data-theme="ragazzi"] .ans .shape { background: var(--ac); border: 0; color: #1a1f44; }
+body[data-theme="ragazzi"] .ans.right { background: rgba(52,168,71,.4); border-color: #8CF59E; color: #fff; }
+body[data-theme="ragazzi"] .ans.wrong { background: rgba(255,92,138,.3); border-color: #FF5C8A; color: #fff; }
+body[data-theme="ragazzi"] .ans.right .shape, body[data-theme="ragazzi"] .ans.wrong .shape { background: #fff; }
+body[data-theme="ragazzi"] .qsub { border-width: 2px; }
+body[data-theme="ragazzi"] .voicetgl { background: rgba(52,168,71,.25); border: 2px solid rgba(140,245,158,.6); color: #8CF59E; box-shadow: none; }
+body[data-theme="ragazzi"] .voicetgl.off { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.3); color: var(--muted); }
+body[data-theme="ragazzi"] .modal { background: rgba(8,12,40,.65); }
+body[data-theme="ragazzi"] .switch.on { background: rgba(52,168,71,.45); border-color: #8CF59E; color: #fff; }
+body[data-theme="ragazzi"] .btn.small, body[data-theme="teen"] .btn.small { font-size: 14px; min-height: 40px; padding: 4px 12px; border-radius: 14px; white-space: nowrap; }
+body[data-theme="ragazzi"] .sel-head h2 { font-size: 21px; }
