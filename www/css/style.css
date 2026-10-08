@@ -1098,3 +1098,9 @@ body[data-theme="ragazzi"] .nbub .bsub, body[data-theme="teen"] .nbub .bsub { co
 body[data-theme="ragazzi"] .sheet { background: #1b2a7a; backdrop-filter: none; }
 body[data-theme="teen"] .sheet { background: #0e1118; backdrop-filter: none; }
 .sess-day { padding-top: 8px; }
+
+/* incastro: la prima riga non deve finire sotto il fumetto di Simon e sotto il personaggio */
+.screen.play #gbox > .inc { justify-content: flex-start; gap: 10px; }
+.screen.play #gbox > .inc .inc-rows { margin-top: 70px; gap: 8px; }
+.screen.play #gbox > .inc .inc-drop { min-height: 52px; }
+.screen.play #gbox > .inc .inc-label { padding-left: 4px; }
