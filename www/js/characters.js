@@ -23,7 +23,7 @@ const Characters = (() => {
   const TEEN_FAMILIES = [
     { id: "visiera",    name: "Cyber",    pet: "Zero", hi: "Yo! Sono Zero. Sistema pronto, si gioca?" },
     { id: "cappellino", name: "Street",   pet: "Kai",  hi: "Ehi! Sono Kai. Facciamo il punteggio?" },
-    { id: "volpe",      name: "Furbo",    pet: "Fox",  hi: "Ciao! Sono Fox. Vediamo chi è più furbo!" },
+    { id: "beanie",     name: "Chill",    pet: "Sky",  hi: "Ciao! Sono Sky. Tranquillo, ci penso io!" },
     { id: "casco",      name: "Racer",    pet: "Rex",  hi: "Ehi! Sono Rex. Ti sfido, ci stai?" },
     { id: "cuffie",     name: "Music",    pet: "Nia",  hi: "Ciao! Sono Nia. Metti le cuffie e partiamo!" }
   ];
@@ -361,18 +361,25 @@ const Characters = (() => {
         <rect x="42" y="92" width="18" height="30" rx="9" fill="${c}"/><rect x="140" y="92" width="18" height="30" rx="9" fill="${c}"/>
         <rect x="46" y="98" width="6" height="18" rx="3" fill="${shade(c, .5)}" opacity=".7"/><rect x="148" y="98" width="6" height="18" rx="3" fill="${shade(c, .5)}" opacity=".7"/>`;
     },
-    // Volpe: cappuccio con orecchie da volpe, faccia furba, baffi
-    volpe(c, st, mood) {
+    // Sky: berretto di lana, occhiali a specchio, cuffie al collo, sorriso sicuro
+    beanie(c, st, mood) {
       const sk = skinOf(c);
-      return body(c, DARK) + `<path d="M44 74 L36 14 L86 48Z M156 74 L164 14 L114 48Z" fill="#242a45"/><path d="M48 66 L44 28 L76 48Z M152 66 L156 28 L124 48Z" fill="${c}"/>
-        <path d="M44 110 Q40 44 100 40 Q160 44 156 110 L150 138 Q100 164 50 138Z" fill="#242a45"/>
-        <path d="M62 82 Q100 66 138 82 Q146 118 128 136 Q100 152 72 136 Q54 118 62 82Z" fill="${sk}"/>
-        <path d="M62 100 L40 94 M62 108 L38 112 M138 100 L160 94 M138 108 L162 112" stroke="${c}" stroke-width="2.8" stroke-linecap="round"/>
-        <path d="M62 82 Q100 70 100 100 Q100 70 138 82" fill="${c}" opacity=".9"/>
-        ${eyeRow(mood, 82, 118, 102, INK, 11)}
-        <path d="M94 114 L106 114 L100 121Z" fill="${INK}"/>
-        ${mood === "cheer" ? `<path d="M84 126 Q100 144 116 126Z" fill="#fff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M92 128 L95 135 L98 128 M102 128 L105 135 L108 128" fill="#fff" stroke="${INK}" stroke-width="1.5"/>` : mouth(mood, 100, 128, 13, INK)}
-        <path d="M66 56 L72 62 M60 66 L68 70" stroke="#fff" stroke-opacity=".3" stroke-width="3" stroke-linecap="round"/>`;
+      const glass = mood === "sad" ? 4 : 0;
+      return body(c, DARK) + `<path d="M64 140 Q100 168 136 140" fill="none" stroke="#2c3250" stroke-width="6" stroke-linecap="round"/>
+        <rect x="48" y="138" width="16" height="22" rx="8" fill="${c}"/><rect x="136" y="138" width="16" height="22" rx="8" fill="${c}"/>
+        <rect x="87" y="120" width="26" height="28" rx="9" fill="${shade(sk, -.1)}"/>
+        <ellipse cx="62" cy="104" rx="6" ry="9" fill="${sk}"/><ellipse cx="138" cy="104" rx="6" ry="9" fill="${sk}"/>
+        <path d="M100 58 Q142 58 140 102 Q138 142 100 144 Q62 142 60 102 Q58 58 100 58Z" fill="${sk}"/>
+        <path d="M100 106 L96 118 L104 118" fill="none" stroke="${shade(sk, -.25)}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M66 ${96 + glass} L134 ${96 + glass} L132 ${110 + glass} Q122 120 110 ${112 + glass} L100 ${106 + glass} L90 ${112 + glass} Q78 120 68 ${110 + glass}Z" fill="#0c0e1c"/>
+        <path d="M70 ${100 + glass} L86 ${100 + glass} L80 ${108 + glass}Z M114 ${100 + glass} L130 ${100 + glass} L124 ${108 + glass}Z" fill="${c}" opacity=".85"/>
+        <path d="M60 98 L68 98 M132 98 L140 98" stroke="#0c0e1c" stroke-width="4" stroke-linecap="round"/>
+        ${mouth(mood, 100, 130, 13, INK)}
+        <path d="M54 82 Q54 34 100 32 Q146 34 146 82 L146 92 Q100 82 54 92Z" fill="${c}"/>
+        <path d="M54 82 L146 82 L146 94 Q100 84 54 94Z" fill="${shade(c, -.2)}"/>
+        <path d="M70 40 L70 80 M86 36 L86 80 M102 34 L102 80 M118 36 L118 80 M134 40 L134 80" stroke="${shade(c, -.25)}" stroke-width="2" opacity=".55"/>
+        <circle cx="100" cy="28" r="9" fill="${shade(c, .35)}"/>
+        `;
     },
     // Rex: casco con visiera alzata, sticker e sorriso da sfida
     casco(c, st, mood) {
@@ -406,9 +413,9 @@ const Characters = (() => {
         <rect x="44" y="96" width="8" height="22" rx="4" fill="${shade(c, .5)}" opacity=".7"/><rect x="148" y="96" width="8" height="22" rx="4" fill="${shade(c, .5)}" opacity=".7"/>`;
     }
   };
-  const TEEN_IDS = ["visiera", "cappellino", "volpe", "casco", "cuffie"];
-  const TEEN_FROM_OLD = { creatura: "cappellino", robot: "visiera", esploratore: "volpe" };
-  const OLD_FROM_TEEN = { visiera: "robot", cappellino: "creatura", volpe: "esploratore", casco: "robot", cuffie: "creatura" };
+  const TEEN_IDS = ["visiera", "cappellino", "beanie", "casco", "cuffie"];
+  const TEEN_FROM_OLD = { creatura: "cappellino", robot: "visiera", esploratore: "beanie" };
+  const OLD_FROM_TEEN = { visiera: "robot", cappellino: "creatura", beanie: "esploratore", casco: "robot", cuffie: "creatura" };
 
   const DRAW = { creatura, robot, esploratore };
 
