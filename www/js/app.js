@@ -399,7 +399,7 @@
   }
 
   function showHome() {
-    Games.stop();
+    Games.stop(); Stats.endSession();
     game = null; cdOpen = false; clearInterval(cdTimer); homeCool = Credit.cooling();
     clearResume();
     setTheme(profile.classId);
@@ -464,7 +464,7 @@
   const CD_SAY = "Basta così! Il tuo cervello è esploso! Hai giocato tantissimo. Adesso spegni il telefono e vai a fare qualcos'altro.";
   function showCooldown() {
     Games.stop(); Music.stop(); Voice.stopSpeaking();
-    game = null; clearResume(); cdOpen = true;
+    game = null; Stats.endSession(); clearResume(); cdOpen = true;
     setTheme(profile.classId);
     $app.innerHTML = `<section class="screen cd">
       ${brandHtml()}
@@ -1333,6 +1333,14 @@
     const subj = Object.entries(t.subj).map(([id, v]) => { const s = SUBJECTS.find(x => x.id === id); return `<li><span>${s ? s.icon + " " + esc(s.name) : esc(id)}</span><span>✅ ${v[0]} · ❌ ${v[1]}</span></li>`; }).join("");
     const lv = (k, n) => t.lvl[k][0] + t.lvl[k][1] ? `<li><span>${n}</span><span>✅ ${t.lvl[k][0]} · ❌ ${t.lvl[k][1]}</span></li>` : "";
     const rows = d.map(x => `<li><span>${esc(x.date.toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" }))}</span><span>${fmtSec(x.sec)} · ✅ ${x.ok} · ❌ ${x.ko}</span></li>`).join("");
+    const ses = Stats.sessions(7).filter(x => x.sec >= 5);
+    const pad2 = x => String(x).padStart(2, "0"), hm = ms => { const q = new Date(ms); return pad2(q.getHours()) + ":" + pad2(q.getMinutes()); };
+    let lastDay = "";
+    const sessHtml = ses.length ? `<ul class="rep-list sess">${ses.map(x => {
+      const dt = new Date(x.s), dk = dt.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+      const head = dk !== lastDay ? `<li class="sess-day"><b>${esc(dk)}</b></li>` : ""; lastDay = dk;
+      return head + `<li><span>🕒 ${hm(x.s)} → ${hm(x.s + x.sec * 1000)}</span><span>${fmtSec(x.sec)} · ✅ ${x.ok} · ❌ ${x.ko}</span></li>`;
+    }).join("")}</ul>` : `<p class="muted">Ancora nessuna sessione registrata.</p>`;
     openModal(`<h2>📊 Resoconto di ${esc(profile.nick)}</h2>
       <div class="report">
         <h3>Oggi</h3>
@@ -1348,6 +1356,7 @@
         ${subj ? `<h3>Per materia</h3><ul class="rep-list">${subj}</ul>` : ""}
         ${(t.lvl.low[0] + t.lvl.low[1] + t.lvl.same[0] + t.lvl.same[1] + t.lvl.high[0] + t.lvl.high[1]) ? `<h3>Per livello</h3><ul class="rep-list">${lv("low", "⬇ Più facili")}${lv("same", "⭐ Della sua classe")}${lv("high", "⬆ Più difficili")}</ul>` : ""}
         <h3>Ultimi 7 giorni</h3><ul class="rep-list">${rows}</ul>
+        <h3>Sessioni di gioco · data e ora</h3>${sessHtml}
       </div>
       <button class="btn" data-act="close">Chiudi</button>`);
   }

@@ -1095,3 +1095,6 @@ body[data-theme="ragazzi"] .screen.play .nbub:before, body[data-theme="teen"] .s
 body[data-theme="teen"] .screen.play .nbub:before { border-right-color: #14171f; }
 body[data-theme="ragazzi"] .screen.play .nbub:after, body[data-theme="teen"] .screen.play .nbub:after { border-right-color: rgba(255,255,255,.22); border-color: transparent rgba(255,255,255,.22) transparent transparent; }
 body[data-theme="ragazzi"] .nbub .bsub, body[data-theme="teen"] .nbub .bsub { color: #fff; border: 0; background: color-mix(in srgb, var(--sc) 70%, #000); }
+body[data-theme="ragazzi"] .sheet { background: #1b2a7a; backdrop-filter: none; }
+body[data-theme="teen"] .sheet { background: #0e1118; backdrop-filter: none; }
+.sess-day { padding-top: 8px; }
