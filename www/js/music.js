@@ -1,5 +1,5 @@
 // ===== Musica: stacchetti di 3-4 secondi, tutti generati dal sintetizzatore (nessun file, nessun diritto) =====
-// Tre fasce d'età (A = 1ª-3ª elementare, B = 4ª-5ª, C = medie) x carattere della materia.
+// Tre fasce d'età (A = 1ª-3ª elementare, B = 4ª-5ª, C = medie: beat rap) x carattere della materia.
 // Le melodie "classiche" (Beethoven, Mozart) sono di pubblico dominio e qui sono suonate dal sintetizzatore.
 const Music = (() => {
   let ctx = null, master = null, enabledFn = () => true;
@@ -186,6 +186,34 @@ const Music = (() => {
     italiano: ["pop", 0], inglese: ["pop", 2], lingua2: ["pop", -2]
   };
 
+
+  // ---------- medie: beat rap (boom bap / trap), sempre diverso per materia ----------
+  const clap = (t, v = 0.3) => { noise(t, 0.14, v, { type: "bandpass", f1: 1500, q: 0.8, peak: 0.15 }); noise(t + 0.012, 0.1, v * 0.7, { type: "bandpass", f1: 2200, q: 0.8, peak: 0.15 }); };
+  const s808 = (m, t, dur, vol) => { tone("sine", mtof(m), t, dur, vol, { glide: mtof(m) * 0.88, attack: 0.008 }); tone("triangle", mtof(m) * 2, t, dur * 0.35, vol * 0.18, { lp: 900 }); };
+  // [radice, strumento della melodia, forma della melodia (gradi della scala minore pentatonica), swing]
+  const RAP = {
+    robot:    [57, chip, [0, 2, 3, 2, 4, 3, 2, 0], 92], tech: [55, lead, [0, 3, 2, 4, 3, 2, 0, 2], 98],
+    sea:      [53, bell, [4, 3, 2, 0, 2, 3, 4, 3], 88], animals: [58, pluck, [0, 2, 4, 3, 2, 3, 4, 2], 94],
+    harp:     [52, bell, [0, 3, 4, 3, 2, 3, 0, 2], 90], fanfare: [55, horn, [0, 0, 2, 3, 4, 3, 2, 0], 96],
+    medieval: [50, flute, [0, 2, 3, 4, 3, 2, 3, 0], 90], classic: [57, pluck, [4, 3, 4, 2, 3, 2, 0, 2], 94],
+    organo:   [50, organ, [0, 2, 0, 3, 2, 0, 4, 3], 88], pop: [56, pluck, [0, 2, 3, 4, 2, 3, 2, 0], 100]
+  };
+  STYLE.rap = function (style, tr, t0) {
+    const [root, inst, shape, bpm] = RAP[style] || RAP.pop;
+    const st = 60 / bpm / 4, r = root + tr, N = 24, sc = [0, 3, 5, 7, 10];   // pentatonica minore
+    const at = i => t0 + i * st;
+    for (let i = 0; i < N; i++) {
+      if ([0, 7, 10, 16, 22].includes(i)) kick(at(i), 0.55);
+      if ([4, 12, 20].includes(i)) { snare(at(i), 0.3); clap(at(i), 0.22); }
+      if (i % 2 === 0) hat(at(i), i % 4 === 0 ? 0.13 : 0.08);
+      if ([14, 15, 22, 23].includes(i)) hat(at(i), 0.09);
+    }
+    [[0, 3], [7, 2], [10, 5], [16, 3], [22, 2]].forEach(([i, len]) => s808(r - 24 + (i === 16 ? 3 : i === 10 ? -2 : 0), at(i), len * st * 0.95, 0.5));
+    shape.forEach((g, k) => { const i = k * 3; if (i < N) inst(r + 12 + sc[g % 5] + (g > 4 ? 12 : 0), at(i), st * 2.6, inst === flute || inst === organ || inst === horn ? 0.2 : 0.17); });
+    noise(at(N - 2), st * 2, 0.14, { type: "highpass", f1: 2500, f2: 9000, peak: 0.9 });   // piccolo «rewind» finale
+    return N * st + 0.5;
+  };
+  
   function finish(dur) {
     const now = ctx.currentTime;
     busyUntil = now + dur;
@@ -199,7 +227,7 @@ const Music = (() => {
       boot(); stop();
       const [style, tr] = MAP[subjectId] || MAP.italiano;
       const t0 = ctx.currentTime + 0.05;
-      const dur = STYLE[style](band(classId), tr, t0);
+      const dur = band(classId) === "C" ? STYLE.rap(style, tr, t0) : STYLE[style](band(classId), tr, t0);
       finish(dur + 0.1);
       return true;
     } catch (e) { return false; }
@@ -222,7 +250,7 @@ const Music = (() => {
       const comp = off.createDynamicsCompressor();
       master = off.createGain(); master.gain.value = 0.55; master.connect(comp); comp.connect(off.destination);
       const [style, tr] = MAP[subjectId] || MAP.italiano;
-      const dur = STYLE[style](band(classId), tr, 0.05);
+      const dur = band(classId) === "C" ? STYLE.rap(style, tr, 0.05) : STYLE[style](band(classId), tr, 0.05);
       const buf = await off.startRendering();
       const d = buf.getChannelData(0); let peak = 0, sum = 0, last = 0;
       for (let i = 0; i < d.length; i++) { const a = Math.abs(d[i]); if (a > peak) peak = a; sum += d[i] * d[i]; if (a > 0.003) last = i; }
@@ -236,6 +264,6 @@ const Music = (() => {
     play, stop,
     busy: () => !!ctx && busyUntil > ctx.currentTime,
     whenDone: cb => { if (ctx && busyUntil > ctx.currentTime) waiters.push(cb); else cb(); },
-    STYLES: Object.keys(STYLE), MAP
+    STYLES: Object.keys(STYLE).filter(k => k !== "rap"), MAP
   };
 })();
