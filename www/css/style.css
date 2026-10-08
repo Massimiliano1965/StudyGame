@@ -1088,3 +1088,10 @@ body[data-theme="ragazzi"] .modal { background: rgba(8,12,40,.65); }
 body[data-theme="ragazzi"] .switch.on { background: rgba(52,168,71,.45); border-color: #8CF59E; color: #fff; }
 body[data-theme="ragazzi"] .btn.small, body[data-theme="teen"] .btn.small { font-size: 14px; min-height: 40px; padding: 4px 12px; border-radius: 14px; white-space: nowrap; }
 body[data-theme="ragazzi"] .sel-head h2 { font-size: 21px; }
+/* fumetto dei giochi: testo chiaro su vetro scuro (la bordatura è ora trasparente) */
+body[data-theme="ragazzi"] .screen.play .nbub, body[data-theme="teen"] .screen.play .nbub { color: var(--ink); background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.22); box-shadow: none; }
+body[data-theme="teen"] .screen.play .nbub { background: #14171f; border-width: 1px; }
+body[data-theme="ragazzi"] .screen.play .nbub:before, body[data-theme="teen"] .screen.play .nbub:before { border-right-color: #2a3a8c; }
+body[data-theme="teen"] .screen.play .nbub:before { border-right-color: #14171f; }
+body[data-theme="ragazzi"] .screen.play .nbub:after, body[data-theme="teen"] .screen.play .nbub:after { border-right-color: rgba(255,255,255,.22); border-color: transparent rgba(255,255,255,.22) transparent transparent; }
+body[data-theme="ragazzi"] .nbub .bsub, body[data-theme="teen"] .nbub .bsub { color: #fff; border: 0; background: color-mix(in srgb, var(--sc) 70%, #000); }
