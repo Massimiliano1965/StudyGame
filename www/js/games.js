@@ -2249,7 +2249,12 @@ const Games = (() => {
   function pickRound(subjectId, classId, lastKind, share) {
     if (Math.random() >= share) return null;
     // se un gioco non può partire (es. Lettere mescolate senza parole adatte) si prova con un altro
-    const kinds = shuffle(Object.keys(GAMES).filter(k => GAMES[k].subjects.includes(subjectId) && k !== lastKind));
+    let kinds = shuffle(Object.keys(GAMES).filter(k => GAMES[k].subjects.includes(subjectId) && k !== lastKind));
+    // 4ª e 5ª elementare: metà giochi «classici» colorati, metà giochi nuovi scuri (ponte verso le medie)
+    if (classId === 3 || classId === 4) {
+      const wantNew = Math.random() < 0.5;
+      kinds = kinds.filter(k => !!EXT[k] === wantNew).concat(kinds.filter(k => !!EXT[k] !== wantNew));
+    }
     for (const k of kinds) {
       const r = GAMES[k].make(classId, subjectId);
       if (r) return r;
