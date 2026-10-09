@@ -1109,6 +1109,7 @@
       <button class="btn alt" data-act="report">📊 Resoconto per i genitori</button>
       <button class="btn ghost" data-act="change-pin">🔐 Cambia PIN dei genitori</button>
       <button class="btn ghost" data-act="info">ℹ️ Avvertenze</button>
+      <button class="btn ghost" data-act="rate">⭐ Ti piace? Lascia una recensione</button>
       <button class="btn ghost" data-act="reset">🗑 Ricomincia da zero</button>
       <button class="btn" data-act="close">Chiudi</button>`);
     if (Lock.available()) refreshLockBox();
@@ -1482,6 +1483,7 @@
     "sel-none": () => { selected = []; Sfx.tap(); renderHome(); },
     info: () => openInfo(),
     "set-voice": el => { profile.voiceG = el.dataset.id === "m" ? "m" : "f"; Storage.saveProfile(profile); openSettings(); applyVoiceStyle(); _speak.call(Voice, "Ciao! Questa è la mia voce.", msg => toast(msg, 6000)); },
+    "rate": () => { const u = "https://play.google.com/store/apps/details?id=it.massi.studygame"; try { window.open("market://details?id=it.massi.studygame", "_system"); } catch (e) { window.open(u, "_system"); } },
     "test-voice": () => { applyVoiceStyle(); const f = Characters.allFamilies().find(x => x.id === profile.family); _speak.call(Voice, (f && f.hi) || "Ciao! Giochiamo insieme?", msg => toast(msg, 6000)); },
     "toggle-read": () => { profile.autoRead = !profile.autoRead; Storage.saveProfile(profile); refreshVoiceToggle(); openSettings(); },
     "voice-toggle": () => {
