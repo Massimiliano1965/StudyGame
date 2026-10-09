@@ -1,11 +1,11 @@
 name: Build AAB (Play Store)
 
-# Si avvia a mano (Actions → Build AAB → Run workflow) oppure mettendo un tag che inizia con "aab-".
+# Si avvia a mano (Actions → Build AAB → Run workflow) oppure aggiornando il ramo "aab" (git push origin main:aab).
 # Produce il file .aab da caricare su Google Play Console. La build normale (APK per il telefono) non cambia.
 on:
   workflow_dispatch:
   push:
-    tags: ["aab-*"]
+    branches: [aab]
 
 jobs:
   aab:
