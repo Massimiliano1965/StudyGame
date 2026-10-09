@@ -109,7 +109,6 @@
     S("Quale strumento si usa per misurare la temperatura?", ["Il termometro", "Il righello", "La bilancia", "Il cronometro"], "Il termometro misura i gradi."),
     S("Che cos'è un combustibile fossile?", ["Una fonte di energia formata in milioni di anni, come il petrolio", "Un tipo di pannello solare", "Un'acqua minerale", "Un animale"], "Carbone, petrolio e gas naturale."),
     S("Perché è importante risparmiare energia?", ["Perché le risorse sono limitate e inquinare fa male all'ambiente", "Perché costa meno comprare di più", "Per niente", "Per non usare mai l'elettricità"], "Meno sprechi, meno inquinamento."),
-    S("Che cos'è un ecosistema?", ["Un ambiente con esseri viventi e non viventi che interagiscono", "Un tipo di animale", "Un tipo di pianta", "Una macchina"], "Esempi: un bosco, uno stagno.")
   ]);
 
   // ============ MUSICA: coro e improvvisazione ============

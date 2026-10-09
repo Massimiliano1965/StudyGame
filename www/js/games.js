@@ -5,6 +5,27 @@ const Games = (() => {
   const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
   const pick = arr => arr[rnd(0, arr.length - 1)];
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // Rimpicciolisce il testo di chi ha una parola troppo lunga per la casella, così nessuna parola si spezza a metà
+  // (es. «Personificazione» nelle etichette dell'Incastro). Non fa nulla se la parola ci sta già.
+  function fitLong(root, sel, minPx) {
+    try {
+      root.querySelectorAll(sel).forEach(el => {
+        const words = (el.textContent || "").split(/\s+/).filter(Boolean);
+        if (!words.length) return;
+        const cs = getComputedStyle(el), fs = parseFloat(cs.fontSize);
+        const avail = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        if (!(avail > 0) || !(fs > 0)) return;
+        const m = document.createElement("span");
+        m.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap;";
+        m.textContent = words.reduce((a, b) => (b.length > a.length ? b : a));
+        el.appendChild(m);
+        const w = m.getBoundingClientRect().width;
+        el.removeChild(m);
+        if (w > avail) el.style.fontSize = Math.max(minPx || 11, Math.floor(fs * avail / w)) + "px";
+      });
+    } catch (e) {}
+  }
   const fmt = n => n < 0 ? "−" + (-n) : String(n);
   const N = fmt;
 
@@ -662,8 +683,8 @@ const Games = (() => {
     mare: "🌊", lago: "🏞️", montagna: "⛰️", fiume: "🏞️", pianura: "🌾", isola: "🏝️", Colosseo: "@colosseo", colosseo: "@colosseo", vesuvio: "🌋", piramidi: "🔺", partenone: "🏛️",
     inverno: "❄️", primavera: "🌸", estate: "☀️", autunno: "🍂", candela: "🕯️", lampadina: "💡", lettera: "✉️", telefono: "☎️", computer: "💻", automobile: "🚗", carrozza: "🐎",
     gattino: "🐱", cucciolo: "🐶", vitello: "🐮", agnello: "🐑", puledro: "🐴", pulcino: "🐥", occhi: "👀", orecchie: "👂", naso: "👃", pelle: "🖐️",
-    radice: "🌱", foglia: "🍃", fiore: "🌸", seme: "🌰", tronco: "🪵", mercurio: "☿️", giove: "🟠", marte: "🔴", saturno: "🪐", terra: "🌍",
-    delfino: "🐬", aquila: "🦅", rana: "🐸", serpente: "🐍", squalo: "🦈", ape: "🐝", cuore: "❤️", polmoni: "🫁", cervello: "🧠", ossa: "🦴",
+    radice: "🌱", foglia: "🍃", seme: "🌰", tronco: "🪵", mercurio: "☿️", giove: "🟠", marte: "🔴", saturno: "🪐", terra: "🌍",
+    delfino: "🐬", aquila: "🦅", serpente: "🐍", squalo: "🦈", ape: "🐝", cuore: "❤️", polmoni: "🫁", cervello: "🧠", ossa: "🦴",
     darwin: "🐢", newton: "🍎", galileo: "🔭", "marie curie": "☢️", mendel: "🌱", pasteur: "🧫", metro: "📏", secondo: "⏱️", joule: "⚡", kelvin: "🌡️",
     aperto: "🔓", chiuso: "🔒", veloce: "⚡", lento: "🐌", felice: "😀", triste: "😢", dolce: "🍬", amaro: "🍋", nuovo: "✨", vecchio: "👴"
   };
@@ -760,6 +781,7 @@ const Games = (() => {
       <div class="inc-rows">${P.map((p, i) => `<div class="inc-row"><span class="inc-label">${esc(p.l)}</span><div class="inc-drop" data-s="${i}"><span class="inc-q">?</span></div></div>`).join("")}</div>
       <div class="inc-tray">${r.order.map(i => `<button class="piece" data-p="${i}"><span class="pz">🧩</span>${esc(P[i].r)}</button>`).join("")}</div>
     </div>`;
+    fitLong(el, ".inc-label", 12);
     const drops = [...el.querySelectorAll(".inc-drop")], tray = el.querySelector(".inc-tray");
     let mistakes = 0, placed = 0, sel = null, done = false, justDragged = false;
 
@@ -1835,6 +1857,7 @@ const Games = (() => {
       <div class="lk-col">${r.order.map(i => `<button class="lk-item" data-s="r" data-p="${i}"><span>${esc(P[i].r)}</span><i class="lk-dot"></i></button>`).join("")}</div>
       <svg class="lk-svg" xmlns="http://www.w3.org/2000/svg"></svg></div>`;
     const box = el.querySelector(".lk"), svg = el.querySelector(".lk-svg");
+    fitLong(el, ".lk-item", 11);
     const item = (s, p) => box.querySelector(`.lk-item[data-s="${s}"][data-p="${p}"]`);
     const dotPos = it => {
       const b = box.getBoundingClientRect(), d = it.querySelector(".lk-dot").getBoundingClientRect();

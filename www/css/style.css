@@ -1101,6 +1101,12 @@ body[data-theme="teen"] .sheet { background: #0e1118; backdrop-filter: none; }
 
 /* incastro: la prima riga non deve finire sotto il fumetto di Simon e sotto il personaggio */
 .screen.play #gbox > .inc { justify-content: flex-start; gap: 10px; }
-.screen.play #gbox > .inc .inc-rows { margin-top: 70px; gap: 8px; }
+.screen.play #gbox > .inc .inc-rows { gap: 8px; }
 .screen.play #gbox > .inc .inc-drop { min-height: 52px; }
 .screen.play #gbox > .inc .inc-label { padding-left: 4px; }
+/* giochi: personaggio e fumetto 40px più in alto (c'era una fascia vuota sotto i pulsanti) e il fumetto è alto abbastanza perché
+   il gioco parta SOTTO i piedi del personaggio (prima la prima riga/carta finiva sotto di lui) */
+.screen.play:not(.quiz) { padding-top: 52px; }
+.screen.play:not(.quiz) .hero.narr { top: calc(104px + env(safe-area-inset-top)); }
+.screen.play:not(.quiz) .nbub { min-height: 140px; }
+.screen.play #gbox { margin-top: 4px; }

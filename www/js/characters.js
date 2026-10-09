@@ -313,7 +313,7 @@ const Characters = (() => {
       <circle cx="82" cy="188" r="3.5" fill="${c}"/><circle cx="118" cy="188" r="3.5" fill="${c}"/>
       <path d="M62 170 L72 170 M128 170 L138 170" stroke="${shade(dark, .25)}" stroke-width="3" stroke-linecap="round"/>`;
   }
-  function mouth(mood, x, y, w, col) {
+  function mouthM(mood, x, y, w, col) {
     if (mood === "cheer") return `<path d="M${x - w} ${y} Q${x} ${y + w * 1.1} ${x + w} ${y}Z" fill="#fff" stroke="${col}" stroke-width="3" stroke-linejoin="round"/>`;
     if (mood === "sad") return `<path d="M${x - w * .7} ${y + 4} Q${x} ${y - 5} ${x + w * .7} ${y + 4}" fill="none" stroke="${col}" stroke-width="3.2" stroke-linecap="round"/>`;
     return `<path d="M${x - w} ${y} Q${x - w * .1} ${y + 7} ${x + w} ${y - 3}" fill="none" stroke="${col}" stroke-width="3.2" stroke-linecap="round"/>`;
@@ -339,7 +339,7 @@ const Characters = (() => {
         <path d="M50 70 Q100 20 150 70" fill="none" stroke="${shade(c, .1)}" stroke-width="3" opacity=".7"/>
         <path d="M58 84 Q100 70 142 84 L138 118 Q100 130 62 118Z" fill="${c}"/><path d="M58 84 Q100 70 142 84" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2.5"/>
         <path d="M66 112 Q100 122 134 112" stroke="#fff" stroke-opacity=".25" stroke-width="2" fill="none"/>${e}
-        ${mouth(mood, 100, 140, 11, shade(c, .5))}
+        ${mouthM(mood, 100, 140, 11, shade(c, .5))}
         <rect x="150" y="82" width="9" height="30" rx="4" fill="${c}"/><path d="M155 82 L155 62" stroke="${c}" stroke-width="3"/><circle cx="155" cy="60" r="4" fill="${shade(c, .5)}"/>
         <path d="M60 52 L70 56 M64 44 L76 50" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>`;
     },
@@ -352,7 +352,7 @@ const Characters = (() => {
         <circle cx="138" cy="116" r="3.2" fill="#FFD23F"/>
         ${eyeRow(mood, 84, 116, 100, INK)}
         <path d="M100 104 L97 114 L103 114" fill="none" stroke="${shade(sk, -.25)}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        ${mouth(mood, 100, 126, 12, INK)}
+        ${mouthM(mood, 100, 126, 12, INK)}
         <path d="M56 92 Q58 46 100 44 Q142 46 144 92 Q122 70 100 72 Q76 70 56 92Z" fill="${c}"/>
         <path d="M60 90 Q100 60 140 90" fill="none" stroke="${shade(c, -.25)}" stroke-width="3"/>
         <path d="M64 72 Q40 78 36 90 L72 86Z" fill="${shade(c, -.2)}"/>
@@ -374,7 +374,7 @@ const Characters = (() => {
         <path d="M66 ${96 + glass} L134 ${96 + glass} L132 ${110 + glass} Q122 120 110 ${112 + glass} L100 ${106 + glass} L90 ${112 + glass} Q78 120 68 ${110 + glass}Z" fill="#0c0e1c"/>
         <path d="M70 ${100 + glass} L86 ${100 + glass} L80 ${108 + glass}Z M114 ${100 + glass} L130 ${100 + glass} L124 ${108 + glass}Z" fill="${c}" opacity=".85"/>
         <path d="M60 98 L68 98 M132 98 L140 98" stroke="#0c0e1c" stroke-width="4" stroke-linecap="round"/>
-        ${mouth(mood, 100, 130, 13, INK)}
+        ${mouthM(mood, 100, 130, 13, INK)}
         <path d="M54 82 Q54 34 100 32 Q146 34 146 82 L146 92 Q100 82 54 92Z" fill="${c}"/>
         <path d="M54 82 L146 82 L146 94 Q100 84 54 94Z" fill="${shade(c, -.2)}"/>
         <path d="M70 40 L70 80 M86 36 L86 80 M102 34 L102 80 M118 36 L118 80 M134 40 L134 80" stroke="${shade(c, -.25)}" stroke-width="2" opacity=".55"/>
@@ -387,7 +387,7 @@ const Characters = (() => {
       return body(c, DARK) + `<rect x="88" y="124" width="24" height="26" rx="8" fill="${shade(sk, -.1)}"/>
         <path d="M66 100 Q66 76 100 76 Q134 76 134 100 L134 124 Q134 142 100 144 Q66 142 66 124Z" fill="${sk}"/>
         ${eyeRow(mood, 86, 114, 108, INK, 10)}
-        ${mouth(mood, 100, 130, 11, INK)}
+        ${mouthM(mood, 100, 130, 11, INK)}
         <path d="M44 106 Q40 34 100 32 Q160 34 156 106 L152 124 Q146 140 128 138 L128 96 Q100 84 72 96 L72 138 Q54 140 48 124Z" fill="#323a60"/>
         <path d="M72 84 Q100 70 128 84 L130 96 Q100 84 70 96Z" fill="${c}"/>
         <path d="M100 32 L100 58" stroke="${c}" stroke-width="7" stroke-linecap="round"/>
@@ -406,7 +406,7 @@ const Characters = (() => {
         <path d="M62 96 Q60 60 100 56 Q140 60 138 96 Q124 74 108 72 Q86 70 62 96Z" fill="${hair}"/>
         ${mood === "happy" ? eyeRow("happy", 84, 116, 102, INK).split("<ellipse")[0] + `<ellipse cx="84" cy="102" rx="7" ry="8" fill="#fff"/><circle cx="85" cy="103" r="4.2" fill="${INK}"/><circle cx="86.5" cy="101.5" r="1.4" fill="#fff"/>` + wink : eyeRow(mood, 84, 116, 102, INK)}
         <circle cx="76" cy="118" r="5" fill="#ff7a9a" opacity=".35"/><circle cx="124" cy="118" r="5" fill="#ff7a9a" opacity=".35"/>
-        ${mouth(mood, 100, 126, 11, "#c0405f")}
+        ${mouthM(mood, 100, 126, 11, "#c0405f")}
         <circle cx="140" cy="116" r="5" fill="none" stroke="#FFD23F" stroke-width="2.5"/>
         <path d="M50 102 Q46 38 100 34 Q154 38 150 102" fill="none" stroke="#2c3250" stroke-width="6" stroke-linecap="round"/>
         <rect x="38" y="88" width="22" height="38" rx="11" fill="${c}"/><rect x="140" y="88" width="22" height="38" rx="11" fill="${c}"/>
@@ -428,7 +428,7 @@ const Characters = (() => {
     // Leo: cappellino sportivo, sorriso aperto
     leo(c, st, mood) {
       const sk = skinOf(c);
-      return tee(c) + neck(sk) + head(sk) + cheeksM + eyeRow(mood, 84, 116, 102, INK, 10) + mouth(mood, 100, 128, 13, INK) +
+      return tee(c) + neck(sk) + head(sk) + cheeksM + eyeRow(mood, 84, 116, 102, INK, 10) + mouthM(mood, 100, 128, 13, INK) +
         `<path d="M56 90 Q58 42 100 40 Q142 42 144 90 Q122 70 100 72 Q78 70 56 90Z" fill="${shade(c, .15)}"/><path d="M96 66 L152 78 Q150 90 142 88 L96 78Z" fill="${shade(c, -.2)}"/><circle cx="100" cy="43" r="4" fill="#fff"/>
          <path d="M70 62 Q82 52 96 52" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>`;
     },
@@ -437,7 +437,7 @@ const Characters = (() => {
       const sk = skinOf(c), hair = hairOf(c);
       return `<path d="M130 70 Q176 70 168 120 Q164 150 146 160 Q158 120 128 96Z" fill="${hair}"/>` + tee(c) + neck(sk) + head(sk) + cheeksM +
         `<path d="M58 98 Q56 48 100 46 Q144 48 142 98 Q128 66 100 70 Q72 66 58 98Z" fill="${hair}"/>` +
-        eyeRow(mood, 84, 116, 104, INK, 10) + mouth(mood, 100, 130, 13, "#c0405f") +
+        eyeRow(mood, 84, 116, 104, INK, 10) + mouthM(mood, 100, 130, 13, "#c0405f") +
         `<circle cx="128" cy="62" r="7" fill="${c}"/><path d="M54 100 Q50 40 100 38 Q150 40 146 100" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
          <rect x="40" y="90" width="20" height="34" rx="10" fill="${shade(c, .2)}"/><rect x="140" y="90" width="20" height="34" rx="10" fill="${shade(c, .2)}"/>`;
     },
@@ -449,7 +449,7 @@ const Characters = (() => {
         `<path d="M62 92 Q70 62 100 60 Q130 62 138 92 Q120 76 100 76 Q80 76 62 92Z" fill="${hair}"/>` + cheeksM +
         eyeRow(mood, 84, 116, 104, INK, 10) +
         `<circle cx="84" cy="104" r="15" fill="#fff" fill-opacity=".15" stroke="${INK}" stroke-width="3.5"/><circle cx="116" cy="104" r="15" fill="#fff" fill-opacity=".15" stroke="${INK}" stroke-width="3.5"/><path d="M99 104 L101 104" stroke="${INK}" stroke-width="3.5"/>` +
-        mouth(mood, 100, 130, 12, INK);
+        mouthM(mood, 100, 130, 12, INK);
     },
     // Bit: robottino fresco, schermo-faccia con occhi LED
     bot(c, st, mood) {
@@ -459,7 +459,7 @@ const Characters = (() => {
       return `<path d="M16 200 Q18 154 60 144 L140 144 Q182 154 184 200Z" fill="${shade(c, -.15)}"/><rect x="72" y="156" width="56" height="30" rx="8" fill="${shade(c, .35)}"/><circle cx="88" cy="171" r="5" fill="${c}"/><circle cx="104" cy="171" r="5" fill="#FFC94A"/><circle cx="120" cy="171" r="5" fill="#34a847"/>
         <rect x="88" y="136" width="24" height="14" rx="4" fill="#8B91A6"/>
         <rect x="52" y="52" width="96" height="88" rx="28" fill="${c}"/><rect x="60" y="62" width="80" height="62" rx="20" fill="#0f1430"/><rect x="64" y="66" width="72" height="54" rx="17" fill="${shade(c, .55)}"/>${eyes}
-        ${mouth(mood, 100, 114, 10, "#06101a")}
+        ${mouthM(mood, 100, 114, 10, "#06101a")}
         <rect x="40" y="82" width="14" height="30" rx="7" fill="${shade(c, -.2)}"/><rect x="146" y="82" width="14" height="30" rx="7" fill="${shade(c, -.2)}"/>
         <path d="M100 52 L100 34" stroke="#8B91A6" stroke-width="4"/><circle cx="100" cy="30" r="7" fill="#FFC94A"/>`;
     },
@@ -471,7 +471,7 @@ const Characters = (() => {
         <path d="M46 108 Q42 44 100 40 Q158 44 154 108 L150 138 Q100 162 50 138Z" fill="${shade(c, -.15)}"/>
         <path d="M64 86 Q100 70 136 86 Q146 120 126 138 Q100 150 74 138 Q54 120 64 86Z" fill="${sk}"/>` + cheeksM +
         eyeRow(mood, 84, 116, 104, INK, 10) +
-        (mood === "cheer" ? `<path d="M82 124 Q100 144 118 124Z" fill="#fff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>` : mouth(mood, 100, 128, 14, INK)) +
+        (mood === "cheer" ? `<path d="M82 124 Q100 144 118 124Z" fill="#fff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>` : mouthM(mood, 100, 128, 14, INK)) +
         `<circle cx="100" cy="46" r="3.5" fill="#fff" opacity=".6"/>`;
     }
   };

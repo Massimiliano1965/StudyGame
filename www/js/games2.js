@@ -331,7 +331,7 @@
     let a, x, tot, expr;
     const t = Math.random();
     if (c >= 5 && t < 0.35) { a = rnd(2, 9); x = rnd(3, 12); tot = a * x; expr = `${a} × ? = ${tot}`; }
-    else if (c >= 4 && t < 0.6) { x = rnd(4, 30); a = x + rnd(5, 40); tot = a; expr = `${a} − ? = ${a - x}`; tot = a - x; a = a; return finishBil(expr, x, a, "sub", tot); }
+    else if (c >= 4 && t < 0.6) { x = rnd(4, 30); a = x + rnd(5, 40); tot = a; expr = `${a} − ? = ${a - x}`; tot = a - x; return finishBil(expr, x, a, "sub", tot); }
     else { a = rnd(6, c <= 3 ? 40 : 90); x = rnd(4, c <= 3 ? 40 : 80); tot = a + x; expr = `${a} + ? = ${tot}`; return finishBil(expr, x, a, "add", tot); }
     return finishBil(expr, x, a, "mul", tot);
     function finishBil(expr2, x2, a2, op, total) {
