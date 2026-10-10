@@ -39,24 +39,21 @@ jobs:
       - name: Numero di versione che cresce a ogni build
         run: sed -i "s/<widget /<widget android-versionCode=\"$((100000 + ${{ github.run_number }}))\" /" config.xml
 
-      # Chiave di CARICAMENTO (upload key). Con «Play App Signing» la chiave vera la custodisce Google:
-      # se questa si perdesse o fosse compromessa, Google la sostituisce. Per usarne una privata basta creare
-      # i segreti UPLOAD_KEYSTORE_B64, UPLOAD_STORE_PASSWORD (e UPLOAD_KEY_ALIAS) nelle impostazioni del repo.
+      # Chiave di CARICAMENTO (upload key): sta SOLO nei segreti del repo (Settings → Secrets and variables → Actions):
+      # UPLOAD_KEYSTORE_B64 (file .keystore in base64), UPLOAD_STORE_PASSWORD, UPLOAD_KEY_ALIAS (= upload).
+      # Mai la chiave o la password nel repo: il repo è pubblico. Con «Play App Signing» la chiave vera la custodisce Google.
       - name: Configura la firma
         env:
           KS_B64: ${{ secrets.UPLOAD_KEYSTORE_B64 }}
           KS_PASS: ${{ secrets.UPLOAD_STORE_PASSWORD }}
           KS_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
         run: |
-          KS="$GITHUB_WORKSPACE/signing/upload.keystore"; PASS="9mO4c8LoM61UspjBDJsZYvKY"; ALIAS="upload"
-          if [ -n "$KS_B64" ] && [ -n "$KS_PASS" ]; then
-            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/upload.keystore"; KS="$RUNNER_TEMP/upload.keystore"; PASS="$KS_PASS"; ALIAS="${KS_ALIAS:-upload}"
-            echo "Uso la chiave privata dei segreti del repo"
-          else
-            echo "Uso la chiave di caricamento del repo (va bene con Play App Signing)"
+          if [ -z "$KS_B64" ] || [ -z "$KS_PASS" ]; then
+            echo "::error::Mancano i segreti UPLOAD_KEYSTORE_B64 e UPLOAD_STORE_PASSWORD nelle impostazioni del repo"; exit 1
           fi
+          echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/upload.keystore"
           cat > build.json <<JSON
-          {"android": {"release": {"keystore": "$KS", "storePassword": "$PASS", "alias": "$ALIAS", "password": "$PASS", "keystoreType": "pkcs12"}}}
+          {"android": {"release": {"keystore": "$RUNNER_TEMP/upload.keystore", "storePassword": "$KS_PASS", "alias": "${KS_ALIAS:-upload}", "password": "$KS_PASS", "keystoreType": "pkcs12"}}}
           JSON
 
       - name: Build AAB
