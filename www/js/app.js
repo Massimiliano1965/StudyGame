@@ -462,7 +462,7 @@
   // SFIDA (quiz)
   // ====================================================================
   const SHAPES = ["▲", "●", "■", "★"];
-  const ANS_COL = ["#FFD23F", "#7ED9FF", "#FF9EC0", "#B9F27A"];
+  const ANS_COL = ["#F3D36A", "#9ED6EE", "#F2B5CA", "#C6E7A0"];   // colori riposanti (10/10/2026)
   const PRAISE = { piccoli: ["Bravo!", "Grande!", "Evviva!", "Che forza!"], ragazzi: ["Esatto!", "Centro!", "Che mito!", "Forte!"], teen: ["Boom!", "Esatto!", "Livello su!", "Sei un mostro!"] };
   const OOPS = ["Quasi!", "Ci sei vicino!", "Ci riprovi col prossimo!"];
 
@@ -513,8 +513,33 @@
     nextQuestion();
   }
 
+  // ---------- pausa per gli occhi: ogni 20 minuti di gioco vero, tra un esercizio e l'altro (mai a metà) ----------
+  const EYE_EVERY = 20 * 60, EYE_SEC = 20;
+  let eyeOpen = false;
+  function eyeBreak(after) {
+    eyeOpen = true; Voice.stopSpeaking(); Music.stop();
+    let n = EYE_SEC;
+    const draw = () => openModal(`<div class="eye-break"><h2>👀 Pausa per gli occhi!</h2>
+      <div class="eb-far">🌳🏠⛰️</div>
+      <p style="font-size:19px">Guarda <b>lontano</b>, fuori dalla finestra, per ${EYE_SEC} secondi. Gli occhi si riposano!</p>
+      <div class="eb-ring" style="--p:${n / EYE_SEC}"><span>${n}</span></div>
+      ${n > 0 ? `<p class="muted">Ogni ${EYE_EVERY / 60} minuti di gioco. Poi si continua.</p>` : `<button class="btn big flash" id="eye-go">Fatto! Continua ▶</button>`}</div>`);
+    draw();
+    if (profile && profile.autoRead) Voice.speak(`Pausa per gli occhi! Guarda lontano, fuori dalla finestra, per ${EYE_SEC} secondi.`, () => {});
+    const t = setInterval(() => {
+      if (!eyeOpen) { clearInterval(t); return; }
+      n--; draw();
+      if (n > 0) return;
+      clearInterval(t);
+      if (profile && profile.autoRead) Voice.speak("Bravo! Si riparte!", () => {});
+      const b = document.getElementById("eye-go");
+      if (b) b.addEventListener("click", () => { eyeOpen = false; closeModal(); if (after) after(); });
+    }, 1000);
+  }
+
   function nextQuestion() {
     if (cdGate()) return;
+    if (game && game.sec >= (game.nextEye || EYE_EVERY)) { game.nextEye = game.sec + EYE_EVERY; eyeBreak(nextQuestion); return; }
     Games.stop();
     game.sid = pick(game.subjects);
     // lingua straniera della voce: inglese, oppure quella scelta nelle Impostazioni per la seconda lingua
@@ -1367,6 +1392,7 @@
       <p><b>Come si guadagnano i minuti.</b> La classe vera si sceglie all'inizio e si cambia solo con il PIN dei genitori. Ogni esercizio vale fino a 3 risposte giuste. Gli esercizi della propria classe danno ${Credit.fmtDelta(CONFIG.RIGHT.same)} minuto a risposta giusta; quelli di classi inferiori ${Credit.fmtDelta(CONFIG.RIGHT.low)} (e le risposte sbagliate costano di più); quelli di classi superiori ${Credit.fmtDelta(CONFIG.RIGHT.high)} e le risposte sbagliate non tolgono niente. Alla 1ª e 2ª elementare le risposte sbagliate non tolgono mai minuti.</p>
       <p><b>Il tempo lo decidono i genitori.</b> Nessuno meglio di mamma e papà sa quanto telefono va bene per il proprio figlio. L'app parte con valori prudenti: ${CONFIG.MIN_MINUTES} minuti garantiti al giorno e un massimo di ${CONFIG.MAX_BY_BAND[0]} minuti alle elementari, ${CONFIG.MAX_BY_BAND[2]} alle medie. Sono solo un suggerimento: si cambiano quando volete, in su o in giù, da <b>Impostazioni → Tempo di telefono</b>, con il PIN dei genitori.</p>
       <p><b>Il cervello che esplode.</b> Anche giocare qui dentro è tempo di schermo. Dopo un certo tempo di esercizi nella giornata (suggeriti: ${CONFIG.PLAY_MIN_BY_CLASS[0]} minuti fino alla 3ª elementare, ${Credit.format(CONFIG.PLAY_MIN_BY_CLASS[3])} in 4ª e 5ª, ${Credit.format(CONFIG.PLAY_MIN_BY_CLASS[5])} alle medie) compare il cervello che esplode e gli esercizi si fermano per ${Credit.format(CONFIG.COOLDOWN_MIN)}; i minuti già guadagnati restano. Anche questo lo decidete voi, dallo stesso posto.</p>
+      <p><b>Gli occhi.</b> I colori sono morbidi e riposanti (niente bianco abbagliante né nero con colori fluorescenti), i testi sono grandi e non ci sono lampeggi. Ogni ${EYE_EVERY / 60} minuti di gioco compare una pausa per gli occhi: si guarda lontano per ${EYE_SEC} secondi. Ricordiamo che per la vista dei bambini contano soprattutto le pause e il tempo all'aperto.</p>
       <p><b>Luci ed effetti.</b> L'app usa colori vivaci, piccoli movimenti e qualche coriandolo, ma niente lampeggi rapidi. Alcune persone, anche bambini, sono sensibili alle luci intermittenti (fotosensibilità, epilessia fotosensibile): se è il vostro caso, o nel dubbio, spegnete gli effetti da <b>Impostazioni → Effetti e luci</b> e parlatene con il medico. Se durante il gioco il bambino ha disturbi (mal di testa, vista offuscata, capogiri), fermatelo subito.</p>
       <p><b>Genitori.</b> Si raccomanda a mamma e papà di tenere sotto controllo i figli quando usano il cellulare, soprattutto se sono piccoli, e di usare sempre buon senso e discrezione sul tempo davanti allo schermo.</p>
       ${typeof DEDICA === "string" && DEDICA === "Pietro" ? `<p><b>Un grazie speciale.</b> A Pietro: è per lui che papà ha pensato questa app, e sarà lui il primo a collaudarla.</p>` : ""}
@@ -1461,7 +1487,7 @@
       renderGame(); saveResume();
       if (profile.autoRead) readQuestion();
     },
-    exit: () => { closeModal(); Voice.stopSpeaking(); Music.stop(); const p = game && game.pack; showHome(); if (p) showPack(p); },
+    exit: () => { eyeOpen = false; closeModal(); Voice.stopSpeaking(); Music.stop(); const p = game && game.pack; showHome(); if (p) showPack(p); },
     // impostazioni
     close: () => closeModal(),
     edit: () => askPin("Cambia nome o classe", () => startWizard(true, 0)),
@@ -1569,7 +1595,7 @@
     const fn = actions[el.dataset.act];
     if (fn) fn(el);
   });
-  $modal.addEventListener("click", e => { if (e.target === $modal && !setupOn()) closeModal(); });   // durante la prima configurazione non si chiude toccando fuori
+  $modal.addEventListener("click", e => { if (e.target === $modal && !setupOn() && !eyeOpen) closeModal(); });   // durante la prima configurazione non si chiude toccando fuori
 
   // tempo passato nelle sfide (solo con l'app davanti) + pausa ogni 45 minuti di gioco
   setInterval(() => {
@@ -1635,7 +1661,7 @@
   // Si esce dall'app solo dalla schermata principale (non c'è niente prima).
   function onBack() {
     if (packClose) { packClose(); return; }
-    if (!$modal.hidden) { if (!setupOn()) closeModal(); return; }
+    if (!$modal.hidden) { if (!setupOn() && !eyeOpen) closeModal(); return; }
     if (cdOpen) { showHome(); return; }
     if (albumOpen && !game) { showHome(); return; }
     if (wiz) {

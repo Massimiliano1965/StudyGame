@@ -15,13 +15,14 @@
    ============================================================ */
 /* Tre "età" dell'app: i colori cambiano con la classe */
 :root, body[data-theme="piccoli"] {
-  --bg-a: #BFE8FF; --bg-b: #FFF3C4;
-  --ink: #2B2D52; --edge: #2B2D52;
-  --card: #FFFFFF; --card-soft: #F1F8FF;
-  --accent: #FF5C8A; --on-accent: #FFFFFF;
-  --accent2: #FFC93C; --on-accent2: #2B2D52;
-  --good: #34a847; --bad: #E5484D;
-  --muted: #5A5E8C;
+  /* colori riposanti (10/10/2026): niente bianco puro, bordi grigio-blu invece che quasi neri, accenti meno accesi */
+  --bg-a: #D9EDF5; --bg-b: #F8F0DA;
+  --ink: #33375A; --edge: #474C70;
+  --card: #FFFBF2; --card-soft: #F2F6F8;
+  --accent: #EE7A98; --on-accent: #FFFFFF;
+  --accent2: #F2C35A; --on-accent2: #33375A;
+  --good: #3E9E57; --bad: #D25C5F;
+  --muted: #5F6385;
 }
 body[data-theme="ragazzi"] {
   --bg-a: #8FE8D6; --bg-b: #FFE48A;
@@ -55,27 +56,29 @@ body[data-theme="teen"] {
   background-attachment: fixed;
 }
 body[data-theme="teen"] {
-  --bg-a: #06070B; --bg-b: #06070B;
-  --ink: #F3F5FA; --edge: rgba(255,255,255,.14);
+  /* colori riposanti: antracite invece del nero, scritte non bianco pieno, niente aloni fluo */
+  --bg-a: #181B22; --bg-b: #181B22;
+  --ink: #E4E6EC; --edge: rgba(255,255,255,.14);
   --card: rgba(255,255,255,.06); --card-soft: rgba(255,255,255,.05);
-  --accent: #34a847; --on-accent: #04140A;
-  --accent2: rgba(255,255,255,.09); --on-accent2: #F3F5FA;
-  --good: #34a847; --bad: #FF5C8A;
-  --muted: #8B91A6;
-  background: radial-gradient(420px 320px at 50% 18%, rgba(52,168,71,.22), transparent 65%),
-    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px) 0 0/28px 28px,
-    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px) 0 0/28px 28px, #06070B;
+  --accent: #3F9E57; --on-accent: #04140A;
+  --accent2: rgba(255,255,255,.09); --on-accent2: #E4E6EC;
+  --good: #3F9E57; --bad: #E86B8C;
+  --muted: #9298AA;
+  background: radial-gradient(420px 320px at 50% 18%, rgba(63,158,87,.10), transparent 65%),
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px) 0 0/28px 28px,
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px) 0 0/28px 28px, #181B22;
   background-attachment: fixed;
 }
 body[data-theme="ragazzi"] {
-  --bg-a: #101a52; --bg-b: #22378f;
-  --ink: #F4F6FF; --edge: rgba(255,255,255,.2);
+  /* colori riposanti: blu meno saturo e meno scuro, scritte bianco-panna */
+  --bg-a: #1E2A5E; --bg-b: #2E3D7E;
+  --ink: #ECEEF6; --edge: rgba(255,255,255,.2);
   --card: rgba(255,255,255,.10); --card-soft: rgba(255,255,255,.08);
   --accent: #34a847; --on-accent: #04140A;
   --accent2: #FFC94A; --on-accent2: #2a1d00;
   --good: #34a847; --bad: #FF5C8A;
-  --muted: #B6C0F0;
-  background: radial-gradient(380px 300px at 85% 0%, rgba(89,215,255,.28), transparent 65%), radial-gradient(360px 300px at 0% 40%, rgba(155,123,255,.22), transparent 65%), linear-gradient(180deg, var(--bg-a), var(--bg-b));
+  --muted: #B3BBDD;
+  background: radial-gradient(380px 300px at 85% 0%, rgba(120,190,230,.16), transparent 65%), radial-gradient(360px 300px at 0% 40%, rgba(155,123,255,.12), transparent 65%), linear-gradient(180deg, var(--bg-a), var(--bg-b));
   background-attachment: fixed;
 }
 
@@ -201,7 +204,7 @@ body[data-theme="teen"] .bubble, body[data-theme="teen"] .tile, body[data-theme=
 body[data-theme="teen"] .btn:active, body[data-theme="teen"] .icon-btn:active, body[data-theme="teen"] .tile:active, body[data-theme="teen"] .ans:active { transform: none; filter: brightness(1.25); }
 body[data-theme="teen"] .btn { border-radius: 17px; letter-spacing: .02em; }
 body[data-theme="teen"] .btn:not(.alt):not(.ghost) { background: linear-gradient(180deg, #46d160, #2c9a40); border-color: transparent; color: #04140A; }
-body[data-theme="teen"] .btn.flash:not(:disabled) { animation: none; box-shadow: 0 0 22px rgba(52,168,71,.45); }
+body[data-theme="teen"] .btn.flash:not(:disabled) { animation: none; box-shadow: 0 0 10px rgba(63,158,87,.25); }
 body[data-theme="teen"] .card { border-radius: 22px; backdrop-filter: blur(10px); }
 body[data-theme="teen"] .bubble { border-radius: 16px; font-size: 16px; }
 body[data-theme="teen"] .bubble::after { border-width: 0 1px 1px 0; background: #14171f; }
@@ -329,7 +332,7 @@ body.calm .welcome .band { transition: none; }
 .bar { position: relative; height: 26px; background: var(--card-soft); border: 3px solid var(--edge); border-radius: 999px; overflow: hidden; }
 .bar > i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent2); border-right: 3px solid var(--edge); }
 .bar > b { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--edge); }
-.bar-labels { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); font-weight: 600; }
+.bar-labels { display: flex; justify-content: space-between; font-size: 15px; color: var(--muted); font-weight: 600; }
 .subjects { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .tile {
   position: relative; min-height: 92px; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
@@ -337,6 +340,7 @@ body.calm .welcome .band { transition: none; }
   color: #2B2D52; background: var(--tc); border: 3px solid var(--edge); border-radius: 22px; box-shadow: 0 5px 0 var(--edge);
 }
 .tile:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--edge); }
+body[data-theme="piccoli"] .tile, body[data-theme="ragazzi"] .tile { filter: saturate(.82); }   /* colori riposanti */
 .tile .ic { font-size: 34px; line-height: 1; }
 .tile.soon { background: var(--card-soft); color: var(--muted); border-style: dashed; }
 .tile.soon small { font-size: 13px; font-weight: 600; }
@@ -361,7 +365,7 @@ body.calm .welcome .band { transition: none; }
 .lvl-box.lvl1 { border-color: #3DDC97; }
 .lvl-box.lvl1 .lvl-tag { color: #158a58; }
 body[data-theme="teen"] .bar { height: 14px; border-width: 1px; background: rgba(255,255,255,.08); }
-body[data-theme="teen"] .bar > i { background: linear-gradient(90deg, #34a847, #8CF59E); border-right: 0; box-shadow: 0 0 12px rgba(52,168,71,.7); }
+body[data-theme="teen"] .bar > i { background: linear-gradient(90deg, #3F9E57, #7CCB8E); border-right: 0; box-shadow: none; }
 body[data-theme="teen"] .bar > b { background: rgba(255,255,255,.5); width: 2px; }
 body[data-theme="teen"] .time .num { font-size: 48px; letter-spacing: -.02em; }
 body[data-theme="teen"] .lvl-box { border-width: 1px; border-radius: 18px; }
@@ -373,7 +377,7 @@ body[data-theme="teen"] .tile { flex-direction: row; justify-content: flex-start
   color: var(--ink); background: linear-gradient(135deg, color-mix(in srgb, var(--tc) 22%, transparent), rgba(255,255,255,.04)); border-color: color-mix(in srgb, var(--tc) 60%, transparent); }
 body[data-theme="teen"] .tile .ic { font-size: 24px; flex: none; }
 body[data-theme="teen"] .tile { font-size: 16px; hyphens: auto; overflow-wrap: anywhere; }
-body[data-theme="teen"] .tile.sel { border-color: #8CF59E; box-shadow: 0 0 16px rgba(52,168,71,.45); }
+body[data-theme="teen"] .tile.sel { border-color: #7CCB8E; box-shadow: 0 0 6px rgba(63,158,87,.25); }
 body[data-theme="teen"] .tile.sel::after { top: 50%; right: 12px; margin-top: -13px; width: 26px; height: 26px; font-size: 15px; border-width: 0; background: #34a847; color: #04140A; }
 body[data-theme="teen"] .tile.soon { background: rgba(255,255,255,.04); border-style: dashed; color: var(--muted); }
 body[data-theme="teen"] .tile { padding: 8px 34px 8px 10px; gap: 8px; font-size: 15px; overflow-wrap: normal; hyphens: none; }
@@ -419,7 +423,7 @@ body.calm .cd .cd-ic { animation: none; }
    ============================================================ */
 .char { display: block; width: 100%; height: auto; overflow: visible; }
 .char.cool { filter: drop-shadow(0 0 5px rgba(46, 230, 255, .45)); }
-.char.teen { filter: drop-shadow(0 0 8px rgba(198, 244, 50, .55)); }
+.char.teen { filter: drop-shadow(0 0 4px rgba(198, 244, 50, .2)); }
 .hero { width: 190px; margin: 0 auto; animation: bob 3.2s ease-in-out infinite; }
 .hero.small { width: 120px; }
 .hero { position: relative; }
@@ -524,7 +528,7 @@ body[data-theme="teen"] .ans.right .shape::before, body[data-theme="teen"] .ans.
 .screen.play .gtop .icon-btn { width: 34px; height: 34px; min-height: 34px; font-size: 15px; }
 .screen.play .gtop .chip { font-size: 13px; padding: 2px 9px; white-space: nowrap; }
 .screen.play:not(.quiz) { padding-top: 46px; }
-.screen.play .nbub { position: relative; color: var(--edge); margin-right: 120px; background: #fff; border: 3px solid var(--edge); border-radius: 18px; padding: 6px 10px; font-weight: 800; font-size: 15px; line-height: 1.2; box-shadow: 0 4px 0 var(--edge); display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.screen.play .nbub { position: relative; color: var(--edge); margin-right: 120px; background: #fff; border: 3px solid var(--edge); border-radius: 18px; padding: 6px 10px; font-weight: 800; font-size: 17px; line-height: 1.2; box-shadow: 0 4px 0 var(--edge); display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 .screen.play .nbub:after { content: ""; position: absolute; right: -14px; top: 16px; border: 8px solid transparent; border-left: 12px solid var(--edge); }
 .screen.play .nbub .bsub { padding: 0 8px; font-size: 12px; font-weight: 700; background: var(--sc); border: 2px solid var(--edge); border-radius: 999px; }
 .screen.play .gtop { left: auto; right: 8px; width: auto; justify-content: flex-end; }
@@ -1296,6 +1300,11 @@ body.calm .tc::after { animation: none; opacity: .35; transform: translateX(80%)
 .time-val { min-width: 92px; text-align: center; font-weight: 800; font-size: 18px; }
 .time-note { margin: 2px 0 4px; font-size: 14px; }
 /* informativa privacy */
+.eye-break { text-align: center; }
+.eye-break .eb-far { font-size: 60px; line-height: 1.1; margin: 4px 0; letter-spacing: 4px; }
+.eye-break .eb-ring { margin: 10px auto; width: 118px; height: 118px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--good) calc(var(--p, 1) * 360deg), rgba(127,127,160,.2) 0); }
+.eye-break .eb-ring span { width: 94px; height: 94px; border-radius: 50%; display: grid; place-items: center; font-size: 42px; font-weight: 700; background: var(--card); }
+body[data-theme="teen"] .eye-break .eb-ring span, body[data-theme="ragazzi"] .eye-break .eb-ring span { background: #20253a; color: #ECEEF6; }
 .priv-frame { width: 100%; height: min(62vh, 520px); border: 0; border-radius: 12px; background: #fff; }
 
 /* ============================================================

@@ -242,7 +242,7 @@ const Games = (() => {
       sway: classId <= 2 ? 0 : classId <= 4 ? 12 : 22 };
   }
 
-  const TCOL = ["#FFD23F", "#7ED9FF", "#FF9EC0", "#B9F27A"];
+  const TCOL = ["#F3D36A", "#9ED6EE", "#F2B5CA", "#C6E7A0"];   // colori riposanti (10/10/2026)
   // errori perdonati: due, ma mai tanti da arrivare per forza alla risposta giusta
   const forgiven = n => Math.max(0, Math.min(2, n - 2));
 
