@@ -1271,6 +1271,9 @@
   const syncPin = () => { if (profile && profile.pin) Lock.setPin(profile.pin); syncContacts(); };
   const syncContacts = () => { if (profile && Array.isArray(profile.contacts)) Lock.setContacts(profile.contacts); };
   let lockStepsOpen = false;
+  // Se Android chiude l'app mentre si è nelle sue Impostazioni, al ritorno si riparte senza schermata iniziale, dalla guida
+  const markAway = () => { try { localStorage.setItem("sg2_away", String(Date.now())); } catch (e) {} };
+  const clearAway = () => { try { localStorage.removeItem("sg2_away"); } catch (e) {} };
 
   function lockHomeHtml() {
     if (!Lock.ready()) return "";
@@ -1719,10 +1722,10 @@
     "lock-done": () => lockFinish(),
     "lock-denied": () => { profile.lkDenied = true; Storage.saveProfile(profile); renderLockSteps(); },
     "lock-undenied": () => { profile.lkDenied = false; Storage.saveProfile(profile); Lock.status().then(renderLockSteps); },
-    "lock-appinfo": () => { Lock.openAppInfo(); },
-    "lock-perm-overlay": () => { Lock.openOverlaySettings(); },
-    "lock-perm-usage": () => { Lock.openUsageSettings(); },
-    "lock-admin": () => { if (profile) { profile.adminLater = false; Storage.saveProfile(profile); } Lock.requestAdmin(); },
+    "lock-appinfo": () => { markAway(); Lock.openAppInfo(); },
+    "lock-perm-overlay": () => { markAway(); Lock.openOverlaySettings(); },
+    "lock-perm-usage": () => { markAway(); Lock.openUsageSettings(); },
+    "lock-admin": () => { if (profile) { profile.adminLater = false; Storage.saveProfile(profile); } markAway(); Lock.requestAdmin(); },
     "lock-admin-later": () => { if (profile) { profile.adminLater = true; Storage.saveProfile(profile); } renderLockSteps(); },
     "lock-admin-step": () => { profile.adminLater = false; Storage.saveProfile(profile); Lock.status().then(openLockSteps); },
     "lock-off": () => askPin("Spegni il blocco", () => Lock.setEnabled(false).then(() => { toast("Blocco spento"); openSettings(); renderHome(); })),
@@ -1821,6 +1824,7 @@
   // nuovo giorno: i minuti ripartono dal minimo garantito
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) { Voice.stopSpeaking(); Stats.flush(); saveResume(); return; }
+    clearAway();
     Credit.refresh();
     if (Lock.available()) { refreshLockBox(); return; }
     if (profile && !setupOn() && !wiz && !game && !askCb && !albumOpen) renderHome();
@@ -1857,10 +1861,13 @@
     syncPin();
     if (!profile.pin && presetPin()) { profile.pin = presetPin(); Storage.saveProfile(profile); }
    
+    let away = false;
+    try { away = Date.now() - Number(localStorage.getItem("sg2_away")) < 15 * 60 * 1000; } catch (e) {}
+    clearAway();
     // profili senza PIN (creati prima): i genitori lo scelgono adesso
     const go = () => {
       if (!profile.pin && presetPin()) { profile.pin = presetPin(); Storage.saveProfile(profile); }
-      if (profile.pin) { if (!tryResume()) { showHome(); if (!profile.tipsOff) setTimeout(() => { if ($modal.hidden && !game && !wiz) openTips(false); }, 900); } return; }
+      if (profile.pin) { if (!tryResume()) { showHome(); if (away && Lock.available()) Lock.status().then(openLockSteps); else if (!profile.tipsOff) setTimeout(() => { if ($modal.hidden && !game && !wiz) openTips(false); }, 900); } return; }
       showHome();
       setTimeout(openParentSetup, 700);   // senza PIN: parte per i genitori, mai davanti al bambino come schermata a sé
     };
