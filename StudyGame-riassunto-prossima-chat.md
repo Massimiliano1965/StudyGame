@@ -189,7 +189,7 @@ Non si fa push senza l'ordine esplicito di Massi. La chat claude.ai non ha crede
 - Informativa privacy: www/privacy.html, aperta dalle Impostazioni con il PIN («🔒 Informativa sulla privacy (genitori)»). Per il Play Store serve anche un indirizzo web pubblico (es. GitHub Pages) e l'email dello sviluppatore nella scheda.
 - Il pulsante «Lascia una recensione» (link al Play Store) ora chiede il PIN (regole Google per le app per bambini).
 - Domande: controllate a campione 198 (11 materie × 3 fasce). Corretti: accordo «Quanti palloncini/libri/adesivi … altri … li divide» nei problemi di matematica; «Quali costruzioni portavano l'acqua…» (storia); «Al Cairo» (arte).
-- Chiave di caricamento Play: nuova chiave creata (consegnata a Massi con i 3 segreti da incollare su GitHub). release-aab.yml usa solo i segreti. signing/upload.keystore (vecchia, esposta: repo pubblico) è ancora nel repo: cancellarla quando Massi dà il via.
+- Chiave di caricamento Play: nuova chiave creata (consegnata a Massi con i 3 segreti da incollare su GitHub). release-aab.yml usa solo i segreti. signing/upload.keystore (vecchia, esposta) CANCELLATA il 10/10 (resta solo nella storia di git: non più valida, la nuova è nei segreti).
 - Da fare con calma: riordino di css/style.css con confronto automatico degli screenshot prima/dopo.
 
 ## Riordino CSS + icona di Pietro (10 ottobre, su main)
