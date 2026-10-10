@@ -92,7 +92,7 @@
   let lastJingle = { sid: null, at: 0 };
 
   Games.setTap(() => Sfx.tap());
-  Games.setBoom(() => Sfx.no());
+  Games.setBoom(() => { Sfx.no(); cheerAfterErrors(); });
   Games.setAvatar(() => charSvg(profile, "happy"));
   Games.setSpeak(card => Voice.speak(fin(card.mq ? mqSegs(card.mq) : card.sort ? sortSegs(card) : card.words ? oddSegs(card) : vfSegs(card)), msg => toast(msg, 6000)), () => !!(profile && profile.autoRead), () => Voice.canSpeak() && !!(profile && profile.autoRead));
 
@@ -695,6 +695,7 @@
       <div id="gbox"></div>
       <div id="gfb"></div>
     </section>`;
+    game.errs = 0;
     Games.mount(document.getElementById("gbox"), r, roundDone);
   }
 
@@ -839,6 +840,25 @@
       idle: ["Beep beep!", "Sistemi attivi!", "Pronto a giocare!", "Si parte?", "Antenne alzate!", "Scansione in corso..."]
     }
   };
+  // dopo il secondo errore nello stesso gioco il compagno incoraggia (la regola dei tre errori non cambia)
+  const CHEER = {
+    piccoli: ["Dai, ce la fai!", "Non mollare: ce la fai!", "Respira e riprova: ce la puoi fare!"],
+    ragazzi: ["Concentrati: ce la puoi fare!", "Non mollare proprio adesso!", "Ragiona con calma: ci sei quasi!"],
+    teen: ["Calma e sangue freddo.", "Ragiona: ce la fai.", "Non mollare adesso."]
+  };
+  function cheerAfterErrors() {
+    if (!game || !game.round || game.answered) return;
+    game.errs = (game.errs || 0) + 1;
+    if (game.errs !== 2) return;
+    const t = pick(CHEER[themeFor(profile.classId)]), hero = document.getElementById("hero");
+    if (hero) {
+      hero.querySelectorAll(".rudy-say").forEach(n => n.remove());
+      const b = document.createElement("span");
+      b.className = "rudy-say cheer"; b.setAttribute("aria-hidden", "true"); b.textContent = t;
+      hero.appendChild(b); setTimeout(() => { if (b.parentNode) b.remove(); }, 2700);
+    }
+    if (profile.autoRead) Voice.speak(t, () => {});
+  }
   function heroSay(hero, kind) {
     const set = hero && profile && SAY[Characters.oldOf(profile.family)];
     if (!set) return;
@@ -1208,6 +1228,7 @@
       <button class="btn alt" data-act="report">📊 Resoconto per i genitori</button>
       <button class="btn ghost" data-act="change-pin">🔐 Cambia PIN dei genitori</button>
       <button class="btn ghost" data-act="info">ℹ️ Avvertenze</button>
+      <button class="btn ghost" data-act="privacy">🔒 Informativa sulla privacy (genitori)</button>
       <button class="btn ghost" data-act="rate">⭐ Ti piace? Lascia una recensione</button>
       <button class="btn ghost" data-act="reset">🗑 Ricomincia da zero</button>
       <button class="btn" data-act="close">Chiudi</button>`);
@@ -1426,7 +1447,7 @@
       renderGame(); saveResume();
       if (profile.autoRead) readQuestion();
     },
-    exit: () => { Voice.stopSpeaking(); Music.stop(); const p = game && game.pack; showHome(); if (p) showPack(p); },
+    exit: () => { closeModal(); Voice.stopSpeaking(); Music.stop(); const p = game && game.pack; showHome(); if (p) showPack(p); },
     // impostazioni
     close: () => closeModal(),
     edit: () => askPin("Cambia nome o classe", () => startWizard(true, 0)),
@@ -1449,8 +1470,11 @@
     "sel-all": () => { selected = subsNow(); Sfx.tap(); renderHome(); },
     "sel-none": () => { selected = []; Sfx.tap(); renderHome(); },
     info: () => openInfo(),
+    privacy: () => askPin("Informativa sulla privacy", () => openModal(`<h2>🔒 Privacy</h2><iframe class="priv-frame" src="privacy.html" title="Informativa sulla privacy"></iframe>
+      <button class="btn" data-act="close">Chiudi</button>`)),
     "set-voice": el => { profile.voiceG = el.dataset.id === "m" ? "m" : "f"; Storage.saveProfile(profile); openSettings(); applyVoiceStyle(); _speak.call(Voice, "Ciao! Questa è la mia voce.", msg => toast(msg, 6000)); },
-    "rate": () => { const u = "https://play.google.com/store/apps/details?id=it.massi.studygame"; try { window.open("market://details?id=it.massi.studygame", "_system"); } catch (e) { window.open(u, "_system"); } },
+    // link al Play Store: solo dopo il PIN (regole Google per le app per bambini: niente uscite dall'app senza un adulto)
+    "rate": () => askPin("Recensione sul Play Store", () => { const u = "https://play.google.com/store/apps/details?id=it.massi.studygame"; try { window.open("market://details?id=it.massi.studygame", "_system"); } catch (e) { window.open(u, "_system"); } }),
     "test-voice": () => { applyVoiceStyle(); const f = Characters.allFamilies().find(x => x.id === profile.family); _speak.call(Voice, (f && f.hi) || "Ciao! Giochiamo insieme?", msg => toast(msg, 6000)); },
     "toggle-read": () => { profile.autoRead = !profile.autoRead; Storage.saveProfile(profile); refreshVoiceToggle(); openSettings(); },
     "voice-toggle": () => {
@@ -1598,7 +1622,15 @@
       if (wiz.pinOnly) { wiz = null; showHome(); return; }
       if (wiz.step > 0) { wiz.step--; renderWizard(); window.scrollTo(0, 0); return; }
       if (profile && !setupOn()) { wiz = null; showHome(); return; }
-    } else if (game) { Voice.stopSpeaking(); Music.stop(); showHome(); return; }
+    } else if (game) {
+      // a metà gioco si chiede conferma (un secondo Indietro chiude la domanda e si continua)
+      if (!game.answered) {
+        openModal(`<h2>Vuoi uscire dal gioco?</h2><p class="center">Il gioco che stai facendo si interrompe. I minuti guadagnati restano tuoi.</p>
+          <div class="btn-row"><button class="btn alt" data-act="close">No, continuo</button><button class="btn" data-act="exit">Sì, esco</button></div>`);
+        return;
+      }
+      Voice.stopSpeaking(); Music.stop(); showHome(); return;
+    }
     if (navigator.app && navigator.app.exitApp) navigator.app.exitApp();
   }
 

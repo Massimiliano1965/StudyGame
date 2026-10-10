@@ -1388,3 +1388,18 @@ body.calm .alb .new { animation: none; }
 @keyframes pkSpin { to { transform: rotate(360deg); } }
 .pk-teen { background: #06070B; color: #F3F5FA; }
 .pk-teen .pk-head { font-size: 13px; letter-spacing: .3em; color: #8B91A6; font-weight: 700; }
+
+/* ---------- 10/10/2026: riflesso olografico solo su carte rare ed epiche (4ª–5ª) ---------- */
+.alb-ragazzi .tc.rare, .alb-ragazzi .tc.epic, .tc.big.rare, .tc.big.epic { overflow: hidden; }
+.alb-ragazzi .tc.rare::after, .alb-ragazzi .tc.epic::after, .tc.big.rare::after, .tc.big.epic::after {
+  content: ""; position: absolute; top: -20%; bottom: -20%; left: 0; width: 45%; pointer-events: none; border-radius: 12px;
+  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,.0) 20%, rgba(255,255,255,.55) 48%, rgba(255,255,255,.0) 76%, transparent 100%);
+  transform: translateX(-120%) skewX(-12deg); animation: holoShine 3.2s ease-in-out infinite; will-change: transform; }
+.tc.epic::after { background: linear-gradient(105deg, transparent 0%, rgba(255,179,240,.0) 18%, rgba(255,255,255,.6) 44%, rgba(46,230,255,.45) 56%, rgba(255,179,240,.0) 78%, transparent 100%); }
+.alb-ragazzi .tc.epic:nth-child(odd)::after, .alb-ragazzi .tc.rare:nth-child(odd)::after { animation-delay: 1.4s; }
+@keyframes holoShine { 0% { transform: translateX(-120%) skewX(-12deg); } 55%, 100% { transform: translateX(330%) skewX(-12deg); } }
+body.calm .tc::after { animation: none; opacity: .35; transform: translateX(80%) skewX(-12deg); }
+/* incoraggiamento dopo il secondo errore */
+.rudy-say.cheer { background: #FFD23F; }
+/* informativa privacy */
+.priv-frame { width: 100%; height: min(62vh, 520px); border: 0; border-radius: 12px; background: #fff; }

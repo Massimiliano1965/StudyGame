@@ -38,7 +38,7 @@
     S("Chi fu il primo imperatore di Roma?", ["Augusto", "Giulio Cesare", "Nerone", "Costantino"], "Augusto diventò il primo imperatore nel 27 a.C."),
     S("Chi era Giulio Cesare?", ["Un grande generale e politico romano", "Un faraone", "Un re greco", "Un inventore"], "Cesare conquistò la Gallia e governò Roma."),
     S("Dove combattevano i gladiatori?", ["Nel Colosseo", "Nel Pantheon", "Nel Foro Romano", "Nelle Terme"], "Il Colosseo era la grande arena di Roma."),
-    S("Che cosa portavano l'acqua nelle città romane?", ["Gli acquedotti", "Gli ascensori", "Gli aeroporti", "I semafori"], "Gli acquedotti erano ponti con un canale per l'acqua."),
+    S("Quali costruzioni portavano l'acqua nelle città romane?", ["Gli acquedotti", "Gli ascensori", "Gli aeroporti", "I semafori"], "Gli acquedotti erano ponti con un canale per l'acqua."),
     S("Quale lingua parlavano gli antichi Romani?", ["Latino", "Greco", "Inglese", "Arabo"], "Dal latino nascono l'italiano, il francese e lo spagnolo."),
     S("Chi viveva nell'antica Etruria?", ["Gli Etruschi", "I Sumeri", "Gli Egizi", "I Maya"], "Gli Etruschi vivevano nell'Italia centrale, soprattutto in Toscana."),
     S("Quale città fu sepolta dall'eruzione del Vesuvio nel 79 d.C.?", ["Pompei", "Roma", "Atene", "Firenze"], "Pompei fu coperta da cenere e lapilli."),

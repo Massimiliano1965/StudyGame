@@ -181,3 +181,13 @@ Non si fa push senza l'ordine esplicito di Massi. La chat claude.ai non ha crede
 - Home: pulsante 📒 accanto all'ingranaggio, con il numero dei pezzi nuovi. Tasto indietro chiude bustina e album. «Ricomincia da zero» cancella anche l'album (chiave sg2_album).
 - Curiosità controllate a mano; emoji scelte tra quelle presenti anche su Android un po' vecchi (niente 🦣 🪸 🛞 🪨).
 - Provato: bustina, album, popup, scambio nelle tre fasce senza errori; 8953 giri di tutti i giochi + 30 partite dei 5 giochi nuovi.
+
+## Dopo la revisione con Gemini (10 ottobre, su main)
+- Tasto Indietro a metà gioco (o domanda): chiede «Vuoi uscire dal gioco?» (No, continuo / Sì, esco); un secondo Indietro chiude la domanda e si continua. Dalla home esce come prima. La ✕ esce subito.
+- Regola dei tre errori invariata (decisione di Massi). Dopo il SECONDO errore nello stesso gioco il compagno dice una frase d'incoraggiamento (CHEER per fascia, cheerAfterErrors in app.js, agganciata a Games.setBoom).
+- Riflesso olografico animato (CSS, holoShine) solo sulle carte rare ed epiche della 4ª–5ª e sulla carta grande; fermo con «Effetti e luci ridotti».
+- Informativa privacy: www/privacy.html, aperta dalle Impostazioni con il PIN («🔒 Informativa sulla privacy (genitori)»). Per il Play Store serve anche un indirizzo web pubblico (es. GitHub Pages) e l'email dello sviluppatore nella scheda.
+- Il pulsante «Lascia una recensione» (link al Play Store) ora chiede il PIN (regole Google per le app per bambini).
+- Domande: controllate a campione 198 (11 materie × 3 fasce). Corretti: accordo «Quanti palloncini/libri/adesivi … altri … li divide» nei problemi di matematica; «Quali costruzioni portavano l'acqua…» (storia); «Al Cairo» (arte).
+- Chiave di caricamento Play: nuova chiave creata (consegnata a Massi con i 3 segreti da incollare su GitHub). release-aab.yml usa solo i segreti. signing/upload.keystore (vecchia, esposta: repo pubblico) è ancora nel repo: cancellarla quando Massi dà il via.
+- Da fare con calma: riordino di css/style.css con confronto automatico degli screenshot prima/dopo.

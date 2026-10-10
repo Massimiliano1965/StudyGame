@@ -124,7 +124,7 @@
     S("Che cos'è una natura morta?", ["Un dipinto di oggetti, frutta o fiori", "Un ritratto di un animale morto", "Un paesaggio di montagna", "Una statua"], "Nelle nature morte ci sono cose ferme."),
     S("Che cos'è l'acquerello?", ["Una pittura con colori diluiti in acqua", "Una scultura", "Un mosaico", "Una fotografia"], "L'acquerello è leggero e trasparente."),
     S("Che cos'è un museo?", ["Un luogo dove si conservano e si mostrano opere", "Un negozio di frutta", "Una scuola di cucina", "Un campo sportivo"], "Nei musei si ammirano le opere d'arte."),
-    S("Dove si trova il Partenone?", ["Ad Atene", "A Roma", "A Il Cairo", "A Parigi"], "Il Partenone è sull'Acropoli di Atene."),
+    S("Dove si trova il Partenone?", ["Ad Atene", "A Roma", "Al Cairo", "A Parigi"], "Il Partenone è sull'Acropoli di Atene."),
     S("Chi dipinse «La Primavera»?", ["Sandro Botticelli", "Giotto", "Leonardo", "Caravaggio"], "La Primavera è di Botticelli."),
     S("Chi dipinse «Il bacio» (con lo sfondo dorato)?", ["Gustav Klimt", "Picasso", "Van Gogh", "Monet"], "Klimt amava l'oro."),
     S("In quale città si trova il Duomo con la grande cupola di Brunelleschi?", ["Firenze", "Milano", "Roma", "Venezia"], "La cupola di Santa Maria del Fiore è a Firenze."),
