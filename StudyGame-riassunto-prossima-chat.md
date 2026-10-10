@@ -8,7 +8,7 @@ Aggiornato al 10 ottobre 2026 (sera). Le versioni precedenti di questo file sono
 - App Android (Cordova) per bambini e ragazzi dalla 1ª elementare alla 3ª media: quiz e giochi sulle materie di scuola. Rispondendo bene si guadagnano minuti di telefono. Il tempo lo decidono i genitori; il blocco del telefono (facoltativo) apre le altre app solo con i minuti guadagnati.
 - Autore: Massimiliano Previtali (Massi), educatore linguistico. Non è programmatore: lavora dal telefono e prova tutto sul suo Android.
 - Repo: Massimiliano1965/StudyGame (PUBBLICO), ramo unico `main`. Id pacchetto `it.massi.studygame`. Chiavi di salvataggio `sg2_*` (non cambiarle: si perderebbero i profili).
-- Build: solo GitHub Actions. «Build APK» (.github/workflows/build.yml) parte a ogni push su main e fa DUE app: `StudyGame-apk` (per tutti) e `StudyGame-apk-Pietro` (con dedica). «Build AAB (Play Store)» (release-aab.yml) si avvia a mano.
+- Build: solo GitHub Actions. «Build APK» (.github/workflows/build.yml) parte a ogni push su main e fa DUE app: `StudyGame-apk` (per tutti) e `StudyGame-apk-D1` (con dedica). «Build AAB (Play Store)» (release-aab.yml) si avvia a mano.
 - Controllo della build dalla sessione cloud: `gh api "repos/Massimiliano1965/StudyGame/actions/runs?per_page=3"`. I log e gli artefatti non si scaricano da qui (redirect bloccato).
 
 ## Regole di Massi (sempre)
@@ -39,7 +39,7 @@ Aggiornato al 10 ottobre 2026 (sera). Le versioni precedenti di questo file sono
 - 29 giochi. Rinnovati il 10/10: Canestro, Pesca con la lenza, Talpe veloci (3 domande, combo), Mongolfiera, Gara contro il bot. Dopo il secondo errore il compagno incoraggia. Indietro a metà gioco chiede «Vuoi uscire dal gioco?».
 - Album di figurine, una per ogni gioco vinto (non nei ripassi): adesivi (1ª–3ª), carte con rarità e riflesso olografico (4ª–5ª), collezione esagonale (medie). Doppioni = punti scambio.
 - Privacy: informativa nelle Impostazioni (PIN); «Lascia una recensione» chiede il PIN. Nessun dato inviato.
-- Versione con dedica (codice D1): icona scudo da supereroe con la P, avvio con lo scudo, «Ciao <nome>! Benvenuto!» al posto di «Come ti chiami?», ringraziamento a Pietro solo lì.
+- Versione con dedica (codice D1): icona scudo da supereroe con la P, avvio con lo scudo, «Ciao <nome>! Benvenuto!» al posto di «Come ti chiami?», ringraziamento al bambino solo lì.
 
 ## In sospeso / da fare
 - Prova sul telefono di Massi di tutto il pacchetto del 10/10 (blocco con la guida nuova, giochi nuovi, album, colori, pausa occhi, app con dedica).
