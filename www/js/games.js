@@ -231,134 +231,224 @@ const Games = (() => {
   }
 
   // ====================================================================
-  // TIRO A SEGNO (italiano e matematica)
+  // CANESTRO (ex Tiro a segno, 10/10/2026): si lancia il pallone col dito verso il canestro con la risposta giusta.
+  // Trascina il pallone e lascia (la direzione sceglie il canestro), oppure tocca il canestro. Due errori si perdonano.
   // ====================================================================
   function makeBersaglio(classId, subjectId) {
     if (typeof Questions === "undefined") return null;
     const q = Questions.next(subjectId, classId);
-    if (!q) return null;
-    const speed = classId <= 2 ? 45 : classId <= 4 ? 75 : 105;
-    return { kind: "bersaglio", title: "Tiro a segno", prompt: q.q, hint: "Tocca il bersaglio con la risposta giusta!", q, speed };
+    if (!q || q.a.length < 2) return null;
+    return { kind: "bersaglio", title: "Canestro", prompt: q.q, hint: "Trascina il pallone verso il canestro giusto e lascialo andare. Due errori si perdonano.", q,
+      sway: classId <= 2 ? 0 : classId <= 4 ? 12 : 22 };
   }
 
-  const LANE = 78, TCOL = ["#FFD23F", "#7ED9FF", "#FF9EC0", "#B9F27A"];
+  const TCOL = ["#FFD23F", "#7ED9FF", "#FF9EC0", "#B9F27A"];
+  // errori perdonati: due, ma mai tanti da arrivare per forza alla risposta giusta
+  const forgiven = n => Math.max(0, Math.min(2, n - 2));
 
   function mountBersaglio(el, r, onDone) {
-    const q = r.q;
-    el.innerHTML = `<div class="arena" style="height:${q.a.length * LANE + 8}px">${q.a.map((t, i) => {
-      const fs = t.length > 18 ? 15 : t.length > 11 ? 18 : 22;
-      return `<button class="target" data-i="${i}" style="top:${8 + i * LANE}px;--tc:${TCOL[i % 4]};font-size:${fs}px"><span class="bull">🎯</span><span class="ttxt">${esc(t)}</span></button>`;
-    }).join("")}</div>`;
-    const arena = el.querySelector(".arena");
-    const ts = [...arena.querySelectorAll(".target")];
-    const S = ts.map(t => ({ el: t, x: 0, w: 0, v: (Math.random() < 0.5 ? -1 : 1) * r.speed * (0.7 + Math.random() * 0.6) }));
-    let done = false, last = 0;
-
-    function place(s) { s.el.style.transform = `translateX(${Math.round(s.x)}px)`; }
-    function frame(now) {
-      if (done) return;
-      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
-      last = now;
-      const W = arena.clientWidth;
-      for (const s of S) {
-        s.w = s.el.offsetWidth || s.w;
-        const max = Math.max(0, W - s.w);
-        s.x += s.v * dt;
-        if (s.x < 0) { s.x = 0; s.v = Math.abs(s.v); }
-        if (s.x > max) { s.x = max; s.v = -Math.abs(s.v); }
-        place(s);
-      }
-      raf = requestAnimationFrame(frame);
-    }
-    // posizioni di partenza sparse
-    requestAnimationFrame(() => {
-      const W = arena.clientWidth;
-      for (const s of S) { s.w = s.el.offsetWidth; s.x = Math.random() * Math.max(0, W - s.w); place(s); }
-    });
-    raf = requestAnimationFrame(frame);
-
-    function hit(i) {
-      if (done) return;
-      done = true; stop(); tapFn();
-      const ok = i === q.c;
-      ts.forEach((t, k) => {
-        t.disabled = true;
-        if (k === q.c) t.classList.add("ok");
-        else if (k === i) t.classList.add("bad");
-        else t.classList.add("dim");
-      });
-      ts[i].querySelector(".bull").textContent = ok ? "💥" : "✖";
-      onDone(ok, q.a[q.c], q.e || "");
-    }
-    ts.forEach((t, i) => {
-      t.addEventListener("pointerdown", e => { e.preventDefault(); hit(i); });
-      t.addEventListener("click", () => hit(i));
-    });
-  }
-
-  // ====================================================================
-  // CORSA (italiano e matematica): il personaggio corre, scegli la corsia giusta
-  // ====================================================================
-  let avatarFn = null;
-  const setAvatar = fn => { avatarFn = fn; };
-
-  function makeCorsa(classId, subjectId) {
-    if (typeof Questions === "undefined") return null;
-    const q = Questions.next(subjectId, classId);
-    if (!q || q.a.length < 3) return null;
-    const wrong = shuffle(q.a.map((t, i) => i).filter(i => i !== q.c)).slice(0, 2);
-    const idx = shuffle([q.c, ...wrong]);
-    return { kind: "corsa", title: "Corsa", prompt: q.q, hint: "Premi Via! e porta il personaggio nella corsia della risposta giusta.",
-      q, opts: idx.map(i => q.a[i]), lane: idx.indexOf(q.c), travel: classId <= 2 ? 5.5 : classId <= 4 ? 4.5 : 3.8 };
-  }
-
-  // carattere in base alla parola più lunga, così le parole non si spezzano a metà
-  function gateFont(tx) {
-    const lw = Math.max(...String(tx).split(/\s+/).map(w => w.length));
-    const base = lw >= 12 ? 11 : lw >= 10 ? 12 : lw >= 8 ? 14 : lw >= 6 ? 17 : 20;
-    return String(tx).length > 24 ? Math.min(base, 12) : String(tx).length > 14 ? Math.min(base, 14) : base;
-  }
-
-  function mountCorsa(el, r, onDone) {
-    const H = 340, GH = 74, CH = 64, Y0 = 6, Y1 = (H - 8 - CH) + CH * 0.5 - GH;
-    let lane = 1, started = false, done = false, t = 0, last = 0;
-    const laneLeft = l => ((l + 0.5) * 100 / 3) + "%";
-    el.innerHTML = `<div class="runwrap">
-      <div class="track" style="height:${H}px">
-        ${[0, 1, 2].map(i => `<div class="lane" data-l="${i}"></div>`).join("")}
-        ${r.opts.map((tx, i) => `<div class="gate" style="left:${i * 100 / 3}%;top:${Y0}px;--tc:${TCOL[i]};font-size:${gateFont(tx)}px"><span>${esc(tx)}</span></div>`).join("")}
-        <div class="runner" style="left:${laneLeft(lane)}">${avatarFn ? avatarFn() : "🏃"}</div>
-        <button class="btn big gostart">▶ Via!</button>
-      </div>
-      <div class="runctl"><button class="btn alt" data-mv="-1" aria-label="Sinistra">◀</button><button class="btn alt" data-mv="1" aria-label="Destra">▶</button></div>
+    const q = r.q, n = q.a.length, H = 380, BALL = 56;
+    const pos = i => n <= 2 ? { l: i * 50 + 3, t: 16 } : n === 3 ? [{ l: 3, t: 16 }, { l: 53, t: 16 }, { l: 28, t: 132 }][i] : { l: (i % 2) * 50 + 3, t: 16 + Math.floor(i / 2) * 116 };
+    el.innerHTML = `<div class="cst" style="height:${H}px">
+      ${q.a.map((t, i) => { const p = pos(i), fs = t.length > 26 ? 13 : t.length > 16 ? 15 : t.length > 9 ? 17 : 20;
+        return `<div class="cst-hoop" data-i="${i}" style="left:${p.l}%;top:${p.t}px"><div class="cst-board" style="--tc:${TCOL[i % 4]};font-size:${fs}px">${esc(t)}</div><div class="cst-ring"></div><div class="cst-net"></div></div>`; }).join("")}
+      <div class="cst-aim"></div>
+      <div class="cst-ball">🏀</div>
+      <div class="cst-tip">👆 Trascina il pallone verso il canestro e lascia!</div>
     </div>`;
-    const track = el.querySelector(".track"), runner = el.querySelector(".runner"), gates = [...el.querySelectorAll(".gate")];
-    function setLane(n) { if (done) return; lane = Math.max(0, Math.min(2, n)); runner.style.left = laneLeft(lane); tapFn(); }
-    el.querySelectorAll(".lane").forEach(l => l.addEventListener("pointerdown", e => { e.preventDefault(); setLane(+l.dataset.l); }));
-    el.querySelectorAll(".lane").forEach(l => l.addEventListener("click", () => setLane(+l.dataset.l)));
-    el.querySelectorAll("[data-mv]").forEach(b => b.addEventListener("click", () => setLane(lane + +b.dataset.mv)));
+    const court = el.querySelector(".cst"), ball = el.querySelector(".cst-ball"), aim = el.querySelector(".cst-aim"), tip = el.querySelector(".cst-tip");
+    const hoops = [...el.querySelectorAll(".cst-hoop")];
+    const out = new Set();
+    let done = false, flying = false, mistakes = 0, drag = null, t = 0, last = 0;
+    const home = () => ({ x: court.clientWidth / 2 - BALL / 2, y: H - BALL - 40 });
+    let bx = 0, by = 0;
+    const putBall = (x, y, s) => { bx = x; by = y; ball.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) scale(${s || 1})`; };
+    requestAnimationFrame(() => { const h = home(); putBall(h.x, h.y); });
+    // il centro dell'anello di ogni canestro, rispetto al campo
+    const ring = i => { const c = court.getBoundingClientRect(), b = hoops[i].querySelector(".cst-ring").getBoundingClientRect(); return { x: b.left - c.left + b.width / 2, y: b.top - c.top + b.height / 2 }; };
 
-    function finish() {
-      done = true; stop();
-      const ok = lane === r.lane;
-      gates.forEach((g, i) => g.classList.add(i === r.lane ? "ok" : i === lane ? "bad" : "dim"));
-      el.querySelectorAll("[data-mv]").forEach(b => { b.disabled = true; });
-      onDone(ok, r.q.a[r.q.c], r.q.e || "");
-    }
     function frame(now) {
       if (done) return;
       const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
       last = now; t += dt;
-      const p = Math.min(1, t / r.travel), y = Y0 + (Y1 - Y0) * p;
-      gates.forEach(g => { g.style.top = Math.round(y) + "px"; });
-      if (p >= 1) { finish(); return; }
+      if (r.sway) hoops.forEach((h, i) => { h.style.transform = `translateX(${Math.round(Math.sin(t * 1.3 + i * 1.7) * r.sway)}px)`; });
       raf = requestAnimationFrame(frame);
     }
-    el.querySelector(".gostart").addEventListener("click", e => {
+    raf = requestAnimationFrame(frame);
+
+    function fx(txt, x, y, cls) {
+      const f = document.createElement("div");
+      f.className = "cst-fx " + (cls || ""); f.textContent = txt;
+      f.style.left = Math.round(x) + "px"; f.style.top = Math.round(y) + "px";
+      court.appendChild(f); setTimeout(() => f.remove(), 900);
+    }
+    // volo del pallone a parabola fino all'anello, poi canestro o rimbalzo sul ferro
+    function shoot(i) {
+      if (done || flying || out.has(i)) return;
+      flying = true; tapFn(); tip.style.opacity = "0";
+      const s = home(), e = ring(i), ex = e.x - BALL / 2, ey = e.y - BALL / 2 - 6, peak = Math.min(s.y, ey) - 70, D = 620;
+      const t0 = performance.now();
+      const step = now => {
+        if (!el.isConnected) return;
+        const p = Math.min(1, (now - t0) / D);
+        const x = s.x + (ex - s.x) * p, y = (1 - p) * (1 - p) * s.y + 2 * (1 - p) * p * peak + p * p * ey;
+        putBall(x, y, 1 - 0.35 * p);
+        if (p < 1) { requestAnimationFrame(step); return; }
+        land(i, ex, ey);
+      };
+      requestAnimationFrame(step);
+    }
+    function land(i, x, y) {
+      const ok = i === q.c;
+      if (ok) {
+        done = true; stop();
+        hoops[i].classList.add("ok"); fx("SWISH!", x - 10, y - 20, "good");
+        ball.style.transition = "transform .35s ease-in"; putBall(x, y + 46, 0.6);
+        hoops.forEach((h, k) => { if (k !== i) h.classList.add("dim"); });
+        onDone(true, q.a[q.c], q.e || "", mistakes);
+        return;
+      }
+      mistakes++; boomFn(); out.add(i);
+      hoops[i].classList.add("bad"); fx("✖", x + 8, y - 24, "bad");
+      // rimbalzo sul ferro e il pallone torna giù
+      ball.style.transition = "transform .55s cubic-bezier(.3,.6,.5,1)";
+      const h = home(); putBall(h.x, h.y);
+      setTimeout(() => { ball.style.transition = ""; flying = false; }, 560);
+      if (mistakes > forgiven(n)) {
+        done = true; stop();
+        hoops.forEach((hp, k) => { if (k === q.c) hp.classList.add("ok"); else if (!out.has(k)) hp.classList.add("dim"); });
+        onDone(false, q.a[q.c], q.e || "", mistakes);
+      }
+    }
+    // mira: la direzione del trascinamento sceglie il canestro più vicino a quella direzione
+    function pickByDir(dx, dy) {
+      const s = home(), sx = s.x + BALL / 2, sy = s.y + BALL / 2, a = Math.atan2(dy, dx);
+      let best = -1, bd = 9;
+      hoops.forEach((_, i) => {
+        if (out.has(i)) return;
+        const e = ring(i), d = Math.abs(Math.atan2(e.y - sy, e.x - sx) - a);
+        if (d < bd) { bd = d; best = i; }
+      });
+      return best;
+    }
+    function showAim(dx, dy) {
+      const L = Math.min(150, Math.hypot(dx, dy)), a = Math.atan2(dy, dx);
+      const s = home();
+      aim.style.width = Math.round(L) + "px";
+      aim.style.transform = `translate(${Math.round(s.x + BALL / 2)}px, ${Math.round(s.y + BALL / 2)}px) rotate(${a}rad)`;
+      aim.style.opacity = L > 12 ? "1" : "0";
+      const i = pickByDir(dx, dy);
+      hoops.forEach((h, k) => h.classList.toggle("aim", k === i && L > 24));
+    }
+    court.addEventListener("pointerdown", e => {
+      if (done || flying) return;
+      const hp = e.target.closest(".cst-hoop");
+      if (hp) { e.preventDefault(); shoot(+hp.dataset.i); return; }
+      e.preventDefault();
+      drag = { x: e.clientX, y: e.clientY };
+      try { court.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    court.addEventListener("pointermove", e => { if (drag && !flying) showAim(e.clientX - drag.x, e.clientY - drag.y); });
+    const release = e => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag = null;
+      aim.style.opacity = "0"; hoops.forEach(h => h.classList.remove("aim"));
+      if (done || flying || dy > -24 || Math.hypot(dx, dy) < 30) return;   // serve un lancio verso l'alto
+      const i = pickByDir(dx, dy);
+      if (i >= 0) shoot(i);
+    };
+    court.addEventListener("pointerup", release);
+    court.addEventListener("pointercancel", () => { drag = null; aim.style.opacity = "0"; });
+  }
+
+  // ====================================================================
+  // GARA CONTRO IL BOT (ex Corsa, 10/10/2026): cinque domande; il bot corre da solo, tu scatti a ogni risposta giusta.
+  // Vince chi arriva prima alla bandiera. Due errori si perdonano, al terzo si perde.
+  // ====================================================================
+  let avatarFn = null;
+  const setAvatar = fn => { avatarFn = fn; };
+  const BOTS = ["Fulmine", "Turbo", "Razzo", "Saetta", "Zed"];
+
+  function makeCorsa(classId, subjectId) {
+    if (typeof Questions === "undefined") return null;
+    const qs = [], seen = new Set();
+    for (let g = 0; qs.length < 5 && g < 60; g++) {
+      const q = Questions.next(subjectId, classId);
+      if (!q || q.a.length < 3 || seen.has(q.q) || q.a.some(a => String(a).length > 42)) continue;
+      seen.add(q.q); qs.push(q);
+    }
+    if (qs.length < 5) return null;
+    return { kind: "corsa", title: "Gara", prompt: "Gara contro il bot: a ogni risposta giusta fai uno scatto. Arriva prima tu alla bandiera!",
+      hint: "Rispondi giusto per fare uno scatto in avanti. Il bot corre da solo. Due errori si perdonano.", qs, q: qs[0],
+      bot: pick(BOTS), time: [115, 105, 100, 85, 80, 70, 65, 65][classId] || 80 };
+  }
+
+  function mountCorsa(el, r, onDone) {
+    // partita salvata con la vecchia Corsa (una domanda sola): si gioca lo stesso
+    if (!r.qs) { r.qs = [r.q]; r.bot = r.bot || "Fulmine"; r.time = r.time || 80; }
+    const QS = r.qs, N = QS.length;
+    el.innerHTML = `<div class="rc">
+      <div class="rc-track">
+        <div class="rc-lane"><span class="rc-who">TU</span><span class="rc-run rc-you">${avatarFn ? avatarFn() : "🏃"}</span><span class="rc-fin">🏁</span></div>
+        <div class="rc-lane"><span class="rc-who">BOT ${esc(r.bot.toUpperCase())}</span><span class="rc-run rc-bot">🤖</span><span class="rc-fin">🏁</span></div>
+      </div>
+      <div class="rc-q"><span class="rc-n"></span><span class="rc-t"></span>${canSpeakFn() ? `<button class="tl-say" data-say aria-label="Leggi">🔊</button>` : ""}</div>
+      <div class="rc-ans"></div>
+      <button class="btn big flash rc-go">▶ Via!</button>
+    </div>`;
+    const you = el.querySelector(".rc-you"), bot = el.querySelector(".rc-bot"), $n = el.querySelector(".rc-n"), $t = el.querySelector(".rc-t"), $a = el.querySelector(".rc-ans");
+    const go = el.querySelector(".rc-go");
+    let qi = 0, q = QS[0], done = false, started = false, mistakes = 0, last = 0, tb = 0, py = 0;
+    // posizione del corridore: 0 = partenza, 1 = bandiera
+    const put = (e, p) => { e.style.left = `calc(${(p * 100).toFixed(2)}% - ${(p * 52).toFixed(1)}px)`; };
+    put(you, 0); put(bot, 0);
+
+    function showQ() {
+      q = QS[qi]; r.q = q;
+      $n.textContent = `${qi + 1}/${N}`; $t.textContent = q.q;
+      $a.innerHTML = q.a.map((t, i) => `<button class="rc-b" data-i="${i}" style="font-size:${String(t).length > 26 ? 14 : String(t).length > 14 ? 16 : 19}px">${esc(t)}</button>`).join("");
+      $a.classList.toggle("off", !started);
+      if (qi > 0 && autoSpeakFn() && speakFn) speakFn({ mq: q });
+    }
+    showQ();
+    function end(ok, msg) {
+      done = true; stop();
+      $a.querySelectorAll(".rc-b").forEach(b => { b.disabled = true; if (!ok && +b.dataset.i === q.c) b.classList.add("ok"); });
+      (ok ? you : bot).classList.add("win");
+      onDone(ok, ok ? QS.map(x => x.a[x.c]).join(" · ") : q.a[q.c], msg, mistakes);
+    }
+    function frame(now) {
+      if (done) return;
+      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+      last = now; tb += dt;
+      put(bot, Math.min(1, tb / r.time));
+      if (tb >= r.time) { end(false, `Il bot ${r.bot} è arrivato prima!`); return; }
+      raf = requestAnimationFrame(frame);
+    }
+    go.addEventListener("click", () => {
       if (started) return;
-      started = true; e.currentTarget.remove(); tapFn();
+      started = true; go.remove(); tapFn(); $a.classList.remove("off");
       raf = requestAnimationFrame(frame);
     });
+    $a.addEventListener("pointerdown", e => {
+      const b = e.target.closest(".rc-b");
+      if (!b || done || !started || b.disabled) return;
+      e.preventDefault(); tapFn();
+      const i = +b.dataset.i;
+      if (i === q.c) {
+        b.classList.add("ok"); py = (qi + 1) / N; put(you, py);
+        you.classList.remove("dash"); void you.offsetWidth; you.classList.add("dash");
+        $a.querySelectorAll(".rc-b").forEach(x => { x.disabled = true; });
+        if (qi >= N - 1) { end(true, mistakes === 0 ? `Hai battuto il bot ${r.bot} senza sbagliare!` : `Hai battuto il bot ${r.bot}!`); return; }
+        setTimeout(() => { if (done) return; qi++; showQ(); }, 420);
+      } else {
+        mistakes++; boomFn(); b.classList.add("bad"); b.disabled = true;
+        you.classList.remove("trip"); void you.offsetWidth; you.classList.add("trip");
+        if (mistakes > 2) end(false, "Tre errori: il bot ti ha superato.");
+      }
+    });
+    const say = el.querySelector("[data-say]");
+    if (say) say.addEventListener("click", () => { if (speakFn && !done) speakFn({ mq: q }); });
   }
 
   // ====================================================================
@@ -921,28 +1011,39 @@ const Games = (() => {
   }
 
   // ====================================================================
-  // PALLONCINI: salgono dal basso, scoppia solo quelli giusti
+  // MONGOLFIERA (ex Palloncini, 10/10/2026): salgono palloncini con le risposte; ogni palloncino giusto
+  // fa salire la mongolfiera verso la bandiera, uno sbagliato la fa scendere un po'. Due errori si perdonano.
   // ====================================================================
   const BCOL = ["#FF8FB1", "#7ED9FF", "#FFD23F", "#B9F27A", "#C9A8FF", "#FFB26B"];
+  const MGF_SVG = `<svg viewBox="0 0 60 84" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M30 3C14 3 4 15 4 29c0 13 10 22 17 31h18c7-9 17-18 17-31C56 15 46 3 30 3z" fill="#FF5C8A" stroke="#2B2D52" stroke-width="3"/>
+    <path d="M30 3c-7 0-11 13-11 27 0 12 3 21 6 30M30 3c7 0 11 13 11 27 0 12-3 21-6 30" fill="none" stroke="#FFD23F" stroke-width="5"/>
+    <path d="M30 3v57" stroke="#fff" stroke-width="4"/>
+    <path d="M21 60l2 9M39 60l-2 9" stroke="#2B2D52" stroke-width="2"/>
+    <rect x="21" y="68" width="18" height="13" rx="3" fill="#B87333" stroke="#2B2D52" stroke-width="3"/></svg>`;
 
   function makePalloncini(classId, subjectId) {
     const g = pairsFor(classId, subjectId);
     if (g.pairs.length < 4) return null;
     const targets = shuffle(g.pairs).slice(0, 3);
-    return { kind: "palloncino", title: "Palloncini", eng: g.eng, rEn: g.rEn, prompt: "Scoppia i palloncini giusti!",
-      hint: "In alto c'è una parola: scoppia il palloncino che le corrisponde. Due errori si perdonano, al terzo i palloncini scappano!",
+    return { kind: "palloncino", title: "Mongolfiera", eng: g.eng, rEn: g.rEn, prompt: "Scoppia i palloncini giusti e porta la mongolfiera fino alla bandiera!",
+      hint: "In alto c'è una parola: scoppia il palloncino che le corrisponde, così la mongolfiera sale. Due errori si perdonano.",
       pairs: targets, pool: g.pairs, speed: classId <= 2 ? 62 : classId <= 4 ? 85 : 110, scene: g.scene,
       solution: targets.map(p => `${p.l} → ${p.r}`).join(" · ") };
   }
 
   function mountPalloncini(el, r, onDone) {
-    const T = r.pairs, pool = r.pool, H = 330;
-    el.innerHTML = `<div class="baltarget"><span class="bt-n"></span><span class="bt-l"></span></div><div class="sky" style="height:${H}px"></div>`;
-    const sky = el.querySelector(".sky"), $l = el.querySelector(".bt-l"), $n = el.querySelector(".bt-n");
-    let ti = 0, mistakes = 0, done = false, last = 0, spawnT = 0;
+    const T = r.pairs, pool = r.pool, H = 340, SIDE = 64;
+    el.innerHTML = `<div class="baltarget"><span class="bt-n"></span><span class="bt-l"></span></div>
+      <div class="sky mg" style="height:${H}px"><div class="mg-col"><span class="mg-flag">🏁</span><span class="mg-rope"></span><div class="mg-air">${MGF_SVG}</div></div></div>`;
+    const sky = el.querySelector(".sky"), $l = el.querySelector(".bt-l"), $n = el.querySelector(".bt-n"), air = el.querySelector(".mg-air");
+    let ti = 0, mistakes = 0, done = false, last = 0, spawnT = 0, alt = 0;
     const B = [];
     const showTarget = () => { $n.textContent = `${ti + 1}/${T.length}`; $l.textContent = T[ti].l; };
     showTarget();
+    // altezza della mongolfiera: 0 = a terra, T.length = alla bandiera
+    const lift = () => { air.style.bottom = Math.round(8 + (H - 118) * Math.max(0, alt) / T.length) + "px"; };
+    lift();
 
     function place(b) { b.el.style.transform = `translate(${Math.round(b.x)}px, ${Math.round(b.y)}px)`; }
     function spawn(y0) {
@@ -957,7 +1058,7 @@ const Games = (() => {
       const fs = p.r.length > 14 ? 12 : p.r.length > 9 ? 14 : 18;
       el2.innerHTML = `<span class="bal-t" style="font-size:${fs}px">${esc(p.r)}</span>`;
       sky.appendChild(el2);
-      const W = sky.clientWidth, w = 108;
+      const W = sky.clientWidth - SIDE, w = 108;
       const b = { el: el2, p, x: rnd(2, Math.max(3, W - w - 2)), y: y0 === undefined ? H + 10 : y0, v: r.speed * (0.8 + Math.random() * 0.5) };
       place(b); B.push(b);
       el2.addEventListener("pointerdown", e => { e.preventDefault(); pop(b); });
@@ -972,18 +1073,21 @@ const Games = (() => {
     function finish(ok) {
       done = true; stop();
       B.forEach(b => { b.el.disabled = true; });
-      onDone(ok, r.solution, ok ? (mistakes === 0 ? "Nemmeno un palloncino sbagliato!" : "Palloncini scoppiati!") : "Tre palloncini sbagliati: gli altri sono volati via.", mistakes);
+      if (ok) { air.classList.add("won"); B.slice().forEach(drop); }
+      onDone(ok, r.solution, ok ? (mistakes === 0 ? "Nemmeno un palloncino sbagliato: la mongolfiera è arrivata!" : "La mongolfiera è arrivata alla bandiera!") : "Tre palloncini sbagliati: la mongolfiera è scesa a terra.", mistakes);
     }
     function pop(b) {
       if (done || !B.includes(b)) return;
       tapFn();
       if (b.p === T[ti]) {
-        effect(b, "💥", "good"); drop(b); ti++;
+        effect(b, "💥", "good"); drop(b); ti++; alt = ti; lift();
         if (ti >= T.length) { finish(true); return; }
         showTarget();
       } else {
         mistakes++; effect(b, "✖", "bad"); drop(b); boomFn();
-        if (mistakes > 2) finish(false);
+        alt = Math.max(0, alt - 0.4); lift();
+        air.classList.remove("shake"); void air.offsetWidth; air.classList.add("shake");
+        if (mistakes > 2) { alt = 0; lift(); finish(false); }
       }
     }
     function frame(now) {
@@ -1002,7 +1106,8 @@ const Games = (() => {
   }
 
   // ====================================================================
-  // PESCA: pesca solo il pesce con la risposta giusta
+  // PESCA CON LA LENZA (10/10/2026): si cala l'amo col dito; il pesce che resta sull'amo abbocca e viene tirato su.
+  // Se abbocca un pesce sbagliato si mangia l'esca e scappa (errore). Due errori si perdonano.
   // ====================================================================
   const FISH = ["🐟", "🐠", "🐡", "🦈"];
 
@@ -1010,144 +1115,215 @@ const Games = (() => {
     if (typeof Questions === "undefined") return null;
     const q = Questions.next(subjectId, classId);
     if (!q || q.a.length < 3) return null;
-    const speed = classId <= 2 ? 40 : classId <= 4 ? 65 : 90;
-    return { kind: "pesca", title: "Pesca", prompt: q.q, hint: "Tocca il pesce con la risposta giusta per pescarlo! Due errori si perdonano.", q, speed };
+    return { kind: "pesca", title: "Pesca", prompt: q.q, hint: "Trascina l'amo su e giù: quando il pesce giusto resta sull'amo, abbocca e lo tiri su. Due errori si perdonano.", q,
+      speed: classId <= 2 ? 34 : classId <= 4 ? 52 : 70, bite: classId <= 2 ? 0.45 : classId <= 4 ? 0.35 : 0.28 };
   }
 
   function mountPesca(el, r, onDone) {
-    const q = r.q, FL = 82;
-    el.innerHTML = `<div class="sea" style="height:${q.a.length * FL + 40}px"><div class="shore">🎣</div>${q.a.map((t, i) => {
-      const fs = t.length > 18 ? 14 : t.length > 11 ? 17 : 21;
-      return `<button class="fish" data-i="${i}" style="top:${34 + i * FL}px;--tc:${TCOL[i % 4]};font-size:${fs}px"><span class="fe">${FISH[i % 4]}</span><span class="ftxt">${esc(t)}</span></button>`;
-    }).join("")}</div>`;
-    const sea = el.querySelector(".sea");
-    const fs = [...sea.querySelectorAll(".fish")];
-    const S = fs.map(f => ({ el: f, fe: f.querySelector(".fe"), x: 0, w: 0, ph: Math.random() * 6, live: true, v: (Math.random() < 0.5 ? -1 : 1) * r.speed * (0.7 + Math.random() * 0.6) }));
-    let done = false, last = 0, mistakes = 0, t = 0;
+    if (!r.bite) r.bite = 0.35;   // vecchia Pesca salvata
+    const q = r.q, n = q.a.length, H = 420, TOP = 54, HOOK0 = 30;   // l'amo parte fuori dall'acqua
+    el.innerHTML = `<div class="lz" style="height:${H}px">
+      <div class="lz-rod">🎣</div><div class="lz-line"></div><div class="lz-hook">🪝</div>
+      ${q.a.map((t, i) => { const fs = t.length > 22 ? 13 : t.length > 12 ? 15 : 18;
+        return `<div class="lz-fish" style="--tc:${TCOL[i % 4]};font-size:${fs}px"><span class="fe">${FISH[i % 4]}</span><span class="ftxt">${esc(t)}</span></div>`; }).join("")}
+      <div class="lz-tip">👆 Trascina l'amo su e giù vicino al pesce giusto</div>
+    </div>`;
+    const sea = el.querySelector(".lz"), line = el.querySelector(".lz-line"), hook = el.querySelector(".lz-hook"), tip = el.querySelector(".lz-tip");
+    const band = (H - TOP - 50) / n;
+    const F = [...el.querySelectorAll(".lz-fish")].map((f, i) => ({ el: f, fe: f.querySelector(".fe"), i, x: 0, y: 0, w: 0, h: 0, base: TOP + 20 + band * i,
+      ph: Math.random() * 6, amp: Math.max(4, (band - 48) / 2),   // ogni pesce resta nella sua fascia: non si sovrappongono
+      v: (Math.random() < 0.5 ? -1 : 1) * r.speed * (0.75 + Math.random() * 0.5), live: true, touch: 0 }));
+    let done = false, mistakes = 0, last = 0, t = 0, hy = HOOK0, ty = HOOK0, rebait = 0, reel = null, moved = false;
+    const hx = () => sea.clientWidth / 2;
 
-    function place(s) { s.el.style.transform = `translate(${Math.round(s.x)}px, ${Math.round(Math.sin(t * 2 + s.ph) * 6)}px)`; s.fe.style.transform = s.v > 0 ? "scaleX(-1)" : "none"; }
-    function frame(now) {
-      if (done) return;
-      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
-      last = now; t += dt;
-      const W = sea.clientWidth;
-      for (const s of S) {
-        if (!s.live) continue;
-        s.w = s.el.offsetWidth || s.w;
-        const max = Math.max(0, W - s.w);
-        s.x += s.v * dt;
-        if (s.x < 0) { s.x = 0; s.v = Math.abs(s.v); }
-        if (s.x > max) { s.x = max; s.v = -Math.abs(s.v); }
-        place(s);
-      }
-      raf = requestAnimationFrame(frame);
+    function drawHook() {
+      line.style.left = Math.round(hx()) + "px"; line.style.height = Math.max(0, Math.round(hy - 30)) + "px";
+      hook.style.transform = `translate(${Math.round(hx() - 13)}px, ${Math.round(hy - 6)}px)`;
     }
     requestAnimationFrame(() => {
       const W = sea.clientWidth;
-      for (const s of S) { s.w = s.el.offsetWidth; s.x = Math.random() * Math.max(0, W - s.w); place(s); }
+      F.forEach(f => { f.w = f.el.offsetWidth; f.h = f.el.offsetHeight; f.x = Math.random() * Math.max(0, W - f.w); });
+      drawHook();
     });
+
+    function frame(now) {
+      if (done && !reel) return;
+      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+      last = now; t += dt;
+      const W = sea.clientWidth;
+      if (reel) {   // si tira su il pesce
+        hy = Math.max(HOOK0 - 20, hy - 360 * dt);
+        reel.y = hy - reel.h / 2 + 10; reel.x = hx() - reel.w / 2;
+        reel.el.style.transform = `translate(${Math.round(reel.x)}px, ${Math.round(reel.y)}px) rotate(-18deg)`;
+        drawHook();
+        if (hy <= HOOK0 - 20) { const f = reel; reel = null; f.el.classList.add("caught"); return; }
+        raf = requestAnimationFrame(frame); return;
+      }
+      // l'amo va verso il dito
+      const d = ty - hy; hy += Math.sign(d) * Math.min(Math.abs(d), 520 * dt);
+      if (rebait > 0) rebait -= dt;
+      for (const f of F) {
+        if (!f.live) {   // pesce scappato con l'esca: esce di lato
+          f.x += f.v * 4 * dt; f.el.style.transform = `translate(${Math.round(f.x)}px, ${Math.round(f.y)}px)`; continue;
+        }
+        f.w = f.el.offsetWidth || f.w; f.h = f.el.offsetHeight || f.h;
+        const max = Math.max(0, W - f.w);
+        f.x += f.v * dt;
+        if (f.x < 0) { f.x = 0; f.v = Math.abs(f.v); }
+        if (f.x > max) { f.x = max; f.v = -Math.abs(f.v); }
+        f.y = Math.max(TOP, Math.min(H - f.h - 8, f.base + Math.sin(t * 0.55 + f.ph) * f.amp));
+        f.el.style.transform = `translate(${Math.round(f.x)}px, ${Math.round(f.y)}px)`;
+        f.fe.style.transform = f.v > 0 ? "scaleX(-1)" : "none";
+        const on = moved && rebait <= 0 && hy > TOP - 6 && hx() > f.x + 6 && hx() < f.x + f.w - 6 && hy > f.y - 4 && hy < f.y + f.h + 4;
+        f.touch = on ? f.touch + dt : 0;
+        f.el.classList.toggle("near", on);
+        if (f.touch >= r.bite) { bite(f); if (done) break; }
+      }
+      drawHook();
+      raf = requestAnimationFrame(frame);
+    }
     raf = requestAnimationFrame(frame);
 
-    function lineTo(s) {
-      const ln = document.createElement("div");
-      ln.className = "fline";
-      const cx = s.x + s.w / 2, top = parseFloat(s.el.style.top);
-      ln.style.left = Math.round(cx) + "px";
-      sea.appendChild(ln);
-      requestAnimationFrame(() => { ln.style.height = Math.round(top + 10) + "px"; });
-    }
-    function catchIt(i) {
-      if (done) return;
-      const s = S[i];
-      tapFn();
-      if (i === q.c) {
-        done = true; stop();
-        lineTo(s); s.el.classList.add("ok"); s.fe.textContent = "🎣";
-        fs.forEach((f, k) => { f.disabled = true; if (k !== i) f.classList.add("dim"); });
+    function bite(f) {
+      tapFn(); f.touch = 0;
+      if (f.i === q.c) {
+        done = true; reel = f; f.el.classList.add("ok"); f.fe.textContent = "🐟";
+        F.forEach(o => { if (o !== f) o.el.classList.add("dim"); });
         onDone(true, q.a[q.c], q.e || "", mistakes);
-      } else {
-        mistakes++; s.live = false; boomFn();
-        s.el.classList.add("bad"); s.el.disabled = true; s.fe.textContent = "✖";
-        if (mistakes > 2) {
-          done = true; stop();
-          fs.forEach((f, k) => { f.disabled = true; if (k === q.c) f.classList.add("ok"); else if (S[k].live) f.classList.add("dim"); });
-          onDone(false, q.a[q.c], q.e || "", mistakes);
-        }
+        return;
+      }
+      mistakes++; boomFn(); f.live = false; f.v = (f.x > sea.clientWidth / 2 ? 1 : -1) * Math.abs(f.v || 40);
+      f.el.classList.add("bad"); f.fe.textContent = "😋";
+      const m = document.createElement("div"); m.className = "lz-msg"; m.textContent = "Ha mangiato l'esca!";
+      sea.appendChild(m); setTimeout(() => m.remove(), 1200);
+      rebait = 0.9; ty = HOOK0;
+      if (mistakes > forgiven(n)) {
+        done = true; stop();
+        F.forEach(o => { if (o.i === q.c) o.el.classList.add("ok"); else if (o.live) o.el.classList.add("dim"); });
+        onDone(false, q.a[q.c], q.e || "", mistakes);
       }
     }
-    fs.forEach((f, i) => {
-      f.addEventListener("pointerdown", e => { e.preventDefault(); catchIt(i); });
-    });
+    const setY = e => { const b = sea.getBoundingClientRect(); moved = true; ty = Math.max(HOOK0, Math.min(H - 16, e.clientY - b.top)); tip.style.opacity = "0"; };
+    let down = false;
+    sea.addEventListener("pointerdown", e => { if (done) return; e.preventDefault(); down = true; setY(e); try { sea.setPointerCapture(e.pointerId); } catch (err) {} });
+    sea.addEventListener("pointermove", e => { if (down && !done) setY(e); });
+    sea.addEventListener("pointerup", () => { down = false; });
+    sea.addEventListener("pointercancel", () => { down = false; });
   }
 
   // ====================================================================
-  // TALPE: spuntano dai buchi con le risposte, colpisci quella giusta
+  // TALPE VELOCI (10/10/2026): 9 buchi, tre domande di fila contro il tempo. Ogni giusta di seguito fa salire la combo;
+  // la talpa d'oro vale doppio. Due errori si perdonano, al terzo (o a tempo scaduto) si perde.
   // ====================================================================
   function makeTalpe(classId, subjectId) {
     if (typeof Questions === "undefined") return null;
-    const q = Questions.next(subjectId, classId);
-    if (!q || q.a.length < 3) return null;
-    return { kind: "talpa", title: "Talpe", prompt: q.q, hint: "Le talpe spuntano dai buchi: tocca quella con la risposta giusta! Due errori si perdonano.", q,
-      stay: classId <= 2 ? 2.8 : classId <= 4 ? 2.3 : 1.9 };
+    const qs = [], seen = new Set();
+    for (let g = 0; qs.length < 3 && g < 40; g++) {
+      const q = Questions.next(subjectId, classId);
+      if (!q || q.a.length < 3 || seen.has(q.q) || q.a.some(a => String(a).length > 26)) continue;
+      seen.add(q.q); qs.push(q);
+    }
+    if (qs.length < 3) return null;
+    return { kind: "talpa", title: "Talpe", prompt: "Tre domande a raffica: colpisci le talpe giuste prima che finisca il tempo!",
+      hint: "Colpisci la talpa con la risposta giusta. Più ne prendi di fila, più sale la combo. Due errori si perdonano.", qs, q: qs[0],
+      time: classId <= 2 ? 55 : classId <= 4 ? 45 : 35, stay: classId <= 2 ? 3 : classId <= 4 ? 2.4 : 1.9, live: classId <= 2 ? 3 : 4 };
   }
 
   function mountTalpe(el, r, onDone) {
-    const q = r.q, HOLES = 6, MAXLIVE = 3;
-    el.innerHTML = `<div class="whack">${Array.from({ length: HOLES }, (_, i) =>
-      `<button class="hole" data-h="${i}"><span class="mole"><span class="mtxt"></span><span class="mface">🐹</span></span><span class="mound"></span></button>`).join("")}</div>`;
-    const H = [...el.querySelectorAll(".hole")].map(h => ({ el: h, mole: h.querySelector(".mole"), face: h.querySelector(".mface"), txt: h.querySelector(".mtxt"), ans: -1, t: 0 }));
-    let done = false, mistakes = 0, last = 0, spawnIn = 0.25, queue = [];
+    if (!r.qs) { r.qs = [r.q]; r.time = r.time || 45; r.stay = r.stay || 2.4; r.live = r.live || 3; }   // vecchie Talpe salvate
+    const HOLES = 9, QS = r.qs;
+    el.innerHTML = `<div class="tl">
+      <div class="tl-q"><span class="tl-n"></span><span class="tl-t"></span>${canSpeakFn() ? `<button class="tl-say" data-say aria-label="Leggi">🔊</button>` : ""}</div>
+      <div class="tl-hud"><span class="tl-combo"></span><span class="tl-time"><i></i></span><span class="tl-pts">0</span></div>
+      <div class="whack w9">${Array.from({ length: HOLES }, (_, i) =>
+        `<button class="hole" data-h="${i}"><span class="mole"><span class="mtxt"></span><span class="mface">🐹</span></span><span class="mound"></span></button>`).join("")}</div>
+    </div>`;
+    const H = [...el.querySelectorAll(".hole")].map(h => ({ el: h, mole: h.querySelector(".mole"), face: h.querySelector(".mface"), txt: h.querySelector(".mtxt"), ans: -1, t: 0, gold: false }));
+    const $n = el.querySelector(".tl-n"), $t = el.querySelector(".tl-t"), $combo = el.querySelector(".tl-combo"), $pts = el.querySelector(".tl-pts"), $bar = el.querySelector(".tl-time i");
+    let qi = 0, q = QS[0], done = false, mistakes = 0, last = 0, spawnIn = 0.2, queue = [], left = r.time, combo = 0, pts = 0, stay = r.stay;
 
-    function hide(h) { h.ans = -1; h.mole.classList.remove("up", "bad", "ok"); h.face.textContent = "🐹"; }
+    function showQ() {
+      q = QS[qi]; r.q = q; queue = [];
+      $n.textContent = `${qi + 1}/${QS.length}`; $t.textContent = q.q;
+      if (qi > 0 && autoSpeakFn() && speakFn) speakFn({ mq: q });
+    }
+    showQ();
+    function hud() {
+      $combo.textContent = combo >= 2 ? `🔥 COMBO ×${combo}` : "";
+      $pts.textContent = pts + " punti";
+      $bar.style.width = Math.max(0, left / r.time * 100) + "%";
+      $bar.classList.toggle("low", left < 8);
+    }
+    hud();
+    function hide(h) { h.ans = -1; h.gold = false; h.mole.classList.remove("up", "bad", "ok", "gold"); h.face.textContent = "🐹"; }
     function show(h, i, life, cls) {
       h.ans = i; h.t = life;
       h.txt.textContent = q.a[i];
-      const L = q.a[i].length;
-      h.txt.style.fontSize = (L > 18 ? 12 : L > 11 ? 14 : L > 7 ? 17 : 20) + "px";
-      h.mole.classList.remove("bad", "ok");
+      const L = String(q.a[i]).length;
+      h.txt.style.fontSize = (L > 18 ? 11 : L > 11 ? 12 : L > 7 ? 14 : 16) + "px";
+      h.mole.classList.remove("bad", "ok", "gold");
+      h.gold = i === q.c && !cls && Math.random() < 0.3;
+      if (h.gold) h.mole.classList.add("gold");
       if (cls) h.mole.classList.add(cls);
+      h.face.textContent = h.gold ? "🌟" : "🐹";
       h.mole.classList.add("up");
     }
     function spawn() {
       const live = H.filter(h => h.ans >= 0), free = H.filter(h => h.ans < 0);
-      if (live.length >= MAXLIVE || !free.length) return;
+      if (live.length >= r.live || !free.length) return;
       if (!queue.length) queue = shuffle(q.a.map((_, i) => i));
       const k = queue.findIndex(i => !live.some(h => h.ans === i));
       if (k < 0) return;
       const i = queue.splice(k, 1)[0];
-      show(pick(free), i, r.stay * (0.85 + Math.random() * 0.4));
+      show(pick(free), i, stay * (0.85 + Math.random() * 0.4));
+    }
+    function fx(h, txt, cls) {
+      const f = document.createElement("span"); f.className = "tl-fx " + cls; f.textContent = txt;
+      h.el.appendChild(f); setTimeout(() => f.remove(), 800);
+    }
+    function lose(msg) {
+      done = true; stop();
+      H.forEach(x => { x.el.disabled = true; hide(x); });
+      show(H[4], q.c, 99, "ok");
+      onDone(false, q.a[q.c], msg, mistakes);
     }
     function frame(now) {
       if (done) return;
       const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
-      last = now; spawnIn -= dt;
+      last = now; spawnIn -= dt; left -= dt;
+      if (left <= 0) { left = 0; hud(); lose("Tempo scaduto!"); return; }
+      $bar.style.width = (left / r.time * 100) + "%"; $bar.classList.toggle("low", left < 8);
       for (const h of H) if (h.ans >= 0 && !h.mole.classList.contains("bad")) { h.t -= dt; if (h.t <= 0) hide(h); }
-      if (spawnIn <= 0) { spawn(); spawnIn = 0.5 + Math.random() * 0.35; }
+      if (spawnIn <= 0) { spawn(); spawnIn = 0.45 + Math.random() * 0.3; }
       raf = requestAnimationFrame(frame);
     }
     function hit(h) {
-      if (done || h.ans < 0 || h.mole.classList.contains("bad")) return;
+      if (done || h.ans < 0 || h.mole.classList.contains("bad") || h.mole.classList.contains("ok")) return;
       tapFn();
       if (h.ans === q.c) {
-        done = true; stop();
-        H.forEach(x => { x.el.disabled = true; if (x !== h) x.mole.classList.remove("up"); });
-        h.mole.classList.add("ok"); h.face.textContent = "🤩";
-        onDone(true, q.a[q.c], q.e || "", mistakes);
-      } else {
-        mistakes++; boomFn();
-        h.mole.classList.add("bad"); h.face.textContent = "✖";
-        if (mistakes > 2) {
+        combo++; const gain = 10 * combo * (h.gold ? 2 : 1); pts += gain;
+        h.mole.classList.add("ok"); h.face.textContent = "🤩"; fx(h, "+" + gain, "good");
+        hud();
+        if (qi >= QS.length - 1) {
           done = true; stop();
           H.forEach(x => { x.el.disabled = true; if (x !== h) hide(x); });
-          const free = H.find(x => x !== h);
-          show(free, q.c, 99, "ok");
-          onDone(false, q.a[q.c], q.e || "", mistakes);
-        } else {
-          setTimeout(() => { if (!done) hide(h); }, 450);
+          onDone(true, QS.map(x => x.a[x.c]).join(" · "), `${pts} punti${combo >= 3 ? ", combo perfetta!" : ""}`, mistakes);
+          return;
         }
+        // domanda dopo: le talpe spariscono e tornano più veloci
+        spawnIn = 99;
+        setTimeout(() => { if (done) return; H.forEach(hide); qi++; stay *= 0.88; showQ(); spawnIn = 0.6; }, 450);
+        H.forEach(x => { if (x !== h) hide(x); });
+      } else {
+        mistakes++; combo = 0; boomFn(); hud();
+        h.mole.classList.add("bad"); h.face.textContent = "✖"; fx(h, "✖", "bad");
+        if (mistakes > 2) { lose(""); return; }
+        setTimeout(() => { if (!done) hide(h); }, 450);
       }
     }
     H.forEach(h => h.el.addEventListener("pointerdown", e => { e.preventDefault(); hit(h); }));
+    const say = el.querySelector("[data-say]");
+    if (say) say.addEventListener("click", () => { if (speakFn && !done) speakFn({ mq: q }); });
     raf = requestAnimationFrame(frame);
   }
 

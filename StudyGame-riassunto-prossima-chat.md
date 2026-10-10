@@ -163,3 +163,14 @@ Non si fa push senza l'ordine esplicito di Massi. La chat claude.ai non ha crede
 - Lettere mescolate e Salva l'omino: niente risposte con cifre (date) fuori da matematica.
 - Provato in headless: 8958 giri di tutti i 29 giochi × 8 classi × 12 materie senza errori; screenshot controllati.
 - Proposte approvate da mostrare prima con anteprima: 9 (dare a Tiro a segno, Pesca, Talpe, Palloncini, Corsa un'idea propria), 11 (album di figurine).
+
+## 5 giochi rinnovati (10 ottobre, su main) — stesso «kind» di prima, così voce, ripresa e registro restano uguali
+- bersaglio → «Canestro»: 2–4 canestri, si trascina il pallone verso l'alto (la direzione sceglie il canestro più vicino) oppure si tocca il canestro. Volo a parabola, SWISH o rimbalzo sul ferro. Canestri che ondeggiano dalla 4ª. Errori perdonati: forgiven(n) = min(2, n−2).
+- pesca → «Pesca con la lenza»: l'amo parte fuori dall'acqua, si trascina su e giù al centro; il pesce che resta sull'amo per r.bite secondi abbocca e viene tirato su. Pesce sbagliato = «Ha mangiato l'esca!» e scappa. Nessun morso prima che il bambino tocchi.
+- talpa → «Talpe veloci»: 9 buchi, 3 domande (r.qs) contro il tempo (55/45/35 s), combo, talpa d'oro ×2, punti. Tre errori o tempo scaduto = perso.
+- palloncino → «Mongolfiera»: come prima, più la mongolfiera (SVG) a destra che sale a ogni giusto e scende un po' a ogni errore.
+- corsa → «Gara contro il bot»: 5 domande (r.qs), bot con nome (Fulmine, Turbo…) che corre da solo (tempo per classe 115…65 s) dopo «Via!»; scatto a ogni giusta.
+- Voce: mqSegs in app.js; setSpeak accetta {mq: domanda} per leggere ogni domanda nuova (Talpe, Gara); pulsante 🔊 nei due giochi.
+- Partite salvate con la vecchia Corsa/Talpe/Pesca: si riaprono lo stesso (r.qs = [r.q]).
+- Provato: 30 partite simulate (vittoria e sconfitta × 5 giochi × classi 1ª el., 5ª el., 3ª media) + 8951 giri di tutti i giochi senza errori.
+- Prossimo: ALBUM DI FIGURINE (punto 11) in TRE versioni diverse per fascia (1ª–3ª el., 4ª–5ª el., medie), ognuna con layout e stile della sua fascia (richiesta di Massi). Prima l'anteprima.

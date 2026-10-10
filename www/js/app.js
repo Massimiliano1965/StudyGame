@@ -94,7 +94,7 @@
   Games.setTap(() => Sfx.tap());
   Games.setBoom(() => Sfx.no());
   Games.setAvatar(() => charSvg(profile, "happy"));
-  Games.setSpeak(card => Voice.speak(fin(card.sort ? sortSegs(card) : card.words ? oddSegs(card) : vfSegs(card)), msg => toast(msg, 6000)), () => !!(profile && profile.autoRead), () => Voice.canSpeak() && !!(profile && profile.autoRead));
+  Games.setSpeak(card => Voice.speak(fin(card.mq ? mqSegs(card.mq) : card.sort ? sortSegs(card) : card.words ? oddSegs(card) : vfSegs(card)), msg => toast(msg, 6000)), () => !!(profile && profile.autoRead), () => Voice.canSpeak() && !!(profile && profile.autoRead));
 
   // ---------- utilità interfaccia ----------
   function toast(msg, ms) {
@@ -561,6 +561,13 @@
     return [...langSegs(card.q.q, card.q.en), { t: /[?!.:…]$/.test(card.q.q) ? " Risposta proposta: " : ". Risposta proposta: " }, ...ansSegs(card.q, card.cand), { t: "." }];
   }
 
+  // una domanda dei giochi a più domande (Talpe, Gara): domanda e risposte
+  function mqSegs(q) {
+    const segs = [...langSegs(q.q, q.en), { t: " Le risposte sono: " }];
+    q.a.forEach((a, i) => segs.push(...ansSegs(q, a), { t: i < q.a.length - 1 ? ", " : "." }));
+    return segs;
+  }
+
   // le quattro parole di "Trova l'intruso"
   function oddSegs(card) {
     const segs = [{ t: "Quale parola non c'entra con le altre? Le parole sono: " }];
@@ -580,11 +587,8 @@
     if (r.kind === "frase") return "Metti le parole in ordine per fare una frase. Le parole sono: " + r.items.map(w => w.replace(/[.,;:!?]/g, "")).join(", ") + ".";
     if (r.kind === "operazione") return (r.problem ? toSpeech(r.prompt) + " " : "") + "Metti in ordine numeri e segni per fare l'operazione. Ci sono: " +
       r.items.map(t => OPS[t] || (/^−\d/.test(t) ? "meno " + t.slice(1) : t)).join(", ") + ".";
-    if (r.kind === "corsa") {
-      const q = r.q, pos = ["A sinistra: ", "Al centro: ", "A destra: "], segs = [{ t: "Premi Via e porta il personaggio nella corsia giusta. " }, ...langSegs(r.prompt, q && q.en)];
-      r.opts.forEach((o, i) => segs.push({ t: " " + pos[i] }, ...ansSegs(q, o), { t: "." }));
-      return fin(segs);
-    }
+    if (r.kind === "corsa") return fin([{ t: `Gara contro il bot ${r.bot || ""}. A ogni risposta giusta fai uno scatto: arriva prima tu alla bandiera! Premi Via quando sei pronto. Prima domanda: ` }, ...mqSegs((r.qs || [r.q])[0])]);
+    if (r.kind === "talpa") return fin([{ t: "Talpe veloci. Tre domande a raffica: colpisci la talpa con la risposta giusta prima che finisca il tempo. Prima domanda: " }, ...mqSegs((r.qs || [r.q])[0])]);
     if (r.kind === "vf") return fin([{ t: "Vero o falso. Per ogni frase tocca vero se la risposta è giusta, falso se è sbagliata. Prima frase: " }, ...vfSegs(r.cards[0])]);
     if (r.kind === "scatole") return fin([{ t: `Smista nelle scatole. Metti ogni carta nella scatola giusta: ${toSpeech(r.labels[0])}, oppure ${toSpeech(r.labels[1])}. Trascina la carta o tocca la scatola. Due errori si perdonano, al terzo si perde. Prima carta: ` },
       { t: toSpeech(r.items[0].t), l: r.items[0].en ? "en" : "" }, { t: "." }]);
@@ -627,7 +631,7 @@
       return fin(segs);
     }
     if (r.kind === "incastro") return toSpeech(r.prompt) + " Da collegare: " + r.pairs.map(p => toSpeech(p.l)).join(", ") + ". I pezzi sono: " + r.order.map(i => toSpeech(r.pairs[i].r)).join(", ") + ".";
-    const q = r.q, segs = [{ t: r.kind === "pesca" ? "Pesca il pesce con la risposta giusta. " : r.kind === "talpa" ? "Colpisci la talpa con la risposta giusta. " : r.kind === "taglia" ? "Taglia al volo la risposta giusta, passando il dito sopra. " : "Colpisci il bersaglio con la risposta giusta. " }, ...langSegs(r.prompt, q && q.en), { t: " Le risposte sono: " }];
+    const q = r.q, segs = [{ t: r.kind === "pesca" ? "Pesca. Trascina l'amo vicino al pesce con la risposta giusta e aspetta che abbocchi. " : r.kind === "taglia" ? "Taglia al volo la risposta giusta, passando il dito sopra. " : "Canestro. Lancia il pallone nel canestro con la risposta giusta. " }, ...langSegs(r.prompt, q && q.en), { t: " Le risposte sono: " }];
     q.a.forEach((a, i) => segs.push(...ansSegs(q, a), { t: i < q.a.length - 1 ? ", " : "." }));
     return fin(segs);
   }
