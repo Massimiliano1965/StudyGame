@@ -49,6 +49,12 @@ jobs:
               fs.writeFileSync("config.xml", x);
             }
           '
+          # icona speciale per l'app con dedica (es. res/dedica/Pietro: scudo da supereroe con la P)
+          if [ -n "$DEDICA" ] && [ -d "res/dedica/$DEDICA" ]; then
+            cp res/dedica/"$DEDICA"/icon-*dpi.png res/dedica/"$DEDICA"/fg-*.png res/dedica/"$DEDICA"/bg-*.png res/android/
+            cp res/dedica/"$DEDICA"/icon-512.png res/icon-512.png
+            echo "Icona speciale per $DEDICA"
+          fi
 
       - uses: actions/setup-node@v4
         with:
