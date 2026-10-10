@@ -1386,6 +1386,7 @@
       <button class="btn alt" data-act="time-set">⏱ Tempo di telefono (genitori)</button>
       <button class="btn alt" data-act="report">📊 Resoconto per i genitori</button>
       <button class="btn ghost" data-act="change-pin">🔐 Cambia PIN dei genitori</button>
+      <button class="btn ghost" data-act="tips">💡 Consigli per i genitori</button>
       <button class="btn ghost" data-act="info">ℹ️ Avvertenze</button>
       <button class="btn ghost" data-act="privacy">🔒 Informativa sulla privacy (genitori)</button>
       <button class="btn ghost" data-act="rate">⭐ Ti piace? Lascia una recensione</button>
@@ -1395,20 +1396,23 @@
   }
 
   // ---------- configurazione dei genitori: il PIN (impostazione da adulti) ----------
+  // «1 minuto per vostro figlio»: tempo deciso dai genitori, pausa occhi, responsabilità. Alla configurazione e poi a ogni avvio, finché i genitori (col PIN) dicono di non mostrarla più.
+  function openTips(setup, fromSettings) {
+    const btns = setup ? `<p class="center" style="margin:8px 0">Adesso scegliete il <b>PIN dei genitori</b>: poi si crea il profilo del bambino.</p><button class="btn big flash" data-act="parent-go">Avanti ▶</button>`
+      : `<button class="btn big flash" data-act="close">Ho capito</button>` +
+        (profile && profile.tipsOff ? (fromSettings ? `<button class="btn ghost" data-act="tips-on">Rimostra all'avvio</button>` : "") : `<button class="btn ghost" data-act="tips-hide">Non mostrare più</button>`);
+    openModal(`<h2>👨‍👩‍👧 Per i genitori: 1 minuto per vostro figlio</h2>
+      <p class="center muted" style="font-size:15px;margin:0 0 8px">${setup ? "La configurazione può sembrare noiosa, ma vale la pena: queste tre cose fanno la differenza." : "Un promemoria: bastano pochi secondi per i vostri figli."}</p>
+      <div class="sp-points">
+        <div class="sp-pt"><span>⏱️</span><p><b>Il tempo lo decidete voi.</b> Scegliete quanti minuti di telefono si possono guadagnare e il massimo al giorno. Il bambino li conquista studiando.</p></div>
+        <div class="sp-pt"><span>👀</span><p><b>Gli occhi si riposano.</b> Ogni 20 minuti di gioco c'è una pausa di 20 secondi, e ogni 45 minuti una pausa più lunga per muoversi e bere.</p></div>
+        <div class="sp-pt"><span>🌱</span><p><b>Impara a gestirsi.</b> Vede i suoi minuti, sceglie come usarli e capisce che il tempo è una risorsa: è il primo passo della responsabilità.</p></div>
+      </div>
+      ${btns}`);
+  }
   function openParentSetup() {
     const setup = setupOn();
-    if (setup) {
-      openModal(`<h2>👨‍👩‍👧 Per i genitori: 1 minuto per vostro figlio</h2>
-        <p class="center muted" style="font-size:15px;margin:0 0 8px">La configurazione può sembrare noiosa, ma vale la pena: queste tre cose fanno la differenza.</p>
-        <div class="sp-points">
-          <div class="sp-pt"><span>⏱️</span><p><b>Il tempo lo decidete voi.</b> Scegliete quanti minuti di telefono si possono guadagnare e il massimo al giorno. Il bambino li conquista studiando.</p></div>
-          <div class="sp-pt"><span>👀</span><p><b>Gli occhi si riposano.</b> Ogni 20 minuti di gioco c'è una pausa di 20 secondi, e ogni 45 minuti una pausa più lunga per muoversi e bere.</p></div>
-          <div class="sp-pt"><span>🌱</span><p><b>Impara a gestirsi.</b> Vede i suoi minuti, sceglie come usarli e capisce che il tempo è una risorsa: è il primo passo della responsabilità.</p></div>
-        </div>
-        <p class="center" style="margin:8px 0">Adesso scegliete il <b>PIN dei genitori</b>: poi si crea il profilo del bambino.</p>
-        <button class="btn big flash" data-act="parent-go">Avanti ▶</button>`);
-      return;
-    }
+    if (setup) { openTips(true); return; }
     openModal(`<h2>👨‍👩‍👧 Chiedi ai tuoi genitori!</h2>
       <p class="center">Adesso serve il <b>PIN dei genitori</b>.</p>
       <p class="center">È un'impostazione da adulti.</p>
@@ -1677,6 +1681,11 @@
       if (!setupOn()) renderHome();
     },
     "info-setup-ok": () => openParentSetup(),
+    "tips": () => openTips(false, true),
+    "tips-hide": () => askPin("Non mostrare più", () => openModal(`<h2>Sei sicuro?</h2><p class="center">Questo promemoria non comparirà più all'avvio. Potrete rivederlo da Impostazioni → «Consigli per i genitori».</p>
+      <div class="btn-row"><button class="btn alt" data-act="close">No, lascialo</button><button class="btn" data-act="tips-hide-yes">Sì, non mostrare più</button></div>`)),
+    "tips-hide-yes": () => { profile.tipsOff = true; Storage.saveProfile(profile); closeModal(); toast("Va bene, non lo mostro più.", 3000); },
+    "tips-on": () => { profile.tipsOff = false; Storage.saveProfile(profile); closeModal(); toast("Lo rivedrete a ogni avvio.", 3000); },
     "lock-start": () => { Lock.setEnabled(true).then(() => Lock.status()).then(openLockSteps); },
     "lock-skip": () => lockFinish(),
     "lock-done": () => lockFinish(),
@@ -1826,7 +1835,7 @@
     // profili senza PIN (creati prima): i genitori lo scelgono adesso
     const go = () => {
       if (!profile.pin && presetPin()) { profile.pin = presetPin(); Storage.saveProfile(profile); }
-      if (profile.pin) { if (!tryResume()) showHome(); return; }
+      if (profile.pin) { if (!tryResume()) { showHome(); if (!profile.tipsOff) setTimeout(() => { if ($modal.hidden && !game && !wiz) openTips(false); }, 900); } return; }
       showHome();
       setTimeout(openParentSetup, 700);   // senza PIN: parte per i genitori, mai davanti al bambino come schermata a sé
     };
