@@ -18,7 +18,7 @@ Aggiornato al 10 ottobre 2026 (sera). Le versioni precedenti di questo file sono
 - Il tasto Indietro torna alla pagina precedente; chiude l'app solo dalla home.
 - Nome dell'app: «Gioca e Impara» (mai «Studia e Gioca»). Non centrare i bottoni con transform. Non mettere BackgroundColor in config.xml.
 - Varietà vera nei giochi (non lo stesso gioco con altre parole). Regola degli errori: due errori si perdonano, al terzo si perde (decisa da Massi).
-- Nella versione per tutti NON deve comparire il nome del bambino della dedica (Massi la mostra alla mamma di Pietro).
+- Nella versione per tutti NON deve comparire il nome del bambino della dedica (Massi la mostra ai genitori).
 - A fase chiusa: «FASE CHIUSA: ti conviene aprire una nuova chat» all'inizio e alla fine del messaggio, e allegare questo file.
 
 ## File (www/)
@@ -39,10 +39,10 @@ Aggiornato al 10 ottobre 2026 (sera). Le versioni precedenti di questo file sono
 - 29 giochi. Rinnovati il 10/10: Canestro, Pesca con la lenza, Talpe veloci (3 domande, combo), Mongolfiera, Gara contro il bot. Dopo il secondo errore il compagno incoraggia. Indietro a metà gioco chiede «Vuoi uscire dal gioco?».
 - Album di figurine, una per ogni gioco vinto (non nei ripassi): adesivi (1ª–3ª), carte con rarità e riflesso olografico (4ª–5ª), collezione esagonale (medie). Doppioni = punti scambio.
 - Privacy: informativa nelle Impostazioni (PIN); «Lascia una recensione» chiede il PIN. Nessun dato inviato.
-- Versione con dedica (codice D1): icona scudo da supereroe con la P, avvio con il suo scudo, «Ciao Pietro! Benvenuto!» al posto di «Come ti chiami?», ringraziamento a Pietro solo lì.
+- Versione con dedica (codice D1): icona scudo da supereroe con la P, avvio con lo scudo, «Ciao <nome>! Benvenuto!» al posto di «Come ti chiami?», ringraziamento a Pietro solo lì.
 
 ## In sospeso / da fare
-- Prova sul telefono di Massi di tutto il pacchetto del 10/10 (blocco con la guida nuova, giochi nuovi, album, colori, pausa occhi, app di Pietro).
+- Prova sul telefono di Massi di tutto il pacchetto del 10/10 (blocco con la guida nuova, giochi nuovi, album, colori, pausa occhi, app con dedica).
 - Play Store (Massi NON vuole ancora pubblicare). Quando vorrà: incollare su GitHub i 3 segreti della chiave nuova (file `SEGRETI-GITHUB-StudyGame.txt` consegnato a Massi; la chiave è `upload-giocaeimpara.keystore`, tenuta da lui), email dello sviluppatore, informativa privacy su una pagina web (es. GitHub Pages). La vecchia chiave esposta è stata cancellata. `signing/studygame.keystore` (versioni di prova) resta: cambiarla obbligherebbe a reinstallare.
 - FATTO: il nome del bambino non è più nel repo pubblico. Codice D1; il nome sta nella variabile GitHub `DEDICA_NOME` (Settings > Secrets and variables > Actions > Variables). Senza variabile la build con dedica viene saltata.
 - App giapponese «あそんで まなぼう» per Riku (nipote di Massi, 2–5 anni; papà Ryu, mamma Kumi, insegnante di scuola dell'infanzia; usano iPhone): solo un'idea, da finire entro fine anno. Prima versione nello zip `asobou-riku.zip` consegnato a Massi (8 giochi dalle 5 aree del 幼稚園教育要領, voce giapponese, adesivi, tempo dei genitori, pausa occhi). Per iPhone: pagina web installabile (manifest + service worker già fatti) da pubblicare su un repo con GitHub Pages; Massi deve creare il repo.
@@ -52,5 +52,5 @@ Aggiornato al 10 ottobre 2026 (sera). Le versioni precedenti di questo file sono
 - Profilo finto in `localStorage.sg2_profile` = {nick, classId, family:"creatura", color, photo:null, autoRead:false, narrAsked:true, sound:false, music:false, pin:"x", infoSeen:true, fxSeen:true}.
 - Per un gioco preciso: `Games.pick = () => Games.make(kind, classe, materia)` poi «Gioca». Giri automatici di tutti i giochi con `Games.make` + `Games.mount`.
 - Blocco: `window.cordova = {}` + finto `window.StudyLock` (callback con lo stato) e `deviceready` a mano.
-- Versione di Pietro: copia di www con `dedica.js` = `const DEDICA = "<nome>"` e `img/dedica-logo.svg`.
+- Versione con dedica: copia di www con `dedica.js` = `const DEDICA = "<nome>"` e `img/dedica-logo.svg`.
 - Prima di cambiare il CSS senza voler cambiare l'aspetto: fotografia degli stili calcolati di tutte le schermate prima/dopo e confronto (fatto per il riordino: 0 differenze).
