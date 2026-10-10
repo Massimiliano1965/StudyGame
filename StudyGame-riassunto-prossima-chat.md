@@ -152,3 +152,14 @@ Non si fa push senza l'ordine esplicito di Massi. La chat claude.ai non ha crede
 - Giri casuali di tutti i giochi su tutte le materie (vedi esito nel messaggio di consegna).
 - Tempo di telefono: PIN sbagliato non apre, PIN giusto apre; + e −; salvataggio che resta dopo la riapertura; minuti guadagnati conservati; tetto mai sotto i garantiti; «Rimetti i suggeriti»; giornata salvata col vecchio sistema (50 min) riportata al nuovo tetto.
 - NON provato da Massi sul telefono: tutto questo pacchetto.
+
+## Pacchetto del 10 ottobre (su main)
+- BLOCCO TELEFONO TOLTO (Massi: «troppo complicato da configurare»): eliminati plugins-local/studylock, js/lock.js, guida permessi, protezione disinstallazione, numeri di emergenza, «Usa i miei minuti». Il primo avvio chiede solo il PIN dei genitori (openParentSetup / renderParentPin in app.js). I minuti restano come contatore: il tempo lo fanno rispettare i genitori. Credit.claim resta nel codice ma non è più usato.
+- Vero o falso: «Vero» verde e «Falso» rosso in tutte le età.
+- Fumetto dell'omino in gioco (rudy-say): sotto il personaggio, non copre più la domanda.
+- Medie (tema teen): Talpe, Pesca, Palloncini, Salva l'omino e Memory in versione scura. Taglia al volo con sfondo intonato a ogni età.
+- Nome della materia nel fumetto più grande (14px); domanda più grande per 1ª–3ª elementare (18px).
+- Home compatta (classe .home): compagno accanto al fumetto, tempo su una riga, le materie si vedono subito.
+- Lettere mescolate e Salva l'omino: niente risposte con cifre (date) fuori da matematica.
+- Provato in headless: 8958 giri di tutti i 29 giochi × 8 classi × 12 materie senza errori; screenshot controllati.
+- Proposte approvate da mostrare prima con anteprima: 9 (dare a Tiro a segno, Pesca, Talpe, Palloncini, Corsa un'idea propria), 11 (album di figurine).

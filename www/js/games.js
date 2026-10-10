@@ -1328,7 +1328,8 @@ const Games = (() => {
     for (let k = 0; k < 20; k++) {
       const g = pairsFor(classId, subjectId);
       if (ASK_AMBIGUE.test(g.prompt)) continue;
-      const cands = shuffle(g.pairs).filter(p => { const w = String(p.r); return !/\s/.test(w) && w.length >= 2 && w.length <= 9; });
+      // date e numeri solo in matematica: rimettere in ordine le cifre di «1789» non è un gioco di lettere
+      const cands = shuffle(g.pairs).filter(p => { const w = String(p.r); return !/\s/.test(w) && w.length >= 2 && w.length <= 9 && (subjectId === "matematica" || !/\d/.test(w)); });
       if (!cands.length) continue;
       const p = cands[0], ask = askFor(g.prompt, p.l, g.eng, g.rEn);
       return { kind: "lettere", title: "Lettere mescolate", eng: g.eng, rEn: g.rEn, clue: { l: p.l, r: String(p.r) }, ask,
@@ -1642,6 +1643,7 @@ const Games = (() => {
       const cands = shuffle(g.pairs).filter(p => {
         if (p.r == null) return false;
         const w = String(p.r), dig = /^\d+$/.test(w);
+        if (subjectId !== "matematica" && /\d/.test(w)) return false;   // niente date fuori da matematica
         return /^[\p{L}\d]+$/u.test(w) && w.length >= (dig ? 2 : 3) && w.length <= maxLen;
       });
       if (!cands.length) continue;

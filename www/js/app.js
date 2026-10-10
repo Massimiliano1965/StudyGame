@@ -27,8 +27,6 @@
   const subsNow = () => subjectsForClass(playClass()).filter(s => isReady(s.id)).map(s => s.id);
   const hashPin = v => { let h = 5381; const t = "gei|" + v + "|2026"; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return "p1" + (h >>> 0).toString(36); };
   // il PIN dei genitori passa anche alla parte nativa: chiede il PIN davanti a Impostazioni di Android e alla disinstallazione
-  const syncPin = () => { if (profile && profile.pin) Lock.setPin(profile.pin); syncContacts(); };
-  const syncContacts = () => { if (profile && Array.isArray(profile.contacts)) Lock.setContacts(profile.contacts); };
   const presetPin = () => (typeof PIN_PRESET === "string" && PIN_PRESET) || "";
   let pendingPin = "";    // PIN scelto nella prima schermata di una installazione nuova
   let pendingCalm = false; // "figlio fotosensibile": scelta fatta nella schermata di benvenuto
@@ -178,7 +176,7 @@
   }
 
   // installazione nuova: prima il PIN dei genitori (a meno che sia già deciso dalla build), poi il profilo
-  // Ordine: 1) informazioni (restano aperte finché si tocca OK) 2) configurazione genitori (blocco e PIN) 3) profilo del bambino.
+  // Ordine: 1) informazioni (restano aperte finché si tocca OK) 2) PIN dei genitori 3) profilo del bambino.
   // Nel frattempo esiste un profilo provvisorio (setup:true) che tiene PIN e permessi anche se Android chiude l'app.
   const setupOn = () => !!(profile && profile.setup);
   function beginSetup(yes) {
@@ -248,7 +246,7 @@
     } else {
       nextLabel = "Ho finito! ✔";
       canNext = pinValid();
-      body = `<div class="center"><h1>🔐 PIN dei genitori</h1>${wiz.pinFirst ? `<p class="parent-note">👨‍👩‍👧 Chiedi ai tuoi genitori! Queste impostazioni sono molto difficili e vanno fatte da un adulto.</p>` : ""}<p class="muted" style="margin-top:6px">${wiz.pinFirst ? "Genitori: Gioca e Impara blocca le altre app del telefono finché il bambino non guadagna minuti giocando. Scegliete" : "Genitori: scegliete"} un PIN di 4 cifre. Serve per cambiare nome o classe, decidere il tempo di telefono, spegnere il blocco e ricominciare da zero. Non ditelo ai bambini e <b>ricordatelo</b>: se lo dimenticate bisogna reinstallare l'app.</p></div>
+      body = `<div class="center"><h1>🔐 PIN dei genitori</h1>${wiz.pinFirst ? `<p class="parent-note">👨‍👩‍👧 Chiedi ai tuoi genitori! Questa impostazione va fatta da un adulto.</p>` : ""}<p class="muted" style="margin-top:6px">Genitori: scegliete un PIN di 4 cifre. Serve per cambiare nome o classe, decidere il tempo di telefono e ricominciare da zero. Non ditelo ai bambini e <b>ricordatelo</b>: se lo dimenticate bisogna reinstallare l'app.</p></div>
         <input id="pin1" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN (4 cifre)" value="${esc(wiz.pin1 || "")}" aria-label="PIN a 4 cifre">
         <input id="pin2" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Ripeti il PIN" value="${esc(wiz.pin2 || "")}" aria-label="Ripeti il PIN" style="margin-top:10px">
         <p class="muted center">Se lo dimenticate, bisogna reinstallare l'app.</p>`;
@@ -328,7 +326,7 @@
     pendingPin = "";
     delete profile.setup;
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
-    syncPin();
+   
     applyCalm();
     wiz = null;
     viewClass = null;
@@ -336,8 +334,8 @@
     Credit.refresh();
     selected = subsNow();
     showHome();
-    // installazione nuova: i genitori attivano subito il blocco (impostazioni difficili, da adulti)
-    if (firstTime && !presetPin() && !profile.pin) setTimeout(openLockOffer, 700);
+    // installazione nuova: i genitori scelgono subito il PIN
+    if (firstTime && !presetPin() && !profile.pin) setTimeout(openParentSetup, 700);
   }
 
   // ====================================================================
@@ -415,21 +413,19 @@
     const pc = playClass(), rel = relOf(pc), subs = subjectsForClass(pc);
     const hiFull = rel > 0 && Credit.highFull();
     const tag = rel < 0 ? "Più facili: " + Credit.fmtDelta(CONFIG.RIGHT.low) + " min a risposta giusta" : rel > 0 ? (hiFull ? "Tetto di oggi raggiunto: valgono come i tuoi" : "Più difficili: " + Credit.fmtDelta(CONFIG.RIGHT.high) + " min a risposta giusta e nessun minuto perso") : "Il tuo livello: " + Credit.fmtDelta(CONFIG.RIGHT.same) + " min a risposta giusta";
-    $app.innerHTML = `<section class="screen">
+    $app.innerHTML = `<section class="screen home">
       ${brandHtml()}
       <div class="top">
         <button class="avatar-btn" data-act="settings" aria-label="Il mio profilo" style="border:0;background:none;padding:0">${avatarHtml(p)}</button>
         <div class="who"><h2>Ciao, ${esc(p.nick)}!</h2><span class="pill">${classLabel(p.classId)}</span></div>
         <button class="icon-btn" data-act="settings" aria-label="Impostazioni"><svg viewBox="0 0 24 24" width="30" height="30" fill="#FFD21F" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6a7.3 7.3 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></button>
       </div>
-      <div class="bubble">${esc(pick(GREET[th]))}</div>
-      <div id="hero" class="hero" data-act="intro">${charSvg(p, "happy")}</div>
+      <div class="home-hi"><div id="hero" class="hero" data-act="intro">${charSvg(p, "happy")}</div>
+        <div class="bubble">${esc(pick(GREET[th]))}</div></div>
       <div class="card time">
-        <div class="row"><h3>Tempo di telefono</h3><span class="muted">oggi</span></div>
-        <div class="row"><span class="num">${esc(Credit.format(min))}</span></div>
+        <div class="row"><h3>Tempo di telefono <span class="muted">oggi</span></h3><span class="num">${esc(Credit.format(min))}</span></div>
         <div class="bar" role="img" aria-label="${Math.floor(min)} minuti su ${cap}"><i style="width:${pct}%"></i><b style="left:${mark}%"></b></div>
         <div class="bar-labels"><span>${esc(Credit.format(Credit.minG()))} garantiti</span><span>massimo ${esc(Credit.format(cap))}</span></div>
-        ${lockHomeHtml()}
       </div>
       <div class="lvl-box lvl${rel}"><button class="icon-btn" data-act="lvl-down" aria-label="Esercizi più facili" ${pc <= 0 ? "disabled" : ""}>◀</button>
         <div class="lvl-mid"><small>Esercizi di</small><b>${esc(classLabel(pc))}</b><span class="lvl-tag">${esc(tag)}</span></div>
@@ -1091,7 +1087,7 @@
   // IMPOSTAZIONI
   // ====================================================================
   function openModal(html) { $modal.innerHTML = `<div class="card sheet">${html}</div>`; $modal.hidden = false; }
-  function closeModal() { $modal.hidden = true; $modal.innerHTML = ""; lockStepsOpen = false; lockPinStage = false; }
+  function closeModal() { $modal.hidden = true; $modal.innerHTML = ""; }
 
   function openSettings() {
     const p = profile;
@@ -1103,180 +1099,39 @@
       <div class="row-set voice-set"><span class="set-label">Voce di ${esc(((Characters.allFamilies().find(f => f.id === p.family) || {}).pet) || "")}</span><div class="l2-pick"><button class="switch ${p.voiceG !== "m" ? "on" : ""}" data-act="set-voice" data-id="f" aria-pressed="${p.voiceG !== "m"}">👧 Femmina</button><button class="switch ${p.voiceG === "m" ? "on" : ""}" data-act="set-voice" data-id="m" aria-pressed="${p.voiceG === "m"}">👦 Maschio</button><button class="switch" data-act="test-voice">▶ Prova</button></div></div>
       <div class="row-set"><span>Suoni</span><button class="switch ${p.sound !== false ? "on" : ""}" data-act="toggle-sound" aria-pressed="${p.sound !== false}">${p.sound !== false ? "Sì" : "No"}</button></div>
       <div class="row-set"><span>Effetti e luci</span><button class="switch ${p.calm ? "" : "on"}" data-act="toggle-fx" aria-pressed="${!p.calm}">${p.calm ? "Ridotti" : "Sì"}</button></div>
-      ${lockBoxHtml()}
       <button class="btn alt" data-act="time-set">⏱ Tempo di telefono (genitori)</button>
-      ${Lock.available() ? `<button class="btn alt" data-act="em-open">📞 Numeri per chiamare mamma e papà</button>` : ""}
       <button class="btn alt" data-act="report">📊 Resoconto per i genitori</button>
       <button class="btn ghost" data-act="change-pin">🔐 Cambia PIN dei genitori</button>
       <button class="btn ghost" data-act="info">ℹ️ Avvertenze</button>
       <button class="btn ghost" data-act="rate">⭐ Ti piace? Lascia una recensione</button>
       <button class="btn ghost" data-act="reset">🗑 Ricomincia da zero</button>
       <button class="btn" data-act="close">Chiudi</button>`);
-    if (Lock.available()) refreshLockBox();
   }
 
-  // ---------- blocco telefono ----------
-  function lockHomeHtml() {
-    if (!Lock.ready()) return "";
-    const av = Credit.available(), left = Lock.get().leftMin;
-    return `<div class="lock-home"><div class="lock-state">${left > 0 ? "🔓 Telefono sbloccato: ancora " + left + " min" : "🔒 Telefono in pausa"}</div>
-      <button class="btn alt small" data-act="lock-claim" ${av > 0 ? "" : "disabled"}>📱 Usa i miei minuti (${av})</button></div>`;
-  }
-
-  function lockBoxHtml() {
-    if (!Lock.available()) return "";
-    const s = Lock.get();
-    let body = `<p class="muted lock-note">Le altre app si aprono solo con i minuti guadagnati qui. Chiamate e sveglia non si bloccano mai. Con la protezione attiva, le Impostazioni di Android e la disinstallazione dell'app chiedono il PIN dei genitori.</p>`;
-    if (s.enabled && (!s.overlay || !s.usage)) body += `<button class="btn small flash" data-act="lock-steps">▶ Attiva il blocco, passo dopo passo</button>`;
-    if (s.enabled && s.overlay && s.usage) body += `<p class="lock-ok">✅ Blocco attivo${s.emergencyToday ? " · sblocchi di emergenza oggi: " + s.emergencyToday : ""}</p>
-      <button class="btn ghost small" data-act="lock-emergency">🆘 Emergenza: sblocca 10 minuti</button>`;
-    if (s.enabled && s.overlay && s.usage) body += s.admin
-      ? `<p class="lock-ok">🛡️ Protezione dalla disinstallazione attiva</p><button class="btn ghost small" data-act="admin-off">🔓 Togli la protezione (genitori)</button>`
-      : `<button class="btn small flash" data-act="lock-admin">🛡️ Attiva la protezione dalla disinstallazione</button>`;
-    return `<div class="lock-box" id="lockbox"><div class="row-set"><span>🔒 Blocco telefono</span><button class="switch ${s.enabled ? "on" : ""}" data-act="lock-toggle" aria-pressed="${!!s.enabled}">${s.enabled ? "Sì" : "No"}</button></div>${body}</div>`;
-  }
-
-
-
-  // dopo la creazione del profilo: le impostazioni del blocco sono difficili, le deve fare un adulto
-  function openLockOffer() {
-    const blocco = Lock.available() && !Lock.ready();
+  // ---------- configurazione dei genitori: il PIN (impostazione da adulti) ----------
+  function openParentSetup() {
     const setup = setupOn();
     openModal(`<h2>👨‍👩‍👧 ${setup ? "Configurazione dei genitori" : "Chiedi ai tuoi genitori!"}</h2>
-      ${blocco ? `<p class="center">Adesso si attiva il <b>blocco del telefono</b>: le altre app si aprono solo con i minuti guadagnati qui.</p>` : `<p class="center">Adesso serve il <b>PIN dei genitori</b>.</p>`}
-      <p class="center">${setup ? "Prima si configura l'app per i genitori (blocco e PIN); poi si crea il profilo del bambino." : "Sono impostazioni <b>molto difficili</b>, vanno fatte da un adulto."}</p>
-      <button class="btn big" data-act="lock-offer-go">${setup ? "Avanti ▶" : "Ci sono i miei genitori ▶"}</button>
-      <button class="btn ghost small" data-act="lock-offer-later">Più tardi: solo il PIN</button>`);
-    lockPinStage = false;
-    if (profile && profile.autoRead && !setup) Voice.speak("Chiedi ai tuoi genitori. Sono impostazioni molto difficili e le deve fare un adulto.", () => {});
+      <p class="center">Adesso serve il <b>PIN dei genitori</b>.</p>
+      <p class="center">${setup ? "Prima i genitori scelgono il PIN; poi si crea il profilo del bambino." : "È un'impostazione da adulti."}</p>
+      <button class="btn big" data-act="parent-go">${setup ? "Avanti ▶" : "Ci sono i miei genitori ▶"}</button>`);
+    if (profile && profile.autoRead && !setup) Voice.speak("Chiedi ai tuoi genitori. È un'impostazione da adulti.", () => {});
   }
 
-  // ultimo passo della guida: il PIN dei genitori (il bambino non lo vede)
-  let lockPinStage = false;
-  function renderParentPin(totalSteps) {
-    lockPinStage = true; lockStepsOpen = true;
-    openModal(`<div class="step-dots">${Array.from({ length: totalSteps }, (_, i) => `<span class="${i < totalSteps - 1 ? "done" : "now"}"></span>`).join("")}</div>
-      <h2>Passo ${totalSteps} di ${totalSteps}</h2>
-      <p class="step-name">Il PIN dei genitori</p>
-      <p class="muted center" style="font-size:15px;margin:0 0 6px">Gioca e Impara blocca le altre app finché il bambino non guadagna minuti giocando. Il PIN serve per cambiare nome o classe, decidere il tempo di telefono, spegnere il blocco e ricominciare da zero. Non ditelo ai bambini e <b>ricordatelo</b>: se lo dimenticate bisogna reinstallare l'app.</p>
+  // il PIN dei genitori (il bambino non lo vede)
+  function renderParentPin() {
+    openModal(`<h2>🔐 PIN dei genitori</h2>
+      <p class="muted center" style="font-size:15px;margin:0 0 6px">Il PIN serve per cambiare nome o classe, decidere il tempo di telefono e ricominciare da zero. Non ditelo ai bambini e <b>ricordatelo</b>: se lo dimenticate bisogna reinstallare l'app.</p>
       <input id="lpin1" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN (4 cifre)" aria-label="PIN a 4 cifre">
       <input id="lpin2" class="adult-in" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Ripeti il PIN" aria-label="Ripeti il PIN" style="margin-top:8px">
-      <button id="lpin-ok" class="btn big" data-act="lock-pin-ok" disabled>Fatto ✔</button>`);
+      <button id="lpin-ok" class="btn big" data-act="parent-pin-ok" disabled>Fatto ✔</button>`);
     const a = document.getElementById("lpin1"), b = document.getElementById("lpin2"), ok = document.getElementById("lpin-ok");
     const chk = () => { ok.disabled = !(/^\d{4}$/.test(a.value) && a.value === b.value); };
     a.addEventListener("input", chk); b.addEventListener("input", chk);
   }
 
-  // procedura guidata dei permessi, un passo alla volta: si aggiorna da sola quando si torna dalle impostazioni di Android
-  let lockStepsOpen = false;
-  function openLockSteps() { lockStepsOpen = true; renderLockSteps(); }
-  function renderLockSteps() {
-    const s = Lock.get();
-    const needPin = !(profile && profile.pin);
-    const total = needPin ? 6 : 5;
-    const dots = n => `<div class="step-dots">${Array.from({ length: total }, (_, k) => k + 1).map(i => `<span class="${i < n ? "done" : i === n ? "now" : ""}"></span>`).join("")}</div>`;
-    lockStepsOpen = true;
-    if (lockPinStage) return;   // sta scrivendo il PIN: non ridisegno
-    if (s.overlay && s.usage && !s.admin && !(profile && profile.adminLater)) {
-      openModal(`${dots(5)}<h2>Passo 5 di ${total}</h2>
-        <p class="step-name">Protezione dalla disinstallazione</p>
-        <ol class="guide-steps">
-          <li><span class="gi">1️⃣</span><span>Tocca <b>«Attiva la protezione»</b> qui sotto.</span></li>
-          <li><span class="gi">2️⃣</span><span>Android chiede «Attivare l'amministratore del dispositivo?»: tocca <b>Attiva</b>. Non dà nessun controllo sul telefono.</span></li>
-          <li><span class="gi">3️⃣</span><span>Poi l'app non si può più disinstallare, e le Impostazioni di Android chiedono il PIN dei genitori.</span></li>
-        </ol>
-        <button class="btn big" data-act="lock-admin">🛡️ Attiva la protezione</button>
-        <button class="btn ghost small" data-act="lock-admin-later">Non adesso</button>`);
-      lockStepsOpen = true;
-      return;
-    }
-    if (s.overlay && s.usage && needPin) { renderParentPin(total); return; }
-    if (s.overlay && s.usage) {
-      openModal(`<h2>✅ Tutto pronto!</h2><p class="center">Il blocco è attivo: le altre app si aprono solo con i minuti guadagnati qui.</p>
-        <button class="btn" data-act="lock-steps-done">Fatto</button>`);
-      lockStepsOpen = true;
-      return;
-    }
-    const prof = profile || {};
-    const mk = (n, title, items, mainAct, mainLabel, extra) => openModal(`${dots(n)}<h2>Passo ${n} di ${total}</h2>
-      <p class="step-name">${title}</p>
-      <ol class="guide-steps">${items.map((t, i) => `<li><span class="gi">${i + 1}️⃣</span><span>${t}</span></li>`).join("")}</ol>
-      <button class="btn big" data-act="${mainAct}">${mainLabel}</button>${extra || ""}
-      <button class="btn ghost small" data-act="lock-steps-done">Più tardi</button>`);
-    if (!s.overlay) {
-      if (!prof.lkTried) {
-        mk(1, "Prima prova: «Mostra sopra le altre app»", [
-          "Tocca <b>«Apri la pagina»</b> qui sotto.",
-          "Cerca <b>Gioca e Impara</b>, toccalo e prova ad attivare l'interruttore.",
-          "Android dirà di no (<b>«Impostazione con restrizioni»</b>): è normale. Chiudi e torna qui."],
-          "lock-perm-overlay", "📲 Apri la pagina",
-          `<button class="btn alt" data-act="lock-tried">✅ Fatto, Android ha detto di no</button>`);
-        return;
-      }
-      if (!prof.lkUnlocked) {
-        mk(2, "Sblocca l'app", [
-          "Tocca <b>«Apri Info app»</b> qui sotto.",
-          "In alto a destra tocca i <b>tre puntini ⋮</b>.",
-          "Tocca <b>«Consenti impostazioni con restrizioni»</b> e conferma con impronta o PIN del telefono."],
-          "lock-appinfo", "⚙️ Apri Info app",
-          `<button class="btn alt" data-act="lock-unlocked">✅ Fatto, avanti</button>`);
-        return;
-      }
-      mk(3, "Ora attiva «Mostra sopra le altre app»", [
-        "Tocca <b>«Apri la pagina»</b> qui sotto.",
-        "Cerca <b>Gioca e Impara</b> e attiva l'interruttore: adesso funziona.",
-        "Torna qui con la freccia indietro."],
-        "lock-perm-overlay", "📲 Apri la pagina",
-        `<button class="btn ghost small" data-act="lock-guide">❓ Dice ancora di no: ricomincia dal passo 1</button>`);
-      return;
-    }
-    mk(4, "Attiva «Accesso all'uso»", [
-      "Tocca <b>«Apri la pagina»</b> qui sotto.",
-      "Cerca <b>Gioca e Impara</b> e attiva l'interruttore.",
-      "Torna qui con la freccia indietro."],
-      "lock-perm-usage", "📲 Apri la pagina",
-      `<button class="btn ghost small" data-act="lock-guide">❓ Dice di no: ricomincia dal passo 1</button>`);
-  }
-
-  // guida per «Consenti impostazioni con restrizioni» (Android 13+, app installate a mano)
-  function openLockGuide() {
-    openModal(`<h2>🔓 «Impostazione con restrizioni»</h2>
-      <p class="muted" style="margin:0 0 4px">Succede con le app installate a mano. I <b>tre puntini</b> compaiono solo <b>dopo</b> che Android ha bloccato il permesso:</p>
-      <ol class="guide-steps">
-        <li><span class="gi">1️⃣</span><span>Prima prova: tocca «Apri la pagina» e prova ad attivare Gioca e Impara. Android lo blocca e scrive «Impostazione con restrizioni»: è normale.</span></li>
-        <li><span class="gi">2️⃣</span><span>Torna qui e tocca <b>«Apri Info app»</b>.</span></li>
-        <li><span class="gi">3️⃣</span><span>In alto a destra ora ci sono i <b>tre puntini ⋮</b>: toccali.</span></li>
-        <li><span class="gi">4️⃣</span><span>Tocca <b>«Consenti impostazioni con restrizioni»</b> e conferma con PIN o impronta.</span></li>
-        <li><span class="gi">5️⃣</span><span>Torna ai passi e attiva il permesso: ora funziona.</span></li>
-      </ol>
-      <button class="btn" data-act="lock-appinfo">⚙️ Apri Info app</button>
-      <button class="btn alt" data-act="lock-guide-done">✅ Fatto, torna ai passi</button>`);
-  }
-
-  // rilegge lo stato dal telefono e aggiorna riquadro nelle impostazioni e home
-  function refreshLockBox() {
-    return Lock.status().then(() => {
-      const el = document.getElementById("lockbox");
-      if (lockStepsOpen && !$modal.hidden) { renderLockSteps(); return; }
-      if (el && !$modal.hidden) el.outerHTML = lockBoxHtml();
-      if (profile && !setupOn() && !wiz && !game && !askCb) renderHome();
-    });
-  }
-
-  // PIN dei genitori: serve per cambiare nome/classe, spegnere il blocco e ricominciare da zero
+  // PIN dei genitori: serve per cambiare nome/classe e ricominciare da zero
   function pinWait() { const u = (profile && profile.pinLock) || 0; return u > Date.now() ? Math.ceil((u - Date.now()) / 60000) : 0; }
-  // ---------- numeri di emergenza: dalla schermata di blocco si può chiamare mamma, papà o un altro numero ----------
-  function openContacts() {
-    const c = (profile.contacts || []).slice(0, 3), def = ["Mamma", "Papà", "Altro"];
-    const row = i => { const x = c[i] || {}; return `<div class="row-set" style="flex-direction:column;align-items:stretch;gap:6px">
-      <input id="em-n${i}" class="adult-in" type="text" maxlength="20" autocomplete="off" placeholder="Nome (${def[i]})" value="${esc(x.n || "")}">
-      <input id="em-t${i}" class="adult-in" type="tel" inputmode="tel" maxlength="20" autocomplete="off" placeholder="Numero di telefono" value="${esc(x.t || "")}"></div>`; };
-    openModal(`<h2>📞 Numeri per chiamare</h2>
-      <p class="muted">Quando il telefono è in pausa, questi tre tasti permettono di chiamare lo stesso. Finita la chiamata, il telefono si riblocca. Lascia vuoto un numero per non mostrarlo.</p>
-      ${row(0)}${row(1)}${row(2)}
-      <button class="btn" data-act="em-save">Salva</button>
-      <button class="btn ghost" data-act="close">Annulla</button>`);
-  }
   function askPin(title, cb) {
     if (!profile.pin) { cb(); return; }
     const w = pinWait();
@@ -1501,61 +1356,21 @@
     "set-l2": el => { profile.l2 = L2.use(el.dataset.id); Storage.saveProfile(profile); openSettings(); },
     "toggle-fx": () => { profile.calm = !profile.calm; Storage.saveProfile(profile); applyCalm(); openSettings(); },
     "toggle-sound": () => { profile.sound = profile.sound === false; Storage.saveProfile(profile); openSettings(); renderHome(); },
-    "lock-toggle": () => {
-      if (Lock.get().enabled) { askPin("Spegni il blocco", () => Lock.setEnabled(false).then(() => { toast("Blocco spento"); openSettings(); renderHome(); })); return; }
-      Lock.setEnabled(true).then(st => { if (st.overlay && st.usage) openSettings(); else openLockSteps(); });
-    },
-    "lock-steps": () => { Lock.status().then(openLockSteps); },
-    "lock-restr-ok": () => { profile.lockRestr = true; Storage.saveProfile(profile); renderLockSteps(); },
-    "lock-restr-again": () => { profile.lockRestr = false; Storage.saveProfile(profile); renderLockSteps(); },
-    "lock-offer-go": () => {
-      if (Lock.available() && !Lock.ready()) Lock.setEnabled(true).then(() => openLockSteps());
-      else renderParentPin(1);
-    },
-    "lock-offer-later": () => renderParentPin(1),
-    "lock-pin-ok": () => {
+    "parent-go": () => renderParentPin(),
+    "parent-pin-ok": () => {
       const a = document.getElementById("lpin1"), b = document.getElementById("lpin2");
       if (!a || !/^\d{4}$/.test(a.value) || a.value !== b.value) return;
-      profile.pin = hashPin(a.value); profile.pinFails = 0; Storage.saveProfile(profile); syncPin();
-      lockPinStage = false;
+      profile.pin = hashPin(a.value); profile.pinFails = 0; Storage.saveProfile(profile);
       openModal(setupOn()
-        ? `<h2>✅ Genitori: fatto!</h2><p class="center">Ricordate il PIN. Ora tocca al bambino: creiamo il suo profilo.</p><button class="btn big flash" data-act="lock-steps-done">Avanti ▶</button>`
-        : `<h2>✅ Tutto pronto!</h2><p class="center">Ricordate il PIN. Ora si può giocare!</p><button class="btn" data-act="lock-steps-done">Fatto</button>`);
-      lockStepsOpen = false; if (!setupOn()) renderHome();
+        ? `<h2>✅ Genitori: fatto!</h2><p class="center">Ricordate il PIN. Ora tocca al bambino: creiamo il suo profilo.</p><button class="btn big flash" data-act="parent-done">Avanti ▶</button>`
+        : `<h2>✅ Tutto pronto!</h2><p class="center">Ricordate il PIN. Ora si può giocare!</p><button class="btn" data-act="parent-done">Fatto</button>`);
+      if (!setupOn()) renderHome();
     },
-    "info-setup-ok": () => openLockOffer(),
-    "lock-steps-done": () => {
-      lockStepsOpen = false; lockPinStage = false;
-      if (profile && !profile.pin) { renderParentPin(1); return; }
+    "info-setup-ok": () => openParentSetup(),
+    "parent-done": () => {
+      if (profile && !profile.pin) { renderParentPin(); return; }
       if (setupOn()) { startChildSetup(); return; }
       closeModal(); renderHome();
-    },
-    "lock-guide": () => { profile.lkTried = false; profile.lkUnlocked = false; Storage.saveProfile(profile); renderLockSteps(); },
-    "lock-tried": () => { profile.lkTried = true; Storage.saveProfile(profile); renderLockSteps(); },
-    "lock-unlocked": () => { profile.lkUnlocked = true; Storage.saveProfile(profile); renderLockSteps(); },
-    "lock-appinfo": () => { Lock.openAppInfo(); },
-    "lock-admin": () => { if (profile) { profile.adminLater = false; Storage.saveProfile(profile); } Lock.requestAdmin(); },
-    "lock-admin-later": () => { if (profile) { profile.adminLater = true; Storage.saveProfile(profile); } renderLockSteps(); },
-    "admin-off": () => askPin("Togli la protezione", () => Lock.releaseAdmin().then(() => {
-      if (profile) { profile.adminLater = true; Storage.saveProfile(profile); }
-      toast("Protezione tolta: ora l'app si può disinstallare.", 4500); openSettings();
-    })),
-    "lock-guide-done": () => { openLockSteps(); },
-    "lock-perm-overlay": () => { Lock.openOverlaySettings(); },
-    "lock-perm-usage": () => { Lock.openUsageSettings(); },
-    "lock-emergency": () => askPin("Sblocca 10 minuti", () => { Lock.emergency().then(() => { toast("Telefono sbloccato per 10 minuti", 4000); refreshLockBox(); }); }),
-    "em-open": openContacts,
-    "em-save": () => {
-      const g = id => (document.getElementById(id) || {}).value || "";
-      const list = [0, 1, 2].map(i => ({ n: g("em-n" + i).trim(), t: g("em-t" + i).replace(/[^0-9+*#]/g, "") }));
-      profile.contacts = list; Storage.saveProfile(profile); syncContacts();
-      toast(list.some(x => x.t) ? "Numeri salvati. Compaiono quando il telefono è in pausa." : "Numeri tolti.", 3500);
-      closeModal(); openSettings();
-    },
-    "lock-claim": () => {
-      const n = Credit.claim();
-      if (!n) return;
-      Lock.unlock(n).then(() => { toast("📱 Telefono sbloccato per " + n + " minuti. Buon divertimento!", 4000); renderHome(); });
     },
     reset: () => askPin("Ricominciare da zero", confirmReset),
     report: () => askPin("Resoconto", openReport),
@@ -1587,7 +1402,7 @@
     "fx-yes": () => setFxChoice(true),
     "fx-no": () => setFxChoice(false),
     "name-mic": () => listenName(),
-    "reset-yes": () => { Lock.setPin(""); Storage.resetAll(); Stats.wipe(); profile = null; viewClass = null; pendingCalm = false; closeModal(); Credit.refresh(); showWelcome(); }
+    "reset-yes": () => { Storage.resetAll(); Stats.wipe(); profile = null; viewClass = null; pendingCalm = false; closeModal(); Credit.refresh(); showWelcome(); }
   };
 
   document.addEventListener("click", e => {
@@ -1626,7 +1441,6 @@
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) { Voice.stopSpeaking(); Stats.flush(); saveResume(); return; }
     Credit.refresh();
-    if (Lock.available()) { refreshLockBox(); return; }
     if (profile && !setupOn() && !wiz && !game && !askCb) renderHome();
   });
 
@@ -1635,7 +1449,6 @@
     Splash.done();
     Voice.warmUp();
     refreshNarrate();
-    if (Lock.available()) refreshLockBox();
     if (profile && !profile.setup && typeof profile.classId !== "number") { Storage.resetAll(); profile = null; }
     if (!profile) { showWelcome(); return; }
     if (profile.setup) {   // prima configurazione interrotta (Android ha chiuso l'app): si riprende da dove era
@@ -1643,20 +1456,20 @@
       applyCalm(); setTheme(null);
       if (profile.pin) { startChildSetup(); return; }
       $app.innerHTML = `<section class="screen wz">${brandHtml()}</section>`;
-      openLockOffer();
+      openParentSetup();
       return;
     }
     applyCalm();
     Credit.setLimits(profile.lim, profile.classId); Credit.setClass(profile.classId); Credit.refresh();
     selected = subsNow();
     if (!profile.pin && presetPin()) { profile.pin = presetPin(); Storage.saveProfile(profile); }
-    syncPin();
+   
     // profili senza PIN (creati prima): i genitori lo scelgono adesso
     const go = () => {
       if (!profile.pin && presetPin()) { profile.pin = presetPin(); Storage.saveProfile(profile); }
       if (profile.pin) { if (!tryResume()) showHome(); return; }
       showHome();
-      setTimeout(openLockOffer, 700);   // senza PIN: parte per i genitori (blocco e PIN), mai davanti al bambino come schermata a sé
+      setTimeout(openParentSetup, 700);   // senza PIN: parte per i genitori, mai davanti al bambino come schermata a sé
     };
     if (profile.narrAsked) go();
     else askNarration(yes => { profile.autoRead = yes; profile.narrAsked = true; Storage.saveProfile(profile); go(); });

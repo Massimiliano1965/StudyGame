@@ -590,11 +590,6 @@ body[data-theme="teen"] .fish.ok, body[data-theme="teen"] .fish.bad { color: #0D
 .hero.fx { position: fixed; left: 0; right: 0; top: calc(20% + env(safe-area-inset-top)); width: 150px; margin: 0 auto; z-index: 22; pointer-events: none; animation: none; }
 
 /* blocco telefono */
-.lock-home { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
-.lock-state { font-weight: 700; text-align: center; }
-.lock-box { display: flex; flex-direction: column; gap: 8px; padding: 6px 0; }
-.lock-note { margin: 0; font-size: 14px; }
-.lock-ok { margin: 0; font-weight: 700; }
 .adult-in { width: 100%; box-sizing: border-box; min-height: 52px; font-size: 22px; text-align: center; border: 3px solid var(--edge); border-radius: 14px; background: var(--card-soft); color: var(--ink); }
 .btn:disabled { opacity: .5; }
 
@@ -1110,3 +1105,52 @@ body[data-theme="teen"] .sheet { background: #0e1118; backdrop-filter: none; }
 .screen.play:not(.quiz) .hero.narr { top: calc(104px + env(safe-area-inset-top)); }
 .screen.play:not(.quiz) .nbub { min-height: 140px; }
 .screen.play #gbox { margin-top: 4px; }
+
+/* ---------- 10/10/2026: sistemazioni dopo il controllo generale ---------- */
+/* 1) Vero o falso: «Vero» verde e «Falso» rosso in tutte le età (prima nei temi scuri erano verdi tutti e due) */
+body[data-theme] .vf-btns .btn.vf-yes:not(.good):not(.bad) { background: #34a847; color: #fff; }
+body[data-theme] .vf-btns .btn.vf-no:not(.good):not(.bad) { background: #E5484D; color: #fff; }
+body[data-theme] .vf-btns .btn.good { background: #34a847; color: #fff; }
+body[data-theme] .vf-btns .btn.bad { background: #E5484D; color: #fff; }
+
+/* 2) fumetto dell'omino durante il gioco: sotto la faccia, non sopra la domanda */
+.screen.play .hero.narr .rudy-say { top: auto; bottom: -40px; left: 0; right: 0; margin: 0 auto; width: max-content; max-width: 118px;
+  white-space: normal; text-align: center; font-size: 15px; line-height: 1.15; padding: 3px 9px; transform-origin: 50% 0; }
+.screen.play .hero.narr .rudy-say::after { left: calc(50% - 6px); bottom: auto; top: -9px; transform: rotate(225deg); }
+
+/* 5) nome della materia sopra la domanda: più grande */
+.screen.play .nbub .bsub { font-size: 14px; padding: 1px 10px; }
+/* 6) 1ª–3ª elementare: domanda più grande nel fumetto */
+body[data-theme="piccoli"] .screen.play .nbub { font-size: 18px; line-height: 1.25; }
+
+/* 4) Taglia al volo: sfondo intonato a ogni età */
+body[data-theme="piccoli"] .slice { background: linear-gradient(#BEE9FF, #EAF8FF 60%, #FFF3C4); }
+body[data-theme="piccoli"] .slice .sl-trail polyline { stroke: #2B2D52; }
+body[data-theme="ragazzi"] .slice { background: linear-gradient(#1f2a7a, #3a2f8f); border-color: rgba(255,255,255,.22); }
+body[data-theme="teen"] .slice { background: linear-gradient(#0b0f17, #10241a); border: 1px solid rgba(255,255,255,.14); }
+
+/* 3) medie: Talpe, Pesca, Palloncini, Salva l'omino e Memory in versione scura, come gli altri giochi */
+body[data-theme="teen"] .whack { background: linear-gradient(#0f1626 0 18%, #12301f 18%); border: 1px solid rgba(255,255,255,.14); }
+body[data-theme="teen"] .hole .mtxt { background: #1d2330; color: #fff; border: 1px solid rgba(140,245,158,.6); box-shadow: 0 0 10px rgba(52,168,71,.35); }
+body[data-theme="teen"] .hole .mole.ok .mtxt { background: #34a847; color: #fff; }
+body[data-theme="teen"] .hole .mole.bad .mtxt { background: #E5484D; color: #fff; }
+body[data-theme="teen"] .sea { background: linear-gradient(#0f1626 0 28px, #0b3550 28px, #04121f); border: 1px solid rgba(255,255,255,.14); }
+body[data-theme="teen"] .fish:not(.ok):not(.bad) { background: rgba(255,255,255,.1); color: #fff; border: 1px solid var(--tc, rgba(255,255,255,.3)); box-shadow: 0 0 10px rgba(0,0,0,.4); }
+body[data-theme="teen"] .sky { background: linear-gradient(#070b1c, #18204a); border: 1px solid rgba(255,255,255,.14); }
+body[data-theme="teen"] .hg-scene { background: #0f1626; border: 1px solid rgba(255,255,255,.14); }
+body[data-theme="teen"] .hg-svg > rect:first-child { fill: #0f1626; }
+body[data-theme="teen"] .hg-svg > circle:first-of-type { fill: #E8E8F0; stroke: none; }
+body[data-theme="teen"] .hg-svg > ellipse { fill: rgba(255,255,255,.12); }
+body[data-theme="teen"] .mcard:not(.up):not(.match):not(.miss) { background: #1d2330; color: #fff; border: 1px solid rgba(255,255,255,.18); box-shadow: none; }
+body[data-theme="teen"] .mcard:not(.up):not(.match) .mback { color: #8CF59E; }
+
+/* 7) home: il compagno accanto al fumetto e il tempo su una riga, così le materie si vedono subito */
+.screen.home .home-hi { display: flex; align-items: center; gap: 8px; }
+.screen.home .home-hi .hero { width: 104px; margin: 0; flex: none; }
+.screen.home .home-hi .bubble { flex: 1; align-self: center; max-width: none; margin-left: 8px; }
+.screen.home .home-hi .bubble::after { left: -10px; top: 50%; bottom: auto; margin: -9px 0 0; transform: rotate(135deg); }
+.screen.home .time { gap: 6px; }
+.screen.home .time .row { align-items: center; }
+.screen.home .time h3 .muted { font-size: 14px; font-weight: 600; }
+.screen.home .time .num { font-size: 32px; }
+.screen.home .lvl-box { margin: 0; padding: 4px 8px; }
