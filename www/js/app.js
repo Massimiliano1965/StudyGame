@@ -1781,8 +1781,17 @@
   });
 
   // ---------- avvio ----------
+  let booted = false;
   function boot() {
+    if (booted) return;
+    booted = true;
+    try { bootInner(); }
+    catch (e) {   // se qualcosa va storto non si resta su una schermata vuota: si riparte dall'inizio sicuro
+      try { console.error(e); if (profile && !profile.setup && typeof profile.classId === "number") showHome(); else showWelcome(); } catch (e2) {}
+    }
     Splash.done();
+  }
+  function bootInner() {
     Voice.warmUp();
     if (Lock.available()) refreshLockBox();
     refreshNarrate();
@@ -1839,5 +1848,6 @@
   // Nell'app Android si aspetta che i plugin (voce, microfono) siano pronti
   if (window.cordova) {
     document.addEventListener("deviceready", () => { document.addEventListener("backbutton", onBack, false); document.addEventListener("pause", () => { Stats.flush(); saveResume(); }, false); boot(); }, false);
+    setTimeout(boot, 4000);   // rete di sicurezza: se «deviceready» non arriva l'app parte lo stesso
   } else boot();
 })();

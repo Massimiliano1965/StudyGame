@@ -2,7 +2,7 @@
 const Splash = (() => {
   let resuming = false;
   try { const r = JSON.parse(localStorage.getItem("sg2_resume")); resuming = !!(r && r.g && Date.now() - r.at < 6 * 3600 * 1000); } catch (e) {}
-  const el = document.getElementById("splash"), t0 = Date.now(), MIN = resuming ? 0 : 3200;
+  const el = document.getElementById("splash"), t0 = Date.now(), MIN = resuming ? 1800 : 3200;
   let gone = false, booted = false;
   const f = document.getElementById("sp-for");
   if (f && typeof DEDICA === "string" && DEDICA) { f.textContent = "Ideata per " + DEDICA + " \u2764\uFE0F"; f.hidden = false; }
