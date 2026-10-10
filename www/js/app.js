@@ -1397,11 +1397,23 @@
   // ---------- configurazione dei genitori: il PIN (impostazione da adulti) ----------
   function openParentSetup() {
     const setup = setupOn();
-    openModal(`<h2>👨‍👩‍👧 ${setup ? "Configurazione dei genitori" : "Chiedi ai tuoi genitori!"}</h2>
+    if (setup) {
+      openModal(`<h2>👨‍👩‍👧 Per i genitori: 1 minuto per vostro figlio</h2>
+        <p class="center muted" style="font-size:15px;margin:0 0 8px">La configurazione può sembrare noiosa, ma vale la pena: queste tre cose fanno la differenza.</p>
+        <div class="sp-points">
+          <div class="sp-pt"><span>⏱️</span><p><b>Il tempo lo decidete voi.</b> Scegliete quanti minuti di telefono si possono guadagnare e il massimo al giorno. Il bambino li conquista studiando.</p></div>
+          <div class="sp-pt"><span>👀</span><p><b>Gli occhi si riposano.</b> Ogni 20 minuti di gioco c'è una pausa di 20 secondi, e ogni 45 minuti una pausa più lunga per muoversi e bere.</p></div>
+          <div class="sp-pt"><span>🌱</span><p><b>Impara a gestirsi.</b> Vede i suoi minuti, sceglie come usarli e capisce che il tempo è una risorsa: è il primo passo della responsabilità.</p></div>
+        </div>
+        <p class="center" style="margin:8px 0">Adesso scegliete il <b>PIN dei genitori</b>: poi si crea il profilo del bambino.</p>
+        <button class="btn big flash" data-act="parent-go">Avanti ▶</button>`);
+      return;
+    }
+    openModal(`<h2>👨‍👩‍👧 Chiedi ai tuoi genitori!</h2>
       <p class="center">Adesso serve il <b>PIN dei genitori</b>.</p>
-      <p class="center">${setup ? "Prima i genitori scelgono il PIN; poi si crea il profilo del bambino." : "È un'impostazione da adulti."}</p>
-      <button class="btn big" data-act="parent-go">${setup ? "Avanti ▶" : "Ci sono i miei genitori ▶"}</button>`);
-    if (profile && profile.autoRead && !setup) Voice.speak("Chiedi ai tuoi genitori. È un'impostazione da adulti.", () => {});
+      <p class="center">È un'impostazione da adulti.</p>
+      <button class="btn big" data-act="parent-go">Ci sono i miei genitori ▶</button>`);
+    if (profile && profile.autoRead) Voice.speak("Chiedi ai tuoi genitori. È un'impostazione da adulti.", () => {});
   }
 
   // il PIN dei genitori (il bambino non lo vede)
