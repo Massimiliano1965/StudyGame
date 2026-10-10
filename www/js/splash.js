@@ -6,7 +6,7 @@ const Splash = (() => {
   let away = false;
   try { away = Date.now() - Number(localStorage.getItem("sg2_away")) < 15 * 60 * 1000; } catch (e) {}
   const el = document.getElementById("splash"), t0 = Date.now(), MIN = away ? 0 : resuming ? 1800 : 3200;
-  if (away && el && el.parentNode) el.parentNode.removeChild(el);
+  if (away && el) el.classList.add("sp-away");   // solo lo sfondo, senza logo né scritte: niente schermo blu vuoto, ma neanche la festa dell'avvio
   let gone = false, booted = false;
   const f = document.getElementById("sp-for");
   if (f && typeof DEDICA === "string" && DEDICA) { f.textContent = "Ideata per " + DEDICA + " \u2764\uFE0F"; f.hidden = false; }

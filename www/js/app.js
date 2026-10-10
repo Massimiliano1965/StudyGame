@@ -1332,10 +1332,10 @@
       ${phoneMock(mock)}<p class="step-txt">${text}</p>${main}${extra || ""}
       <button class="btn ghost small" data-act="lock-skip">Salta: lo faccio dopo</button>`);
     if (!s.overlay) {
-      if (prof.lkDenied) {
-        step(1, "Sblocca il permesso", "appinfo", "Tocca <b>Apri</b>. In alto a destra tocca i <b>tre puntini ⋮</b>, poi <b>«Consenti impostazioni con restrizioni»</b>. Torna qui.",
+      if ((prof.lkDenied || prof.lkTried) && !prof.lkAllowed) {
+        step(1, "Sblocca il permesso", "appinfo", (prof.lkTried && !prof.lkDenied ? "L'interruttore non si è acceso? Android blocca i permessi alle app installate da fuori dal Play Store. " : "") + "Tocca <b>Apri</b>. In alto a destra tocca i <b>tre puntini ⋮</b>, poi <b>«Consenti impostazioni con restrizioni»</b>. Torna qui.",
           `<button class="btn big" data-act="lock-appinfo">⚙️ Apri</button>`,
-          `<button class="btn alt" data-act="lock-undenied">✅ Fatto, riprova</button>`);
+          `<button class="btn alt" data-act="lock-undenied">✅ Fatto: riapri «Mostra sopra le altre app»</button>`);
         return;
       }
       step(1, "«Mostra sopra le altre app»", "overlay", "Tocca <b>Apri</b>, cerca <b>Gioca e Impara</b> e accendi l'interruttore. Poi torna qui con la freccia ←.",
@@ -1721,9 +1721,9 @@
     "lock-skip": () => lockFinish(),
     "lock-done": () => lockFinish(),
     "lock-denied": () => { profile.lkDenied = true; Storage.saveProfile(profile); renderLockSteps(); },
-    "lock-undenied": () => { profile.lkDenied = false; Storage.saveProfile(profile); Lock.status().then(renderLockSteps); },
+    "lock-undenied": () => { profile.lkDenied = false; profile.lkAllowed = true; Storage.saveProfile(profile); markAway(); Lock.openOverlaySettings(); },
     "lock-appinfo": () => { markAway(); Lock.openAppInfo(); },
-    "lock-perm-overlay": () => { markAway(); Lock.openOverlaySettings(); },
+    "lock-perm-overlay": () => { profile.lkTried = true; Storage.saveProfile(profile); markAway(); Lock.openOverlaySettings(); },
     "lock-perm-usage": () => { markAway(); Lock.openUsageSettings(); },
     "lock-admin": () => { if (profile) { profile.adminLater = false; Storage.saveProfile(profile); } markAway(); Lock.requestAdmin(); },
     "lock-admin-later": () => { if (profile) { profile.adminLater = true; Storage.saveProfile(profile); } renderLockSteps(); },
