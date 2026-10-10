@@ -30,6 +30,14 @@
   const presetPin = () => (typeof PIN_PRESET === "string" && PIN_PRESET) || "";
   let pendingPin = "";    // PIN scelto nella prima schermata di una installazione nuova
   let pendingCalm = false; // "figlio fotosensibile": scelta fatta nella schermata di benvenuto
+  // fascia scelta dal bambino nella prima schermata: dà subito lo stile giusto e limita le classi da scegliere
+  let pendingBand = null;
+  const BANDS = [
+    { id: "piccoli", from: 0, to: 3, big: "1ª–3ª", small: "elementare", color: "#FF8FB1" },
+    { id: "ragazzi", from: 3, to: 5, big: "4ª–5ª", small: "elementare", color: "#4DB8FF" },
+    { id: "teen", from: 5, to: 8, big: "Scuola", small: "media", color: "#FF8FB1" }];
+  const bandOf = () => BANDS.find(b => b.id === (pendingBand || (profile && profile.band)));
+  const bandClass = () => { const b = bandOf(); return b ? b.from : null; };
   const pinValid = () => !!wiz && /^\d{4}$/.test(wiz.pin1 || "") && wiz.pin1 === wiz.pin2;
 
   // ---------- suoni ----------
@@ -150,8 +158,11 @@
     const fams = Characters.FAMILIES;
     $app.innerHTML = `<section class="screen welcome wz">
       ${brandHtml()}
-      <div class="center"><h1>Ciao! Benvenuto!</h1></div>
-      <div class="trio">${fams.map(f => `<div class="mate">${Characters.svg({ family: f.id, color: Characters.COLORS[fams.indexOf(f) % Characters.COLORS.length].hex, stage: 0, mood: "cheer" })}<b>${esc(f.pet)}</b></div>`).join("")}</div>
+      <div class="center"><h1>Ciao! Che scuola fai?</h1><p class="muted" style="margin-top:4px">Tocca la tua.</p></div>
+      <div class="bands ${pendingBand ? "has-sel" : ""}">${BANDS.map(bd => { const f = Characters.familiesFor(bd.from)[0];
+        return `<button class="band b-${bd.id} ${pendingBand === bd.id ? "sel" : ""}" data-act="band" data-id="${bd.id}" aria-label="${bd.big} ${bd.small}">
+          <span class="bd-lab"><b>${bd.big}</b><small>${bd.small}</small></span>
+          ${Characters.svg({ family: f.id, color: bd.color, stage: bd.from, mood: "cheer" })}</button>`; }).join("")}</div>
       <p class="center muted">Giochiamo insieme e vinciamo minuti di telefono!</p>
       <div class="fx-ask" style="margin:10px 0 14px">
         <p class="center" style="font-size:1.05rem;font-weight:700;margin-bottom:8px">⚠️ Per i genitori: vostro figlio è sensibile alle luci intermittenti (fotosensibile)?</p>
@@ -161,10 +172,11 @@
           <button class="choice ${pendingCalm ? "" : "sel"}" data-act="fx-no" data-fx="no" style="padding:14px 8px"><span style="font-size:1.05rem;font-weight:800">No, lascia così</span></button>
         </div>
       </div>
-      <button class="btn big flash" data-act="welcome-go">Avanti ▶</button>
+      <button id="wgo" class="btn big ${pendingBand ? "flash" : ""}" data-act="welcome-go" ${pendingBand ? "" : "disabled"}>Avanti ▶</button>
     </section>`;
+    if (pendingBand) setTheme(bandClass()); else setTheme(null);
     document.body.classList.toggle("calm", pendingCalm);
-    Voice.speak("Ciao! Benvenuto in Gioca e Impara! Io sono Pufo, lui è Bip e lui è Rudy. Giocheremo insieme! Tocca il pulsante che lampeggia.", msg => toast(msg, 6000));
+    Voice.speak("Ciao! Benvenuto in Gioca e Impara! Che scuola fai? Tocca la tua: prima, seconda o terza elementare; quarta o quinta elementare; oppure scuola media.", msg => toast(msg, 6000));
   }
 
   // scelta "figlio fotosensibile" nella schermata di benvenuto: si aggiorna sul posto (senza ridisegnare, così la voce non riparte)
@@ -181,9 +193,9 @@
   const setupOn = () => !!(profile && profile.setup);
   function beginSetup(yes) {
     pendingAuto = yes;
-    profile = { setup: true, autoRead: !!yes, narrAsked: true, sound: true, calm: pendingCalm, infoSeen: true, fxSeen: true };
+    profile = { setup: true, autoRead: !!yes, narrAsked: true, sound: true, calm: pendingCalm, infoSeen: true, fxSeen: true, band: pendingBand || undefined };
     Storage.saveProfile(profile);
-    setTheme(null);
+    setTheme(bandClass());
     $app.innerHTML = `<section class="screen wz">${brandHtml()}</section>`;
     openInfo(true);
   }
@@ -211,14 +223,15 @@
 
   function renderWizard() {
     const d = wiz.d, s = wiz.step;
-    setTheme(d.classId);
+    const bc = wiz.editing ? null : bandClass();
+    setTheme(d.classId != null ? d.classId : bc);
     let body = "", canNext = true, nextLabel = "Avanti ▶";
 
     if (s === 0) {
       const canNickNow = d.nick.trim().length >= 2;
       canNext = canNickNow;
       body = `
-        <div class="hero small">${charSvg({ ...d, classId: d.classId == null ? 0 : d.classId }, "cheer")}</div>
+        <div class="hero small">${charSvg({ ...d, classId: d.classId == null ? (bc || 0) : d.classId, family: d.classId == null && bc ? Characters.familiesFor(bc)[0].id : d.family }, "cheer")}</div>
         <div class="center"><h1>Ciao! Come ti chiami?</h1><p class="muted" style="margin-top:6px">${smallKids() ? "Dì il tuo nome al microfono, oppure chiedi a mamma o papà di scriverlo." : "Scrivi il tuo nome o un soprannome inventato."}</p></div>
         ${!wiz.editing && smallKids() && Voice.canListen() ? `<button class="btn big alt ${canNickNow || wiz.listening ? "" : "flash"}" data-act="name-mic">${wiz.listening ? "🎤 Ti ascolto…" : "🎤 Tocca e dì il tuo nome"}</button>` : ""}
         <input id="nick" class="field" type="text" inputmode="text" autocomplete="off" autocapitalize="words" maxlength="${CONFIG.NICK_MAX}" placeholder="Il tuo nome" value="${esc(d.nick)}" aria-label="Il tuo nome o soprannome">`;
@@ -227,9 +240,10 @@
       const grp = (title, from, to) => `<div class="group-title">${title}</div><div class="grid2 cls-grid">${CONFIG.CLASSES.slice(from, to).map(c =>
         `<button class="choice ${d.classId === c.id ? "sel" : ""}" data-act="class" data-id="${c.id}"><span class="big-num">${c.short}</span><span>${c.level === "Medie" ? "media" : "elementare"}</span></button>`).join("")}</div>`;
       body = `<div class="center"><h1>Che classe fai?</h1><p class="muted" style="margin-top:6px">Così ti preparo le sfide giuste.${wiz.editing ? "" : " Attenzione: dopo, la classe si cambia solo con il PIN dei genitori."}</p></div>
-        ${grp("Elementari", 0, 5)}${grp("Medie", 5, 8)}`;
+        ${!wiz.editing && bandOf() ? grp(bandOf().from < 5 ? "Elementari" : "Medie", bandOf().from, bandOf().to) + `<button class="btn ghost small" data-act="band-all">Le altre classi</button>`
+          : grp("Elementari", 0, 5) + grp("Medie", 5, 8)}`;
     } else if (s === 2) {
-      const st = d.classId == null ? 0 : d.classId;
+      const st = d.classId == null ? (bc || 0) : d.classId;
       body = `<div class="center"><h1>Scegli il tuo compagno</h1><p class="muted" style="margin-top:6px">Crescerà con te, classe dopo classe!</p></div>
         ${wiz.say ? `<div id="intro" class="bubble intro" style="--tail:${[17, 50, 83][Math.max(0, Characters.familiesFor(d.classId == null ? 0 : d.classId).findIndex(f => f.id === d.family)) % 3]}%">${esc(wiz.say)}</div>` : ""}
         <div class="grid2" style="grid-template-columns:repeat(3,1fr);gap:10px">${Characters.familiesFor(st).map(f =>
@@ -1534,11 +1548,18 @@
       closeModal(); toast("Per oggi le risposte sbagliate non tolgono minuti.", 3500);
       const fb = document.querySelector(".feedback"); if (fb) { const b = fb.querySelector('[data-act="help"]'); if (b) b.remove(); }
     },
-    "welcome-go": () => beginSetup(true),
+    "welcome-go": () => { if (pendingBand) beginSetup(true); },
+    band: el => {
+      pendingBand = el.dataset.id; setTheme(bandClass()); Sfx.tap();
+      document.querySelectorAll(".bands .band").forEach(b => b.classList.toggle("sel", b.dataset.id === pendingBand));
+      const w = document.querySelector(".bands"); if (w) w.classList.add("has-sel");
+      const g = document.getElementById("wgo"); if (g) { g.disabled = false; g.classList.add("flash"); }
+    },
+    "band-all": () => { pendingBand = null; if (profile) { delete profile.band; Storage.saveProfile(profile); } renderWizard(); },
     "fx-yes": () => setFxChoice(true),
     "fx-no": () => setFxChoice(false),
     "name-mic": () => listenName(),
-    "reset-yes": () => { Storage.resetAll(); Album.reset(); Stats.wipe(); profile = null; viewClass = null; pendingCalm = false; closeModal(); Credit.refresh(); showWelcome(); }
+    "reset-yes": () => { Storage.resetAll(); Album.reset(); Stats.wipe(); profile = null; viewClass = null; pendingCalm = false; pendingBand = null; closeModal(); Credit.refresh(); showWelcome(); }
   };
 
   document.addEventListener("click", e => {

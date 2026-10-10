@@ -299,6 +299,19 @@ body[data-theme="ragazzi"] .brand .b1 { color: #FFC94A; }
 .welcome .mate { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .welcome .mate svg { width: 100%; max-width: 110px; height: auto; }
 .welcome .mate b { font-size: 20px; }
+/* prima schermata: tre colonne, una per fascia, ognuna con i suoi colori e il suo compagno */
+.welcome .bands { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.welcome .band { display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 6px; min-height: 250px; padding: 12px 4px 8px; border-radius: 20px; font-family: inherit; cursor: pointer; transition: opacity .25s, transform .25s; }
+.welcome .band svg { width: 100%; max-width: 112px; height: auto; }
+.welcome .band .bd-lab { display: flex; flex-direction: column; align-items: center; line-height: 1.05; }
+.welcome .band .bd-lab b { font-size: 24px; font-weight: 700; }
+.welcome .band .bd-lab small { font-size: 14px; font-weight: 600; opacity: .85; }
+.welcome .band.b-piccoli { color: #2B2D52; background: linear-gradient(#BFE8FF, #FFF3C4); border: 3px solid #2B2D52; box-shadow: 0 4px 0 #2B2D52; }
+.welcome .band.b-ragazzi { color: #fff; background: linear-gradient(#2d3a9a, #1f2a7a); border: 2px solid rgba(255,255,255,.3); box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+.welcome .band.b-teen { color: #F3F5FA; background: radial-gradient(160px 120px at 50% 30%, rgba(52,168,71,.35), transparent 70%), #06070B; border: 1px solid rgba(140,245,158,.45); box-shadow: 0 4px 14px rgba(0,0,0,.45); }
+.welcome .bands.has-sel .band:not(.sel) { opacity: .5; }
+.welcome .band.sel { transform: translateY(-4px); outline: 4px solid #FFD23F; outline-offset: 2px; }
+body.calm .welcome .band { transition: none; }
 .cls-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .cls-grid .choice { font-size: 14px; padding: 8px 4px; min-height: 66px; }
 .cls-grid .choice .big-num { font-size: 26px; }
