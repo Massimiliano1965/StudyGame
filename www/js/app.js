@@ -517,24 +517,28 @@
     const ok = ids.filter(isReady);
     if (!ok.length) { toast("Scegli almeno una sfida con il bollino verde."); return; }
     game = { subjects: ok, streak: 0, right: 0, listening: false, lastKind: "", round: null, cls: playClass(), rel: relOf(playClass()),
-      sec: 0, rounds: 0, okCount: 0, loseRun: 0, help: false, helpAt: 0, nextBreak: 2700 };
+      sec: 0, rounds: 0, okCount: 0, loseRun: 0, help: false, helpAt: 0, nextBreak: brk().longMin * 60 };
     lastJingle = { sid: null, at: 0 };
     nextQuestion();
   }
 
-  // ---------- pausa per gli occhi: ogni 20 minuti di gioco vero, tra un esercizio e l'altro (mai a metà) ----------
-  const EYE_EVERY = 20 * 60, EYE_SEC = 20;
+  // ---------- pause: occhi (suggerite: 30 secondi ogni 15 minuti di gioco) e pausa lunga (3 minuti ogni 30). I genitori le cambiano col PIN. ----------
+  const BRK_DEF = { eyeMin: 15, eyeSec: 30, longMin: 30, longSec: 180 };
+  const brk = () => Object.assign({}, BRK_DEF, profile && profile.brk);
+  const fmtBrkSec = t => t >= 60 ? (t / 60) + (t === 60 ? " minuto" : " minuti") : t + " secondi";
   let eyeOpen = false;
-  function eyeBreak(after) {
+  function eyeBreak(after, kind) {
+    const lg = kind === "long", B = brk(), TOT = lg ? B.longSec : B.eyeSec;
     eyeOpen = true; Voice.stopSpeaking(); Music.stop();
-    let n = EYE_SEC;
-    const draw = () => openModal(`<div class="eye-break"><h2>👀 Pausa per gli occhi!</h2>
-      <div class="eb-far">🌳🏠⛰️</div>
-      <p style="font-size:19px">Guarda <b>lontano</b>, fuori dalla finestra, per ${EYE_SEC} secondi. Gli occhi si riposano!</p>
-      <div class="eb-ring" style="--p:${n / EYE_SEC}"><span>${n}</span></div>
-      ${n > 0 ? `<p class="muted">Ogni ${EYE_EVERY / 60} minuti di gioco. Poi si continua.</p>` : `<button class="btn big flash" id="eye-go">Fatto! Continua ▶</button>`}</div>`);
+    let n = TOT;
+    const clock = t => t >= 60 ? Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0") : t;
+    const draw = () => openModal(`<div class="eye-break"><h2>${lg ? "🧘 Pausa lunga!" : "👀 Pausa per gli occhi!"}</h2>
+      <div class="eb-far">${lg ? "🚶💧🤸" : "🌳🏠⛰️"}</div>
+      <p style="font-size:19px">${lg ? `Alzati, muoviti e bevi un po' d'acqua per <b>${fmtBrkSec(TOT)}</b>. Guarda anche lontano: gli occhi si riposano!` : `Guarda <b>lontano</b>, fuori dalla finestra, per ${fmtBrkSec(TOT)}. Gli occhi si riposano!`}</p>
+      <div class="eb-ring" style="--p:${n / TOT}"><span>${clock(n)}</span></div>
+      ${n > 0 ? `<p class="muted">Ogni ${lg ? B.longMin : B.eyeMin} minuti di gioco. Poi si continua.</p>` : `<button class="btn big flash" id="eye-go">Fatto! Continua ▶</button>`}</div>`);
     draw();
-    if (profile && profile.autoRead) Voice.speak(`Pausa per gli occhi! Guarda lontano, fuori dalla finestra, per ${EYE_SEC} secondi.`, () => {});
+    if (profile && profile.autoRead) Voice.speak(lg ? `Pausa lunga! Alzati, muoviti e bevi un po' d'acqua per ${fmtBrkSec(TOT)}.` : `Pausa per gli occhi! Guarda lontano, fuori dalla finestra, per ${fmtBrkSec(TOT)}.`, () => {});
     const t = setInterval(() => {
       if (!eyeOpen) { clearInterval(t); return; }
       n--; draw();
@@ -548,7 +552,11 @@
 
   function nextQuestion() {
     if (cdGate()) return;
-    if (game && game.sec >= (game.nextEye || EYE_EVERY)) { game.nextEye = game.sec + EYE_EVERY; eyeBreak(nextQuestion); return; }
+    if (game) {
+      const B = brk();
+      if (game.sec >= (game.nextBreak || B.longMin * 60)) { game.nextBreak = game.sec + B.longMin * 60; game.nextEye = game.sec + B.eyeMin * 60; eyeBreak(nextQuestion, "long"); return; }
+      if (game.sec >= (game.nextEye || B.eyeMin * 60)) { game.nextEye = game.sec + B.eyeMin * 60; eyeBreak(nextQuestion); return; }
+    }
     Games.stop();
     game.sid = pick(game.subjects);
     // lingua straniera della voce: inglese, oppure quella scelta nelle Impostazioni per la seconda lingua
@@ -1384,6 +1392,7 @@
       ${lockBoxHtml()}
       ${Lock.available() ? `<button class="btn alt" data-act="em-open">📞 Numeri per chiamare mamma e papà</button>` : ""}
       <button class="btn alt" data-act="time-set">⏱ Tempo di telefono (genitori)</button>
+      <button class="btn alt" data-act="brk-set">👀 Pause: occhi e pausa lunga (genitori)</button>
       <button class="btn alt" data-act="report">📊 Resoconto per i genitori</button>
       <button class="btn ghost" data-act="change-pin">🔐 Cambia PIN dei genitori</button>
       <button class="btn ghost" data-act="tips">💡 Consigli per i genitori</button>
@@ -1405,7 +1414,7 @@
       <p class="center muted" style="font-size:15px;margin:0 0 8px">${setup ? "La configurazione può sembrare noiosa, ma vale la pena: queste tre cose fanno la differenza." : "Un promemoria: bastano pochi secondi per i vostri figli."}</p>
       <div class="sp-points">
         <div class="sp-pt"><span>⏱️</span><p><b>Il tempo lo decidete voi.</b> Scegliete quanti minuti di telefono si possono guadagnare e il massimo al giorno. Il bambino li conquista studiando.</p></div>
-        <div class="sp-pt"><span>👀</span><p><b>Gli occhi si riposano.</b> Ogni 20 minuti di gioco c'è una pausa di 20 secondi, e ogni 45 minuti una pausa più lunga per muoversi e bere.</p></div>
+        <div class="sp-pt"><span>👀</span><p><b>Gli occhi si riposano.</b> Ogni ${brk().eyeMin} minuti di gioco c'è una pausa di ${fmtBrkSec(brk().eyeSec)}, e ogni ${brk().longMin} minuti una pausa lunga di ${fmtBrkSec(brk().longSec)} per muoversi e bere. Voi potete cambiare i tempi.</p></div>
         <div class="sp-pt"><span>🌱</span><p><b>Impara a gestirsi.</b> Vede i suoi minuti, sceglie come usarli e capisce che il tempo è una risorsa: è il primo passo della responsabilità.</p></div>
       </div>
       ${btns}`);
@@ -1477,6 +1486,25 @@
     // la scheda viene ricreata a ogni tocco: rimetti lo scorrimento dov'era, senza farla tornare in cima
     const newSheet = document.querySelector("#modal .sheet"); if (newSheet) newSheet.scrollTop = keepScroll;
   }
+  // pause: i genitori scelgono ogni quanto e per quanto tempo (col PIN)
+  let brkDraft = null;
+  const BRK_RANGE = { eyeMin: [5, 30, 5], eyeSec: [10, 60, 10], longMin: [15, 60, 5], longSec: [60, 600, 60] };
+  function openBrkSet() {
+    const d = brkDraft;
+    const row = (k, label, v, txt) => { const [lo, hi, st] = BRK_RANGE[k]; return `<div class="time-row"><div class="time-lab"><b>${label}</b><small>suggeriti: ${BRK_DEF[k] >= 60 && k.endsWith("Sec") ? fmtBrkSec(BRK_DEF[k]) : BRK_DEF[k] + (k.endsWith("Sec") ? " secondi" : " minuti")}</small></div>
+      <div class="time-ctl"><button class="icon-btn" data-act="brk-adj" data-k="${k}" data-d="${-st}" aria-label="Meno ${label}" ${v <= lo ? "disabled" : ""}>−</button>
+      <span class="time-val" aria-live="polite">${txt}</span>
+      <button class="icon-btn" data-act="brk-adj" data-k="${k}" data-d="${st}" aria-label="Più ${label}" ${v >= hi ? "disabled" : ""}>+</button></div></div>`; };
+    openModal(`<h2>👀 Pause</h2>
+      <p class="muted">Le pause riposano occhi e testa. Si fanno tra un esercizio e l'altro, mai a metà.</p>
+      ${row("eyeMin", "Pausa occhi ogni", d.eyeMin, d.eyeMin + " min")}
+      ${row("eyeSec", "Pausa occhi dura", d.eyeSec, fmtBrkSec(d.eyeSec))}
+      ${row("longMin", "Pausa lunga ogni", d.longMin, d.longMin + " min")}
+      ${row("longSec", "Pausa lunga dura", d.longSec, fmtBrkSec(d.longSec))}
+      <button class="btn" data-act="brk-save">Salva</button>
+      <button class="btn ghost" data-act="brk-default">Rimetti i suggeriti</button>
+      <button class="btn ghost" data-act="close">Annulla</button>`);
+  }
   function saveTime(lim) {
     if (lim) profile.lim = lim; else delete profile.lim;
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
@@ -1529,7 +1557,7 @@
       <p><b>Come si guadagnano i minuti.</b> La classe vera si sceglie all'inizio e si cambia solo con il PIN dei genitori. Ogni esercizio vale fino a 3 risposte giuste. Gli esercizi della propria classe danno ${Credit.fmtDelta(CONFIG.RIGHT.same)} minuto a risposta giusta; quelli di classi inferiori ${Credit.fmtDelta(CONFIG.RIGHT.low)} (e le risposte sbagliate costano di più); quelli di classi superiori ${Credit.fmtDelta(CONFIG.RIGHT.high)} e le risposte sbagliate non tolgono niente. Alla 1ª e 2ª elementare le risposte sbagliate non tolgono mai minuti.</p>
       <p><b>Il tempo lo decidono i genitori.</b> Nessuno meglio di mamma e papà sa quanto telefono va bene per il proprio figlio. L'app parte con valori prudenti: ${CONFIG.MIN_MINUTES} minuti garantiti al giorno e un massimo di ${CONFIG.MAX_BY_BAND[0]} minuti alle elementari, ${CONFIG.MAX_BY_BAND[2]} alle medie. Sono solo un suggerimento: si cambiano quando volete, in su o in giù, da <b>Impostazioni → Tempo di telefono</b>, con il PIN dei genitori.</p>
       <p><b>Il cervello che esplode.</b> Anche giocare qui dentro è tempo di schermo. Dopo un certo tempo di esercizi nella giornata (suggeriti: ${CONFIG.PLAY_MIN_BY_CLASS[0]} minuti fino alla 3ª elementare, ${Credit.format(CONFIG.PLAY_MIN_BY_CLASS[3])} in 4ª e 5ª, ${Credit.format(CONFIG.PLAY_MIN_BY_CLASS[5])} alle medie) compare il cervello che esplode e gli esercizi si fermano per ${Credit.format(CONFIG.COOLDOWN_MIN)}; i minuti già guadagnati restano. Anche questo lo decidete voi, dallo stesso posto.</p>
-      <p><b>Gli occhi.</b> I colori sono morbidi e riposanti (niente bianco abbagliante né nero con colori fluorescenti), i testi sono grandi e non ci sono lampeggi. Ogni ${EYE_EVERY / 60} minuti di gioco compare una pausa per gli occhi: si guarda lontano per ${EYE_SEC} secondi. Ricordiamo che per la vista dei bambini contano soprattutto le pause e il tempo all'aperto.</p>
+      <p><b>Gli occhi.</b> I colori sono morbidi e riposanti (niente bianco abbagliante né nero con colori fluorescenti), i testi sono grandi e non ci sono lampeggi. Ogni ${brk().eyeMin} minuti di gioco compare una pausa per gli occhi: si guarda lontano per ${fmtBrkSec(brk().eyeSec)}. Ogni ${brk().longMin} minuti c'è una pausa lunga di ${fmtBrkSec(brk().longSec)} per muoversi e bere. I genitori possono cambiare i tempi da <b>Impostazioni → Pause</b>. Ricordiamo che per la vista dei bambini contano soprattutto le pause e il tempo all'aperto.</p>
       <p><b>Luci ed effetti.</b> L'app usa colori vivaci, piccoli movimenti e qualche coriandolo, ma niente lampeggi rapidi. Alcune persone, anche bambini, sono sensibili alle luci intermittenti (fotosensibilità, epilessia fotosensibile): se è il vostro caso, o nel dubbio, spegnete gli effetti da <b>Impostazioni → Effetti e luci</b> e parlatene con il medico. Se durante il gioco il bambino ha disturbi (mal di testa, vista offuscata, capogiri), fermatelo subito.</p>
       <p><b>Genitori.</b> Si raccomanda a mamma e papà di tenere sotto controllo i figli quando usano il cellulare, soprattutto se sono piccoli, e di usare sempre buon senso e discrezione sul tempo davanti allo schermo.</p>
       ${hasDedica() ? `<p><b>Un grazie speciale.</b> A ${esc(DEDICA)}: è per lui che papà ha pensato questa app, e sarà lui il primo a collaudarla.</p>` : ""}
@@ -1733,6 +1761,10 @@
       openTimeSet();
     },
     "time-save": () => { if (timeDraft) saveTime({ min: timeDraft.min, max: timeDraft.max, play: timeDraft.play }); timeDraft = null; },
+    "brk-set": () => askPin("Pause", () => { brkDraft = brk(); openBrkSet(); }),
+    "brk-adj": el => { if (!brkDraft || !el) return; const k = el.dataset.k, [lo, hi] = BRK_RANGE[k]; brkDraft[k] = Math.max(lo, Math.min(hi, brkDraft[k] + +el.dataset.d)); openBrkSet(); },
+    "brk-save": () => { if (!brkDraft) return; profile.brk = brkDraft; brkDraft = null; Storage.saveProfile(profile); if (game) { game.nextEye = game.sec + brk().eyeMin * 60; game.nextBreak = game.sec + brk().longMin * 60; } closeModal(); toast("Pause salvate.", 3000); },
+    "brk-default": () => { brkDraft = null; delete profile.brk; Storage.saveProfile(profile); closeModal(); toast("Pause rimesse ai valori suggeriti.", 3000); },
     "time-default": () => { timeDraft = null; saveTime(null); },
     help: () => askPin("Aiuto dei genitori", openHelp),
     gift: el => {
@@ -1775,13 +1807,6 @@
     if (!game || document.hidden) return;
     game.sec++; Stats.tick(); Credit.playTick();
     if (game.sec % 15 === 0) { Stats.flush(); saveResume(); }
-    if (game.sec >= game.nextBreak && $modal.hidden) {
-      game.nextBreak += 2700;
-      Voice.stopSpeaking();
-      openModal(`<h2>⏸ Pausa!</h2><p>Hai giocato per tanto tempo. Alzati, muoviti e bevi un po' d'acqua. Poi torni più in forma!</p>
-        <button class="btn big flash" data-act="close">Ok, faccio una pausa</button>`);
-      if (profile && profile.autoRead) Voice.speak("Pausa! Alzati, muoviti e bevi un po' d'acqua. Poi torni più in forma!");
-    }
   }, 1000);
 
   // pausa del cervello: il conto alla rovescia in home scorre, e quando finisce la home si ridisegna
