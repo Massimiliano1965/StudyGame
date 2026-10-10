@@ -174,3 +174,10 @@ Non si fa push senza l'ordine esplicito di Massi. La chat claude.ai non ha crede
 - Partite salvate con la vecchia Corsa/Talpe/Pesca: si riaprono lo stesso (r.qs = [r.q]).
 - Provato: 30 partite simulate (vittoria e sconfitta × 5 giochi × classi 1ª el., 5ª el., 3ª media) + 8951 giri di tutti i giochi senza errori.
 - Prossimo: ALBUM DI FIGURINE (punto 11) in TRE versioni diverse per fascia (1ª–3ª el., 4ª–5ª el., medie), ognuna con layout e stile della sua fascia (richiesta di Massi). Prima l'anteprima.
+
+## Album di figurine (10 ottobre, su main) — js/album.js + UI in app.js (sezione «ALBUM DI FIGURINE») + CSS in fondo a style.css
+- Tre album diversi per fascia (themeFor): piccoli = «Il mio album di adesivi» (quaderno ad anelli, 4 pagine × 6 adesivi: fattoria, animali del mondo, frutta, mezzi; alcuni coi brillantini); ragazzi = «Le mie carte» (4 set × 9 carte numerate con dato curioso: dinosauri, spazio, animali record, inventori; comune/rara/epica 70/25/5); teen = «Collezione» (4 set × 12 tessere esagonali: scienziati, meraviglie, missioni spaziali, tecnologie; comune/raro/epico/leggendario 60/28/10/2; livello collezionista = 1 + posseduti/4).
+- Una figurina a ogni GIOCO vinto (non nei «Ripeti questa sfida», non nelle domande a 4 risposte): Album.draw in roundDone → game.pack; la bustina (showPack) si apre toccando «Avanti» (o uscendo). Piccoli: 85% un adesivo che manca. Doppioni: +1 punto scambio (4ª–5ª) / frammento (medie); 5 punti = si tocca un pezzo che manca e lo si prende.
+- Home: pulsante 📒 accanto all'ingranaggio, con il numero dei pezzi nuovi. Tasto indietro chiude bustina e album. «Ricomincia da zero» cancella anche l'album (chiave sg2_album).
+- Curiosità controllate a mano; emoji scelte tra quelle presenti anche su Android un po' vecchi (niente 🦣 🪸 🛞 🪨).
+- Provato: bustina, album, popup, scambio nelle tre fasce senza errori; 8953 giri di tutti i giochi + 30 partite dei 5 giochi nuovi.

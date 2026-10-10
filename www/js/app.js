@@ -398,7 +398,7 @@
 
   function showHome() {
     Games.stop(); Stats.endSession();
-    game = null; cdOpen = false; clearInterval(cdTimer); homeCool = Credit.cooling();
+    game = null; cdOpen = false; albumOpen = false; clearInterval(cdTimer); homeCool = Credit.cooling();
     clearResume();
     setTheme(profile.classId);
     renderHome();
@@ -418,7 +418,7 @@
       <div class="top">
         <button class="avatar-btn" data-act="settings" aria-label="Il mio profilo" style="border:0;background:none;padding:0">${avatarHtml(p)}</button>
         <div class="who"><h2>Ciao, ${esc(p.nick)}!</h2><span class="pill">${classLabel(p.classId)}</span></div>
-        <button class="icon-btn" data-act="settings" aria-label="Impostazioni"><svg viewBox="0 0 24 24" width="30" height="30" fill="#FFD21F" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6a7.3 7.3 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></button>
+        ${albBtnHtml()}<button class="icon-btn" data-act="settings" aria-label="Impostazioni"><svg viewBox="0 0 24 24" width="30" height="30" fill="#FFD21F" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6a7.3 7.3 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></button>
       </div>
       <div class="home-hi"><div id="hero" class="hero" data-act="intro">${charSvg(p, "happy")}</div>
         <div class="bubble">${esc(pick(GREET[th]))}</div></div>
@@ -954,7 +954,9 @@
   // un gioco è finito: aggiorno minuti, personaggio e riquadro del risultato senza ridisegnare il gioco
   function roundDone(ok, correct, expl, mistakes) {
     if (!game || !game.round || game.answered) return;
+    const wasPractice = game.practice;
     finishRound(ok, expl, correct, mistakes);
+    if (ok && !wasPractice) game.pack = Album.draw(themeFor(profile.classId));   // figurina per il gioco vinto: si apre su «Avanti»
     const hero = document.getElementById("hero"), m = document.getElementById("gmins"), st = document.getElementById("gstreak"), f = document.getElementById("gfb");
     if (hero) hero.innerHTML = charSvg(profile, game.mood);
     if (m) m.textContent = "⏱ " + Credit.format(Credit.get());
@@ -1086,6 +1088,105 @@
     $vt.setAttribute("aria-label", on ? "Voce accesa: tocca per spegnerla" : "Voce spenta: tocca per accenderla");
   }
   new MutationObserver(() => { refreshVoiceToggle(); refreshNarrate(); }).observe($app, { childList: true });
+
+  // ====================================================================
+  // ALBUM DI FIGURINE (10/10/2026): tre album diversi per fascia (adesivi / carte / collezione digitale)
+  // ====================================================================
+  let albumOpen = false, albSet = 0, packClose = null;
+  const albBand = () => themeFor(profile.classId);
+  const RCLS = ["", "rare", "epic", "legend"];
+
+  function albBtnHtml() {
+    const s = Album.stats(albBand());
+    return `<button class="icon-btn alb-btn" data-act="album" aria-label="Il mio album">📒${s.fresh ? `<i class="alb-dot">${s.fresh}</i>` : ""}</button>`;
+  }
+
+  // la figurina grande: nella bustina e quando si tocca un pezzo dell'album
+  function albBigHtml(band, it) {
+    const set = Album.BANDS[band].sets.find(s => s.id === it.set);
+    if (band === "piccoli") return `<div class="ab-stk ${it.r ? "glit" : ""}"><span class="e">${it.e}</span></div><div class="ab-name">${esc(it.n)}</div><p class="ab-fact">${esc(it.f)}</p>`;
+    if (band === "ragazzi") return `<div class="tc big ${RCLS[it.r]}" style="--c:${it.r === 2 ? "#7a3cff" : it.r === 1 ? "#e2a400" : "#3DDC97"}"><div class="in">
+        <div class="top"><span>${it.r ? Album.RNAME.ragazzi[it.r].toUpperCase() : esc(set.tag)}</span><span>#${String(it.no).padStart(2, "0")}</span></div>
+        <div class="pic">${it.e}</div><div class="nm">${esc(it.n)}</div><div class="stat">${esc(it.s || "")}</div></div></div><p class="ab-fact">${esc(it.f)}</p>`;
+    return `<div class="holo r${it.r}"><div class="in"><span class="e">${it.e}</span><span class="t">${esc(it.n)}</span>
+      <span class="r">${it.r ? "★ " : ""}${Album.RNAME.teen[it.r].toUpperCase()}</span><span class="f">${esc(it.f)}</span></div></div>`;
+  }
+  const albSay = it => { if (profile.autoRead) Voice.speak(it.n + ". " + it.f, () => {}); };
+
+  // bustina dopo un gioco vinto (si apre quando si tocca «Avanti»)
+  function showPack(res, after) {
+    const band = albBand(), it = Album.find(res.id);
+    if (!it) { if (after) after(); return; }
+    const head = band === "piccoli" ? (res.dup ? "Ce l'hai già: è un doppione!" : "🎉 Un adesivo nuovo!")
+      : band === "ragazzi" ? (res.dup ? `Doppione: +1 punto scambio` : "✨ Bustina aperta! ✨")
+      : (res.dup ? "DUPLICATO · +1 FRAMMENTO" : "NUOVO OGGETTO");
+    const btn = band === "piccoli" ? (res.dup ? "Va bene! 👍" : "Attaccalo! 👆") : band === "ragazzi" ? "Mettila nella collezione ▶" : "Aggiungi alla collezione";
+    const ov = document.createElement("div");
+    ov.id = "pack"; ov.className = "pack pk-" + band + (fxCalm() ? " calm" : "");
+    ov.innerHTML = `${band === "piccoli" && !fxCalm() ? `<div class="pk-conf"></div>` : ""}${band === "ragazzi" ? `<div class="pk-rays"></div>` : ""}
+      <div class="pk-in"><div class="pk-head">${esc(head)}</div>${albBigHtml(band, it)}
+      ${res.setDone ? `<div class="pk-done">🏆 Hai completato «${esc(res.setDone)}»!</div>` : ""}
+      <button class="btn big pk-ok">${btn}</button></div>`;
+    document.body.appendChild(ov);
+    Sfx.tap();
+    albSay(it);
+    const close = () => { packClose = null; Voice.stopSpeaking(); if (ov.parentNode) ov.remove(); if (after) after(); };
+    packClose = close;
+    ov.querySelector(".pk-ok").addEventListener("click", close);
+  }
+
+  function openAlbum() {
+    albumOpen = true; Voice.stopSpeaking();
+    const band = albBand(), B = Album.BANDS[band], st = Album.stats(band), d = Album.load();
+    albSet = Math.min(albSet, B.sets.length - 1);
+    const set = B.sets[albSet], own = it => !!d.own[it.id], fresh = it => !!d.fresh[it.id];
+    const canSwap = band !== "piccoli" && st.pts >= Album.SWAP_COST;
+    let body = "";
+    if (band === "piccoli") {
+      const n = set.items.filter(own).length;
+      body = `<div class="nb">
+        <div class="pg">${set.ic} ${esc(set.name)}</div>
+        <div class="pgs">${B.sets.map((s, i) => `<button class="${i === albSet ? "on" : ""}" data-act="album-set" data-i="${i}" aria-label="${esc(s.name)}">${s.ic}</button>`).join("")}</div>
+        <div class="st">${set.items.map((it, k) => own(it)
+          ? `<button class="sk r${k % 2 + 1} ${it.r ? "glit" : ""} ${fresh(it) ? "new" : ""}" data-act="album-item" data-id="${it.id}"><span class="e">${it.e}</span>${esc(it.n)}${it.r ? " ✨" : ""}</button>`
+          : `<div class="sk no"><span class="e">${it.e}</span>?</div>`).join("")}</div>
+        <div class="stars">${"⭐".repeat(n)}${"☆".repeat(set.items.length - n)}</div></div>`;
+    } else if (band === "ragazzi") {
+      body = `<div class="tabs2">${B.sets.map((s, i) => `<button class="${i === albSet ? "on" : ""}" data-act="album-set" data-i="${i}">${s.ic} ${esc(s.name)} ${s.items.filter(own).length}/${s.items.length}</button>`).join("")}</div>
+        <div class="swp ${canSwap ? "on" : ""}">🔄 Punti scambio: <b>${st.pts}</b>/${Album.SWAP_COST}${canSwap ? " · tocca una carta che manca per prenderla!" : " · i doppioni danno punti"}</div>
+        <div class="ab-g2">${set.items.map(it => own(it)
+          ? `<button class="tc ${RCLS[it.r]} ${fresh(it) ? "new" : ""}" data-act="album-item" data-id="${it.id}" style="--c:${it.r === 2 ? "#7a3cff" : it.r === 1 ? "#e2a400" : "#3DDC97"}"><div class="in">
+              <div class="top"><span>${it.r ? Album.RNAME.ragazzi[it.r].toUpperCase() : esc(set.tag)}</span><span>#${String(it.no).padStart(2, "0")}</span></div>
+              <div class="pic">${it.e}</div><div class="nm">${esc(it.n)}</div><div class="stat">${esc(it.s || "")}</div></div></button>`
+          : `<button class="tc no ${canSwap ? "can" : ""}" ${canSwap ? `data-act="album-swap" data-id="${it.id}"` : "disabled"}><div class="in">#${String(it.no).padStart(2, "0")}</div></button>`).join("")}</div>
+        <div class="leg"><span><i style="background:#c7ccdb"></i>Comune</span><span><i style="background:#e2a400"></i>Rara</span><span><i style="background:#7a3cff"></i>Epica</span></div>`;
+    } else {
+      const lvl = 1 + Math.floor(st.own / 4);
+      body = `<div class="sub">Livello collezionista ${lvl} · ${st.own} / ${st.total} · frammenti ${st.pts}/${Album.SWAP_COST}</div>
+        <div class="sets">${B.sets.map((s, i) => { const n = s.items.filter(own).length, done = n === s.items.length;
+          return `<button class="set ${i === albSet ? "on" : ""} ${done ? "done" : ""}" data-act="album-set" data-i="${i}"><span class="ic">${s.ic}</span><span class="tx">${esc(s.name)}<small>${n} / ${s.items.length}${done ? " · ✔ set completato" : ""}</small></span><span class="bar"><i style="width:${Math.round(n / s.items.length * 100)}%"></i></span></button>`; }).join("")}</div>
+        ${canSwap ? `<div class="swp on">Hai ${st.pts} frammenti: tocca un pezzo che manca per sbloccarlo.</div>` : ""}
+        <div class="ab-g3">${set.items.map(it => own(it)
+          ? `<button class="hx c${it.r + 1} ${fresh(it) ? "new" : ""}" data-act="album-item" data-id="${it.id}" aria-label="${esc(it.n)}">${it.e}</button>`
+          : `<button class="hx no ${canSwap ? "can" : ""}" ${canSwap ? `data-act="album-swap" data-id="${it.id}"` : "disabled"} aria-label="Manca"></button>`).join("")}</div>
+        <div class="leg3"><span><i style="background:#2a3242"></i>Comune</span><span><i style="background:#1d4ed8"></i>Raro</span><span><i style="background:#8b5cf6"></i>Epico</span><span><i style="background:#FFD23F"></i>Leggendario</span></div>`;
+    }
+    const title = band === "piccoli" ? "📒 " + B.title : band === "ragazzi" ? "🃏 " + B.title : B.title.toUpperCase();
+    $app.innerHTML = `<section class="screen alb alb-${band}">
+      <div class="alb-top"><button class="icon-btn" data-act="album-close" aria-label="Torna alla home">◀</button><h1>${esc(title)}</h1>${band === "piccoli" ? "" : `<span class="tot">${st.own} / ${st.total}</span>`}</div>
+      ${body}
+      ${st.own === 0 ? `<p class="alb-empty">Vinci un gioco per ${band === "piccoli" ? "avere il tuo primo adesivo" : band === "ragazzi" ? "aprire la tua prima bustina" : "sbloccare il primo oggetto"}!</p>` : ""}
+    </section>`;
+    window.scrollTo(0, 0);
+  }
+  function openAlbumItem(id) {
+    const it = Album.find(id), band = albBand();
+    if (!it) return;
+    Album.seen(id);
+    openModal(`<div class="ab-pop ab-${band}">${albBigHtml(band, it)}
+      <div class="btn-row"><button class="btn alt" data-act="album-say" data-id="${id}">🔊 Leggi</button><button class="btn" data-act="album-pop-close">Chiudi</button></div></div>`);
+    albSay(it);
+  }
 
   // ====================================================================
   // IMPOSTAZIONI
@@ -1303,7 +1404,14 @@
     "narr-yes": () => narrChoice(true),
     "narr-no": () => narrChoice(false),
     mic: () => listenForAnswer(),
-    "next-q": () => nextQuestion(),
+    "next-q": () => { if (game && game.pack) { const p = game.pack; game.pack = null; showPack(p, nextQuestion); return; } nextQuestion(); },
+    album: () => { albSet = 0; openAlbum(); Sfx.tap(); },
+    "album-close": () => showHome(),
+    "album-set": el => { albSet = +el.dataset.i || 0; openAlbum(); Sfx.tap(); },
+    "album-item": el => openAlbumItem(el.dataset.id),
+    "album-say": el => { const it = Album.find(el.dataset.id); if (it) Voice.speak(it.n + ". " + it.f, msg => toast(msg, 6000)); },
+    "album-pop-close": () => { closeModal(); openAlbum(); },
+    "album-swap": el => { if (Album.swap(albBand(), el.dataset.id)) { Sfx.ok(); openAlbum(); openAlbumItem(el.dataset.id); } },
     "cd-home": () => showHome(),
     "cd-skip": () => {
       if (!profile.pin) { toast("Serve il PIN dei genitori: si imposta da Impostazioni.", 4000); return; }
@@ -1318,7 +1426,7 @@
       renderGame(); saveResume();
       if (profile.autoRead) readQuestion();
     },
-    exit: () => { Voice.stopSpeaking(); Music.stop(); showHome(); },
+    exit: () => { Voice.stopSpeaking(); Music.stop(); const p = game && game.pack; showHome(); if (p) showPack(p); },
     // impostazioni
     close: () => closeModal(),
     edit: () => askPin("Cambia nome o classe", () => startWizard(true, 0)),
@@ -1406,7 +1514,7 @@
     "fx-yes": () => setFxChoice(true),
     "fx-no": () => setFxChoice(false),
     "name-mic": () => listenName(),
-    "reset-yes": () => { Storage.resetAll(); Stats.wipe(); profile = null; viewClass = null; pendingCalm = false; closeModal(); Credit.refresh(); showWelcome(); }
+    "reset-yes": () => { Storage.resetAll(); Album.reset(); Stats.wipe(); profile = null; viewClass = null; pendingCalm = false; closeModal(); Credit.refresh(); showWelcome(); }
   };
 
   document.addEventListener("click", e => {
@@ -1434,7 +1542,7 @@
 
   // pausa del cervello: il conto alla rovescia in home scorre, e quando finisce la home si ridisegna
   setInterval(() => {
-    if (!profile || setupOn() || wiz || game || cdOpen || document.hidden || !$modal.hidden) return;
+    if (!profile || setupOn() || wiz || game || cdOpen || albumOpen || document.hidden || !$modal.hidden) return;
     const c = Credit.cooling();
     if (c !== homeCool) { homeCool = c; renderHome(); return; }
     const el = document.getElementById("cd-home-left");
@@ -1445,7 +1553,7 @@
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) { Voice.stopSpeaking(); Stats.flush(); saveResume(); return; }
     Credit.refresh();
-    if (profile && !setupOn() && !wiz && !game && !askCb) renderHome();
+    if (profile && !setupOn() && !wiz && !game && !askCb && !albumOpen) renderHome();
   });
 
   // ---------- avvio ----------
@@ -1481,8 +1589,10 @@
   // Tasto indietro di Android: torna alla pagina precedente invece di chiudere l'app.
   // Si esce dall'app solo dalla schermata principale (non c'è niente prima).
   function onBack() {
+    if (packClose) { packClose(); return; }
     if (!$modal.hidden) { if (!setupOn()) closeModal(); return; }
     if (cdOpen) { showHome(); return; }
+    if (albumOpen && !game) { showHome(); return; }
     if (wiz) {
       if (wiz.pinForce) { if (navigator.app && navigator.app.exitApp) navigator.app.exitApp(); return; }
       if (wiz.pinOnly) { wiz = null; showHome(); return; }
