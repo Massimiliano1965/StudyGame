@@ -1029,7 +1029,7 @@
       "Vuoi mettere una fotografia? Tocca la macchina fotografica, oppure fatti aiutare da mamma e papà. Se non vuoi, tocca Ho finito."]
   };
 
-  // la versione con dedica (quella di Pietro, 10 anni) sa già scrivere: niente microfono né aiuto dei genitori per il nome
+  // la versione con dedica sa già scrivere: niente microfono né aiuto dei genitori per il nome
   const smallKids = () => !(typeof DEDICA === "string" && DEDICA);
   const nameSay = () => !smallKids() ? "Come ti chiami? Scrivi il tuo nome nella casella." : Voice.canListen()
     ? "Come ti chiami? Tocca il microfono e dì il tuo nome. Oppure chiedi a mamma o papà di scrivere il tuo nome."
@@ -1369,7 +1369,7 @@
       <p><b>Il cervello che esplode.</b> Anche giocare qui dentro è tempo di schermo. Dopo un certo tempo di esercizi nella giornata (suggeriti: ${CONFIG.PLAY_MIN_BY_CLASS[0]} minuti fino alla 3ª elementare, ${Credit.format(CONFIG.PLAY_MIN_BY_CLASS[3])} in 4ª e 5ª, ${Credit.format(CONFIG.PLAY_MIN_BY_CLASS[5])} alle medie) compare il cervello che esplode e gli esercizi si fermano per ${Credit.format(CONFIG.COOLDOWN_MIN)}; i minuti già guadagnati restano. Anche questo lo decidete voi, dallo stesso posto.</p>
       <p><b>Luci ed effetti.</b> L'app usa colori vivaci, piccoli movimenti e qualche coriandolo, ma niente lampeggi rapidi. Alcune persone, anche bambini, sono sensibili alle luci intermittenti (fotosensibilità, epilessia fotosensibile): se è il vostro caso, o nel dubbio, spegnete gli effetti da <b>Impostazioni → Effetti e luci</b> e parlatene con il medico. Se durante il gioco il bambino ha disturbi (mal di testa, vista offuscata, capogiri), fermatelo subito.</p>
       <p><b>Genitori.</b> Si raccomanda a mamma e papà di tenere sotto controllo i figli quando usano il cellulare, soprattutto se sono piccoli, e di usare sempre buon senso e discrezione sul tempo davanti allo schermo.</p>
-      <p><b>Un grazie speciale.</b> A Pietro: è per lui che papà ha pensato questa app, e sarà lui il primo a collaudarla.</p>
+      ${typeof DEDICA === "string" && DEDICA === "Pietro" ? `<p><b>Un grazie speciale.</b> A Pietro: è per lui che papà ha pensato questa app, e sarà lui il primo a collaudarla.</p>` : ""}
       ${setup ? `<button class="btn big flash" data-act="info-setup-ok">Ok, ho letto ▶</button>` : `<button class="btn" data-act="close">Ho capito</button>`}`);
     const sh = document.querySelector("#modal .sheet"); if (sh) sh.scrollTop = 0;
   }
