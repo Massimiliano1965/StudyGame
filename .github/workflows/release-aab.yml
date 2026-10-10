@@ -34,7 +34,7 @@ jobs:
         run: cordova platform add android@14.0.1
 
       - name: Aggiungi plugin
-        run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 cordova-plugin-camera@7.0.0 ./plugins-local/speechrecognition
+        run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 cordova-plugin-camera@7.0.0 ./plugins-local/speechrecognition ./plugins-local/studylock
 
       - name: Numero di versione che cresce a ogni build
         run: sed -i "s/<widget /<widget android-versionCode=\"$((100000 + ${{ github.run_number }}))\" /" config.xml

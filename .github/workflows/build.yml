@@ -53,6 +53,10 @@ jobs:
           if [ -n "$DEDICA" ] && [ -d "res/dedica/$DEDICA" ]; then
             cp res/dedica/"$DEDICA"/icon-*dpi.png res/dedica/"$DEDICA"/fg-*.png res/dedica/"$DEDICA"/bg-*.png res/android/
             cp res/dedica/"$DEDICA"/icon-512.png res/icon-512.png
+            # anche le schermate d'avvio: quella di Android (icona e colore) e quella animata dell'app
+            if [ -f res/dedica/"$DEDICA"/splash-icon.png ]; then cp res/dedica/"$DEDICA"/splash-icon.png res/splash-icon.png; fi
+            sed -i 's/#9B6BFF/#3A55E0/g' config.xml
+            if [ -f res/dedica/"$DEDICA"/logo.svg ]; then mkdir -p www/img; cp res/dedica/"$DEDICA"/logo.svg www/img/dedica-logo.svg; fi
             echo "Icona speciale per $DEDICA"
           fi
 
@@ -75,8 +79,8 @@ jobs:
       - name: Aggiungi piattaforma Android
         run: cordova platform add android@13.0.0
 
-      - name: Aggiungi plugin voce, microfono e fotocamera
-        run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 cordova-plugin-camera@7.0.0 ./plugins-local/speechrecognition
+      - name: Aggiungi plugin voce, microfono, fotocamera e blocco
+        run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 cordova-plugin-camera@7.0.0 ./plugins-local/speechrecognition ./plugins-local/studylock
 
       - name: Numero di versione che cresce a ogni build
         run: sed -i "s/<widget /<widget android-versionCode=\"$((100000 + ${{ github.run_number }}))\" /" config.xml

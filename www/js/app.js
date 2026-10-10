@@ -32,6 +32,8 @@
   let pendingCalm = false; // "figlio fotosensibile": scelta fatta nella schermata di benvenuto
   // fascia scelta dal bambino nella prima schermata: dà subito lo stile giusto e limita le classi da scegliere
   let pendingBand = null;
+  // versione personalizzata (build con dedica, es. quella di Pietro): saluto per nome invece di «Come ti chiami?»
+  const hasDedica = () => typeof DEDICA === "string" && !!DEDICA;
   const BANDS = [
     { id: "piccoli", from: 0, to: 3, big: "1ª–3ª", small: "elementare", color: "#FF8FB1" },
     { id: "ragazzi", from: 3, to: 5, big: "4ª–5ª", small: "elementare", color: "#4DB8FF" },
@@ -158,7 +160,7 @@
     const fams = Characters.FAMILIES;
     $app.innerHTML = `<section class="screen welcome wz">
       ${brandHtml()}
-      <div class="center"><h1>Ciao! Che scuola fai?</h1><p class="muted" style="margin-top:4px">Tocca la tua.</p></div>
+      <div class="center"><h1>Ciao${hasDedica() ? " " + esc(DEDICA) : ""}! Che scuola fai?</h1><p class="muted" style="margin-top:4px">Tocca la tua.</p></div>
       <div class="bands ${pendingBand ? "has-sel" : ""}">${BANDS.map(bd => { const f = Characters.familiesFor(bd.from)[0];
         return `<button class="band b-${bd.id} ${pendingBand === bd.id ? "sel" : ""}" data-act="band" data-id="${bd.id}" aria-label="${bd.big} ${bd.small}">
           <span class="bd-lab"><b>${bd.big}</b><small>${bd.small}</small></span>
@@ -176,7 +178,7 @@
     </section>`;
     if (pendingBand) setTheme(bandClass()); else setTheme(null);
     document.body.classList.toggle("calm", pendingCalm);
-    Voice.speak("Ciao! Benvenuto in Gioca e Impara! Che scuola fai? Tocca la tua: prima, seconda o terza elementare; quarta o quinta elementare; oppure scuola media.", msg => toast(msg, 6000));
+    Voice.speak((hasDedica() ? "Ciao " + DEDICA + "! " : "Ciao! ") + "Benvenuto in Gioca e Impara! Che scuola fai? Tocca la tua: prima, seconda o terza elementare; quarta o quinta elementare; oppure scuola media.", msg => toast(msg, 6000));
   }
 
   // scelta "figlio fotosensibile" nella schermata di benvenuto: si aggiorna sul posto (senza ridisegnare, così la voce non riparte)
@@ -210,7 +212,7 @@
     wiz = {
       step: step || 0, editing: !!editing,
       d: editing && profile ? { ...profile } :
-        { nick: "", classId: null, family: "creatura", color: Characters.COLORS[0].hex, photo: null, autoRead: pendingAuto, sound: true, calm: pendingCalm }
+        { nick: hasDedica() ? DEDICA : "", classId: null, family: "creatura", color: Characters.COLORS[0].hex, photo: null, autoRead: pendingAuto, sound: true, calm: pendingCalm }
     };
     renderWizard();
   }
@@ -227,7 +229,12 @@
     setTheme(d.classId != null ? d.classId : bc);
     let body = "", canNext = true, nextLabel = "Avanti ▶";
 
-    if (s === 0) {
+    if (s === 0 && !wiz.editing && hasDedica()) {
+      d.nick = DEDICA; canNext = true;
+      body = `
+        <div class="hero small">${charSvg({ ...d, classId: d.classId == null ? (bc || 0) : d.classId, family: d.classId == null && bc ? Characters.familiesFor(bc)[0].id : d.family }, "cheer")}</div>
+        <div class="center"><h1>Ciao ${esc(DEDICA)}! Benvenuto!</h1><p class="muted" style="margin-top:6px">Questa app è tutta tua. Tocca «Avanti» e scegli la tua classe.</p></div>`;
+    } else if (s === 0) {
       const canNickNow = d.nick.trim().length >= 2;
       canNext = canNickNow;
       body = `
@@ -340,6 +347,7 @@
     pendingPin = "";
     delete profile.setup;
     if (!Storage.saveProfile(profile)) toast("Non riesco a salvare sul telefono: lo spazio è pieno.");
+    syncPin();
    
     applyCalm();
     wiz = null;
@@ -440,6 +448,7 @@
         <div class="row"><h3>Tempo di telefono <span class="muted">oggi</span></h3><span class="num">${esc(Credit.format(min))}</span></div>
         <div class="bar" role="img" aria-label="${Math.floor(min)} minuti su ${cap}"><i style="width:${pct}%"></i><b style="left:${mark}%"></b></div>
         <div class="bar-labels"><span>${esc(Credit.format(Credit.minG()))} garantiti</span><span>massimo ${esc(Credit.format(cap))}</span></div>
+        ${lockHomeHtml()}
       </div>
       <div class="lvl-box lvl${rel}"><button class="icon-btn" data-act="lvl-down" aria-label="Esercizi più facili" ${pc <= 0 ? "disabled" : ""}>◀</button>
         <div class="lvl-mid"><small>Esercizi di</small><b>${esc(classLabel(pc))}</b><span class="lvl-tag">${esc(tag)}</span></div>
@@ -1056,7 +1065,7 @@
 
   // la versione con dedica sa già scrivere: niente microfono né aiuto dei genitori per il nome
   const smallKids = () => !(typeof DEDICA === "string" && DEDICA);
-  const nameSay = () => !smallKids() ? "Come ti chiami? Scrivi il tuo nome nella casella." : Voice.canListen()
+  const nameSay = () => hasDedica() ? `Ciao ${DEDICA}! Benvenuto in Gioca e Impara! Questa app è tutta tua. Tocca Avanti e scegli la tua classe.` : !smallKids() ? "Come ti chiami? Scrivi il tuo nome nella casella." : Voice.canListen()
     ? "Come ti chiami? Tocca il microfono e dì il tuo nome. Oppure chiedi a mamma o papà di scrivere il tuo nome."
     : "Come ti chiami? Chiedi a mamma o papà di scrivere il tuo nome.";
   const stepSay = i => i === 0 ? nameSay() : STEP_SAY.steps[i];
@@ -1248,10 +1257,119 @@
   }
 
   // ====================================================================
+  // BLOCCO DEL TELEFONO (rimesso il 10/10/2026, facoltativo: chi non vuole lo salta)
+  // Le altre app si aprono solo con i minuti guadagnati qui. Guida passo passo con un'animazione per ogni passo.
+  // ====================================================================
+  const syncPin = () => { if (profile && profile.pin) Lock.setPin(profile.pin); syncContacts(); };
+  const syncContacts = () => { if (profile && Array.isArray(profile.contacts)) Lock.setContacts(profile.contacts); };
+  let lockStepsOpen = false;
+
+  function lockHomeHtml() {
+    if (!Lock.ready()) return "";
+    const av = Credit.available(), left = Lock.get().leftMin;
+    return `<div class="lock-home"><div class="lock-state">${left > 0 ? "🔓 Telefono sbloccato: ancora " + left + " min" : "🔒 Le altre app sono in pausa"}</div>
+      <button class="btn alt small" data-act="lock-claim" ${av > 0 ? "" : "disabled"}>📱 Usa i miei minuti (${av})</button></div>`;
+  }
+  function lockBoxHtml() {
+    if (!Lock.available()) return "";
+    const s = Lock.get(), on = s.enabled && s.overlay && s.usage;
+    let body = `<p class="muted lock-note">Le altre app (giochi, video, social) si aprono solo con i minuti guadagnati qui. Telefonate e sveglia funzionano sempre.</p>`;
+    if (!on) body += `<button class="btn small flash" data-act="lock-start">▶ Attiva il blocco (guida facile)</button>`;
+    else body += `<p class="lock-ok">✅ Blocco attivo${s.emergencyToday ? " · sblocchi di emergenza oggi: " + s.emergencyToday : ""}</p>
+      <button class="btn ghost small" data-act="lock-emergency">🆘 Emergenza: sblocca 10 minuti</button>
+      ${s.admin ? `<button class="btn ghost small" data-act="admin-off">🔓 Togli la protezione dalla disinstallazione</button>` : `<button class="btn ghost small" data-act="lock-admin-step">🛡️ Proteggi dalla disinstallazione</button>`}
+      <button class="btn ghost small" data-act="lock-off">Spegni il blocco</button>`;
+    return `<div class="lock-box" id="lockbox"><div class="row-set"><span>🔒 Blocco del telefono</span><span class="pill">${on ? "Acceso" : "Spento"}</span></div>${body}</div>`;
+  }
+  function refreshLockBox() {
+    return Lock.status().then(() => {
+      if (lockStepsOpen && !$modal.hidden) { renderLockSteps(); return; }
+      const el = document.getElementById("lockbox");
+      if (el && !$modal.hidden) el.outerHTML = lockBoxHtml();
+      if (profile && !setupOn() && !wiz && !game && !askCb && !albumOpen) renderHome();
+    });
+  }
+
+  // ---- telefono disegnato con il dito che mostra cosa toccare (si ripete da solo) ----
+  function phoneMock(kind) {
+    const row = (name, me) => `<div class="pm-row ${me ? "me" : ""}"><span class="pm-ic">${me ? "🎓" : name === "YouTube" ? "▶️" : "🎵"}</span><span class="pm-name">${name}</span><span class="pm-tg ${me ? "anim" : ""}"><i></i></span></div>`;
+    const list = title => `<div class="pm-bar">← ${title}</div>${row("YouTube")}${row("Gioca e Impara", true)}${row("Musica")}`;
+    let screen = "", finger = "";
+    if (kind === "overlay" || kind === "usage") { screen = list(kind === "overlay" ? "Mostra sopra altre app" : "Accesso all'utilizzo"); finger = "f-toggle"; }
+    if (kind === "denied") { screen = list("Mostra sopra altre app") + `<div class="pm-pop"><b>Impostazione con restrizioni</b><small>Per la tua sicurezza…</small><span>OK</span></div>`; finger = "f-ok"; }
+    if (kind === "appinfo") { screen = `<div class="pm-bar">← Info app <span class="pm-dots">⋮</span></div><div class="pm-app">🎓<b>Gioca e Impara</b></div><div class="pm-menu"><span>Consenti impostazioni con restrizioni</span></div>`; finger = "f-dots"; }
+    if (kind === "admin") { screen = `<div class="pm-app">🎓<b>Gioca e Impara</b></div><div class="pm-pop show"><b>Attivare l'app di amministrazione?</b><small>Serve solo a non farla disinstallare.</small><span class="two"><em>Annulla</em><em class="go">Attiva</em></span></div>`; finger = "f-admin"; }
+    return `<div class="pm pm-${kind}" aria-hidden="true"><div class="pm-scr">${screen}</div><div class="pm-finger ${finger}">👆</div></div>`;
+  }
+
+  // ---- offerta durante la prima configurazione (dopo il PIN) ----
+  function openLockOffer() {
+    openModal(`<h2>🔒 Blocco del telefono</h2>
+      <p class="center">Le altre app (giochi, video, social) si aprono <b>solo con i minuti guadagnati</b> qui.<br>Telefonate e sveglia funzionano sempre.</p>
+      <p class="center muted">Ci vogliono circa 3 minuti: vi guidiamo passo passo, con le figure.</p>
+      <button class="btn big flash" data-act="lock-start">🔒 Sì, attiviamolo</button>
+      <button class="btn ghost" data-act="lock-skip">Salta: lo faccio dopo dalle Impostazioni</button>`);
+  }
+
+  // ---- la guida: un passo alla volta, si aggiorna da sola quando si torna dalle impostazioni di Android ----
+  function openLockSteps() { lockStepsOpen = true; renderLockSteps(); }
+  function renderLockSteps() {
+    const s = Lock.get(), prof = profile || {};
+    lockStepsOpen = true;
+    const total = 3, dots = n => `<div class="step-dots">${[1, 2, 3].map(i => `<span class="${i < n ? "done" : i === n ? "now" : ""}"></span>`).join("")}</div>`;
+    const step = (n, title, mock, text, main, extra) => openModal(`${dots(n)}<h2>Passo ${n} di ${total}</h2><p class="step-name">${title}</p>
+      ${phoneMock(mock)}<p class="step-txt">${text}</p>${main}${extra || ""}
+      <button class="btn ghost small" data-act="lock-skip">Salta: lo faccio dopo</button>`);
+    if (!s.overlay) {
+      if (prof.lkDenied) {
+        step(1, "Sblocca il permesso", "appinfo", "Tocca <b>Apri</b>. In alto a destra tocca i <b>tre puntini ⋮</b>, poi <b>«Consenti impostazioni con restrizioni»</b>. Torna qui.",
+          `<button class="btn big" data-act="lock-appinfo">⚙️ Apri</button>`,
+          `<button class="btn alt" data-act="lock-undenied">✅ Fatto, riprova</button>`);
+        return;
+      }
+      step(1, "«Mostra sopra le altre app»", "overlay", "Tocca <b>Apri</b>, cerca <b>Gioca e Impara</b> e accendi l'interruttore. Poi torna qui con la freccia ←.",
+        `<button class="btn big" data-act="lock-perm-overlay">📲 Apri</button>`,
+        `<button class="btn alt" data-act="lock-denied">Android dice «con restrizioni»</button>`);
+      return;
+    }
+    if (!s.usage) {
+      step(2, "«Accesso all'utilizzo»", "usage", "Tocca <b>Apri</b>, cerca <b>Gioca e Impara</b> e accendi l'interruttore. Poi torna qui con la freccia ←.",
+        `<button class="btn big" data-act="lock-perm-usage">📲 Apri</button>`);
+      return;
+    }
+    if (!s.admin && !prof.adminLater) {
+      step(3, "Protezione (facoltativa)", "admin", "Così il bambino non può disinstallare l'app. Tocca <b>Proteggi</b> e poi <b>Attiva</b>.",
+        `<button class="btn big" data-act="lock-admin">🛡️ Proteggi</button>`,
+        `<button class="btn alt" data-act="lock-admin-later">Non serve</button>`);
+      return;
+    }
+    lockStepsOpen = false;
+    openModal(`<h2>✅ Blocco attivo!</h2><p class="center">Le altre app si aprono solo con i minuti guadagnati.<br>Dalla home: «📱 Usa i miei minuti».</p>
+      <button class="btn big flash" data-act="lock-done">Avanti ▶</button>`);
+  }
+  // ---- numeri da chiamare anche col telefono in pausa ----
+  function openContacts() {
+    const c = (profile.contacts || []).slice(0, 3), def = ["Mamma", "Papà", "Altro"];
+    const row = i => { const x = c[i] || {}; return `<div class="row-set" style="flex-direction:column;align-items:stretch;gap:6px">
+      <input id="em-n${i}" class="adult-in" type="text" maxlength="20" autocomplete="off" placeholder="Nome (${def[i]})" value="${esc(x.n || "")}">
+      <input id="em-t${i}" class="adult-in" type="tel" inputmode="tel" maxlength="20" autocomplete="off" placeholder="Numero di telefono" value="${esc(x.t || "")}"></div>`; };
+    openModal(`<h2>📞 Numeri per chiamare</h2>
+      <p class="muted">Con il telefono in pausa, questi tasti permettono di chiamare lo stesso. Lascia vuoto un numero per non mostrarlo.</p>
+      ${row(0)}${row(1)}${row(2)}
+      <button class="btn" data-act="em-save">Salva</button>
+      <button class="btn ghost" data-act="close">Annulla</button>`);
+  }
+  function lockFinish() {
+    lockStepsOpen = false;
+    if (setupOn()) { startChildSetup(); return; }
+    closeModal(); renderHome();
+  }
+
+  // ====================================================================
   // IMPOSTAZIONI
   // ====================================================================
   function openModal(html) { $modal.innerHTML = `<div class="card sheet">${html}</div>`; $modal.hidden = false; }
-  function closeModal() { $modal.hidden = true; $modal.innerHTML = ""; }
+  function closeModal() { $modal.hidden = true; $modal.innerHTML = ""; lockStepsOpen = false; }
 
   function openSettings() {
     const p = profile;
@@ -1263,6 +1381,8 @@
       <div class="row-set voice-set"><span class="set-label">Voce di ${esc(((Characters.allFamilies().find(f => f.id === p.family) || {}).pet) || "")}</span><div class="l2-pick"><button class="switch ${p.voiceG !== "m" ? "on" : ""}" data-act="set-voice" data-id="f" aria-pressed="${p.voiceG !== "m"}">👧 Femmina</button><button class="switch ${p.voiceG === "m" ? "on" : ""}" data-act="set-voice" data-id="m" aria-pressed="${p.voiceG === "m"}">👦 Maschio</button><button class="switch" data-act="test-voice">▶ Prova</button></div></div>
       <div class="row-set"><span>Suoni</span><button class="switch ${p.sound !== false ? "on" : ""}" data-act="toggle-sound" aria-pressed="${p.sound !== false}">${p.sound !== false ? "Sì" : "No"}</button></div>
       <div class="row-set"><span>Effetti e luci</span><button class="switch ${p.calm ? "" : "on"}" data-act="toggle-fx" aria-pressed="${!p.calm}">${p.calm ? "Ridotti" : "Sì"}</button></div>
+      ${lockBoxHtml()}
+      ${Lock.available() ? `<button class="btn alt" data-act="em-open">📞 Numeri per chiamare mamma e papà</button>` : ""}
       <button class="btn alt" data-act="time-set">⏱ Tempo di telefono (genitori)</button>
       <button class="btn alt" data-act="report">📊 Resoconto per i genitori</button>
       <button class="btn ghost" data-act="change-pin">🔐 Cambia PIN dei genitori</button>
@@ -1271,6 +1391,7 @@
       <button class="btn ghost" data-act="rate">⭐ Ti piace? Lascia una recensione</button>
       <button class="btn ghost" data-act="reset">🗑 Ricomincia da zero</button>
       <button class="btn" data-act="close">Chiudi</button>`);
+    if (Lock.available()) refreshLockBox();
   }
 
   // ---------- configurazione dei genitori: il PIN (impostazione da adulti) ----------
@@ -1536,13 +1657,44 @@
     "parent-pin-ok": () => {
       const a = document.getElementById("lpin1"), b = document.getElementById("lpin2");
       if (!a || !/^\d{4}$/.test(a.value) || a.value !== b.value) return;
-      profile.pin = hashPin(a.value); profile.pinFails = 0; Storage.saveProfile(profile);
+      profile.pin = hashPin(a.value); profile.pinFails = 0; Storage.saveProfile(profile); syncPin();
+      if (setupOn() && Lock.available() && !Lock.ready()) { openLockOffer(); return; }   // il blocco si offre subito, ma si può saltare
       openModal(setupOn()
         ? `<h2>✅ Genitori: fatto!</h2><p class="center">Ricordate il PIN. Ora tocca al bambino: creiamo il suo profilo.</p><button class="btn big flash" data-act="parent-done">Avanti ▶</button>`
         : `<h2>✅ Tutto pronto!</h2><p class="center">Ricordate il PIN. Ora si può giocare!</p><button class="btn" data-act="parent-done">Fatto</button>`);
       if (!setupOn()) renderHome();
     },
     "info-setup-ok": () => openParentSetup(),
+    "lock-start": () => { Lock.setEnabled(true).then(() => Lock.status()).then(openLockSteps); },
+    "lock-skip": () => lockFinish(),
+    "lock-done": () => lockFinish(),
+    "lock-denied": () => { profile.lkDenied = true; Storage.saveProfile(profile); renderLockSteps(); },
+    "lock-undenied": () => { profile.lkDenied = false; Storage.saveProfile(profile); Lock.status().then(renderLockSteps); },
+    "lock-appinfo": () => { Lock.openAppInfo(); },
+    "lock-perm-overlay": () => { Lock.openOverlaySettings(); },
+    "lock-perm-usage": () => { Lock.openUsageSettings(); },
+    "lock-admin": () => { if (profile) { profile.adminLater = false; Storage.saveProfile(profile); } Lock.requestAdmin(); },
+    "lock-admin-later": () => { if (profile) { profile.adminLater = true; Storage.saveProfile(profile); } renderLockSteps(); },
+    "lock-admin-step": () => { profile.adminLater = false; Storage.saveProfile(profile); Lock.status().then(openLockSteps); },
+    "lock-off": () => askPin("Spegni il blocco", () => Lock.setEnabled(false).then(() => { toast("Blocco spento"); openSettings(); renderHome(); })),
+    "admin-off": () => askPin("Togli la protezione", () => Lock.releaseAdmin().then(() => {
+      if (profile) { profile.adminLater = true; Storage.saveProfile(profile); }
+      toast("Protezione tolta: ora l'app si può disinstallare.", 4500); openSettings();
+    })),
+    "lock-emergency": () => askPin("Sblocca 10 minuti", () => { Lock.emergency().then(() => { toast("Telefono sbloccato per 10 minuti", 4000); refreshLockBox(); }); }),
+    "em-open": () => askPin("Numeri da chiamare", openContacts),
+    "em-save": () => {
+      const g = id => (document.getElementById(id) || {}).value || "";
+      const list = [0, 1, 2].map(i => ({ n: g("em-n" + i).trim(), t: g("em-t" + i).replace(/[^0-9+*#]/g, "") }));
+      profile.contacts = list; Storage.saveProfile(profile); syncContacts();
+      toast(list.some(x => x.t) ? "Numeri salvati." : "Numeri tolti.", 3500);
+      closeModal(); openSettings();
+    },
+    "lock-claim": () => {
+      const n = Credit.claim();
+      if (!n) return;
+      Lock.unlock(n).then(() => { toast("📱 Telefono sbloccato per " + n + " minuti. Buon divertimento!", 4000); renderHome(); });
+    },
     "parent-done": () => {
       if (profile && !profile.pin) { renderParentPin(); return; }
       if (setupOn()) { startChildSetup(); return; }
@@ -1585,7 +1737,7 @@
     "fx-yes": () => setFxChoice(true),
     "fx-no": () => setFxChoice(false),
     "name-mic": () => listenName(),
-    "reset-yes": () => { Storage.resetAll(); Album.reset(); Stats.wipe(); profile = null; viewClass = null; pendingCalm = false; pendingBand = null; closeModal(); Credit.refresh(); showWelcome(); }
+    "reset-yes": () => { Lock.setPin(""); Storage.resetAll(); Album.reset(); Stats.wipe(); profile = null; viewClass = null; pendingCalm = false; pendingBand = null; closeModal(); Credit.refresh(); showWelcome(); }
   };
 
   document.addEventListener("click", e => {
@@ -1624,6 +1776,7 @@
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) { Voice.stopSpeaking(); Stats.flush(); saveResume(); return; }
     Credit.refresh();
+    if (Lock.available()) { refreshLockBox(); return; }
     if (profile && !setupOn() && !wiz && !game && !askCb && !albumOpen) renderHome();
   });
 
@@ -1631,6 +1784,7 @@
   function boot() {
     Splash.done();
     Voice.warmUp();
+    if (Lock.available()) refreshLockBox();
     refreshNarrate();
     if (profile && !profile.setup && typeof profile.classId !== "number") { Storage.resetAll(); profile = null; }
     if (!profile) { showWelcome(); return; }
@@ -1645,6 +1799,7 @@
     applyCalm();
     Credit.setLimits(profile.lim, profile.classId); Credit.setClass(profile.classId); Credit.refresh();
     selected = subsNow();
+    syncPin();
     if (!profile.pin && presetPin()) { profile.pin = presetPin(); Storage.saveProfile(profile); }
    
     // profili senza PIN (creati prima): i genitori lo scelgono adesso

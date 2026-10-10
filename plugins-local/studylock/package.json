@@ -1,0 +1,11 @@
+{
+  "name": "cordova-plugin-studylock",
+  "version": "1.0.0",
+  "description": "Blocco morbido del telefono per Gioca e Impara",
+  "cordova": {
+    "id": "cordova-plugin-studylock",
+    "platforms": ["android"]
+  },
+  "keywords": ["cordova", "ecosystem:cordova", "cordova-android"],
+  "license": "MIT"
+}
