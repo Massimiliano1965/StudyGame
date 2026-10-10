@@ -5,6 +5,7 @@
   <content src="index.html" />
   <allow-intent href="market:*" />
   <preference name="Orientation" value="portrait" />
+  <preference name="errorUrl" value="https://localhost/index.html" />
   <preference name="android-minSdkVersion" value="24" />
   <platform name="android">
     <preference name="AndroidWindowSplashScreenBackground" value="#9B6BFF" />
