@@ -21,9 +21,8 @@ jobs:
       fail-fast: false
       matrix:
         # a ogni modifica su main: versione per tutti + versione con dedica (codice D1); a mano: solo il nome indicato
-        dedica: ${{ fromJSON(github.event_name == 'workflow_dispatch' && format('["{0}"]', inputs.dedica) || '["", "D1"]') }}
+        dedica: ${{ fromJSON(github.event_name == 'workflow_dispatch' && format('["{0}"]', inputs.dedica) || (vars.DEDICA_NOME != '' && '["", "D1"]' || '[""]')) }}
     # il nome vero di D1 sta nella variabile privata DEDICA_NOME (Settings > Secrets and variables > Actions > Variables)
-    if: ${{ matrix.dedica != 'D1' || vars.DEDICA_NOME != '' }}
     steps:
       - uses: actions/checkout@v4
 
