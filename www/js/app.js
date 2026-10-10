@@ -32,7 +32,7 @@
   let pendingCalm = false; // "figlio fotosensibile": scelta fatta nella schermata di benvenuto
   // fascia scelta dal bambino nella prima schermata: dà subito lo stile giusto e limita le classi da scegliere
   let pendingBand = null;
-  // versione personalizzata (build con dedica, es. quella di Pietro): saluto per nome invece di «Come ti chiami?»
+  // versione personalizzata (build con dedica, es. quella per un bambino in particolare): saluto per nome invece di «Come ti chiami?»
   const hasDedica = () => typeof DEDICA === "string" && !!DEDICA;
   const BANDS = [
     { id: "piccoli", from: 0, to: 3, big: "1ª–3ª", small: "elementare", color: "#FF8FB1" },
@@ -1516,7 +1516,7 @@
       <p><b>Gli occhi.</b> I colori sono morbidi e riposanti (niente bianco abbagliante né nero con colori fluorescenti), i testi sono grandi e non ci sono lampeggi. Ogni ${EYE_EVERY / 60} minuti di gioco compare una pausa per gli occhi: si guarda lontano per ${EYE_SEC} secondi. Ricordiamo che per la vista dei bambini contano soprattutto le pause e il tempo all'aperto.</p>
       <p><b>Luci ed effetti.</b> L'app usa colori vivaci, piccoli movimenti e qualche coriandolo, ma niente lampeggi rapidi. Alcune persone, anche bambini, sono sensibili alle luci intermittenti (fotosensibilità, epilessia fotosensibile): se è il vostro caso, o nel dubbio, spegnete gli effetti da <b>Impostazioni → Effetti e luci</b> e parlatene con il medico. Se durante il gioco il bambino ha disturbi (mal di testa, vista offuscata, capogiri), fermatelo subito.</p>
       <p><b>Genitori.</b> Si raccomanda a mamma e papà di tenere sotto controllo i figli quando usano il cellulare, soprattutto se sono piccoli, e di usare sempre buon senso e discrezione sul tempo davanti allo schermo.</p>
-      ${typeof DEDICA === "string" && DEDICA === "Pietro" ? `<p><b>Un grazie speciale.</b> A Pietro: è per lui che papà ha pensato questa app, e sarà lui il primo a collaudarla.</p>` : ""}
+      ${hasDedica() ? `<p><b>Un grazie speciale.</b> A ${esc(DEDICA)}: è per lui che papà ha pensato questa app, e sarà lui il primo a collaudarla.</p>` : ""}
       ${setup ? `<button class="btn big flash" data-act="info-setup-ok">Ok, ho letto ▶</button>` : `<button class="btn" data-act="close">Ho capito</button>`}`);
     const sh = document.querySelector("#modal .sheet"); if (sh) sh.scrollTop = 0;
   }

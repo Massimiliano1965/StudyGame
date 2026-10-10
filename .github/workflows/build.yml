@@ -20,14 +20,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # a ogni modifica su main: versione per tutti + versione di Pietro; a mano: solo il nome indicato
-        dedica: ${{ fromJSON(github.event_name == 'workflow_dispatch' && format('["{0}"]', inputs.dedica) || '["", "Pietro"]') }}
+        # a ogni modifica su main: versione per tutti + versione con dedica (codice D1); a mano: solo il nome indicato
+        dedica: ${{ fromJSON(github.event_name == 'workflow_dispatch' && format('["{0}"]', inputs.dedica) || '["", "D1"]') }}
+    # il nome vero di D1 sta nella variabile privata DEDICA_NOME (Settings > Secrets and variables > Actions > Variables)
+    if: ${{ matrix.dedica != 'D1' || vars.DEDICA_NOME != '' }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Dedica personale (solo se indicata)
         env:
-          DEDICA: ${{ matrix.dedica }}
+          DEDICA: ${{ matrix.dedica == 'D1' && vars.DEDICA_NOME || matrix.dedica }}
+          CODICE: ${{ matrix.dedica }}
           PIN: ${{ inputs.pin }}
         run: |
           node -e '
@@ -49,14 +52,14 @@ jobs:
               fs.writeFileSync("config.xml", x);
             }
           '
-          # icona speciale per l'app con dedica (es. res/dedica/Pietro: scudo da supereroe con la P)
-          if [ -n "$DEDICA" ] && [ -d "res/dedica/$DEDICA" ]; then
-            cp res/dedica/"$DEDICA"/icon-*dpi.png res/dedica/"$DEDICA"/fg-*.png res/dedica/"$DEDICA"/bg-*.png res/android/
-            cp res/dedica/"$DEDICA"/icon-512.png res/icon-512.png
+          # icona speciale per l'app con dedica (es. res/dedica/D1: scudo da supereroe)
+          if [ -n "$CODICE" ] && [ -d "res/dedica/$CODICE" ]; then
+            cp res/dedica/"$CODICE"/icon-*dpi.png res/dedica/"$CODICE"/fg-*.png res/dedica/"$CODICE"/bg-*.png res/android/
+            cp res/dedica/"$CODICE"/icon-512.png res/icon-512.png
             # anche le schermate d'avvio: quella di Android (icona e colore) e quella animata dell'app
-            if [ -f res/dedica/"$DEDICA"/splash-icon.png ]; then cp res/dedica/"$DEDICA"/splash-icon.png res/splash-icon.png; fi
+            if [ -f res/dedica/"$CODICE"/splash-icon.png ]; then cp res/dedica/"$CODICE"/splash-icon.png res/splash-icon.png; fi
             sed -i 's/#9B6BFF/#3A55E0/g' config.xml
-            if [ -f res/dedica/"$DEDICA"/logo.svg ]; then mkdir -p www/img; cp res/dedica/"$DEDICA"/logo.svg www/img/dedica-logo.svg; fi
+            if [ -f res/dedica/"$CODICE"/logo.svg ]; then mkdir -p www/img; cp res/dedica/"$CODICE"/logo.svg www/img/dedica-logo.svg; fi
             echo "Icona speciale per $DEDICA"
           fi
 
