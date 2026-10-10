@@ -44,7 +44,7 @@ Aggiornato al 10 ottobre 2026 (sera). Le versioni precedenti di questo file sono
 ## In sospeso / da fare
 - Prova sul telefono di Massi di tutto il pacchetto del 10/10 (blocco con la guida nuova, giochi nuovi, album, colori, pausa occhi, app con dedica).
 - Play Store (Massi NON vuole ancora pubblicare). Quando vorrà: incollare su GitHub i 3 segreti della chiave nuova (file `SEGRETI-GITHUB-StudyGame.txt` consegnato a Massi; la chiave è `upload-giocaeimpara.keystore`, tenuta da lui), email dello sviluppatore, informativa privacy su una pagina web (es. GitHub Pages). La vecchia chiave esposta è stata cancellata. `signing/studygame.keystore` (versioni di prova) resta: cambiarla obbligherebbe a reinstallare.
-- FATTO: il nome del bambino non è più nel repo pubblico. Codice D1; il nome sta nella variabile GitHub `DEDICA_NOME` (Settings > Secrets and variables > Actions > Variables). Senza variabile la build con dedica viene saltata.
+- FATTO: il nome del bambino non è più nel repo pubblico. Codice D1; il nome sta nella variabile GitHub `DEDICA_NOME` (Settings > Secrets and variables > Actions > Variables). Senza variabile la build con dedica viene saltata (deve stare tra le «Repository variables», non in un Environment).
 - App giapponese «あそんで まなぼう» per Riku (nipote di Massi, 2–5 anni; papà Ryu, mamma Kumi, insegnante di scuola dell'infanzia; usano iPhone): solo un'idea, da finire entro fine anno. Prima versione nello zip `asobou-riku.zip` consegnato a Massi (8 giochi dalle 5 aree del 幼稚園教育要領, voce giapponese, adesivi, tempo dei genitori, pausa occhi). Per iPhone: pagina web installabile (manifest + service worker già fatti) da pubblicare su un repo con GitHub Pages; Massi deve creare il repo.
 
 ## Come provare (per Claude)
