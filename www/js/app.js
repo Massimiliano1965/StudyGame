@@ -725,7 +725,7 @@
   }
 
   function feedbackHtml(fb, showSol) {
-    return `<div class="card feedback">
+    return `<div class="card feedback" role="status" aria-live="polite">
         <div class="head"><h2>${esc(fb.title)}</h2><span class="delta ${fb.delta > 0 ? "up" : fb.delta < 0 ? "down" : ""}">${fb.delta > 0 ? "+" : fb.delta < 0 ? "−" : ""}${fb.delta === 0 ? "" : Credit.fmtDelta(fb.delta) + " min"}</span></div>
         ${showSol && fb.correct ? `<p class="sol">Soluzione: <b>${esc(fb.correct)}</b></p>` : ""}
         ${fb.tr && fb.tr.length ? `<p class="sol tr">🔤 ${fb.tr.map(x => `<b>${esc(x)}</b>`).join(" · ")}</p>` : ""}
@@ -1379,8 +1379,28 @@
   // ====================================================================
   // IMPOSTAZIONI
   // ====================================================================
-  function openModal(html) { $modal.innerHTML = `<div class="card sheet">${html}</div>`; $modal.hidden = false; }
-  function closeModal() { $modal.hidden = true; $modal.innerHTML = ""; lockStepsOpen = false; }
+  // finestre: lettori di schermo e tastiera restano dentro (role=dialog, resto della pagina inerte, focus spostato e poi restituito)
+  let modalReturnFocus = null;
+  const setBackdropInert = on => Array.from(document.body.children).forEach(el => {
+    if (el === $modal || el.id === "toast" || el.tagName === "SCRIPT") return;
+    if (on) el.setAttribute("inert", ""); else el.removeAttribute("inert");
+  });
+  function openModal(html) {
+    if ($modal.hidden) modalReturnFocus = document.activeElement;
+    $modal.innerHTML = `<div class="card sheet" role="dialog" aria-modal="true" tabindex="-1">${html}</div>`;
+    $modal.hidden = false;
+    const sheet = $modal.firstElementChild, h = sheet.querySelector("h1, h2");
+    if (h) { if (!h.id) h.id = "modal-title"; sheet.setAttribute("aria-labelledby", h.id); }
+    setBackdropInert(true);
+    try { sheet.focus({ preventScroll: true }); } catch (e) {}
+  }
+  function closeModal() {
+    $modal.hidden = true; $modal.innerHTML = ""; lockStepsOpen = false;
+    setBackdropInert(false);
+    const r = modalReturnFocus; modalReturnFocus = null;
+    try { if (r && r.isConnected && r.focus) r.focus({ preventScroll: true }); } catch (e) {}
+  }
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$modal.hidden && !setupOn() && !eyeOpen) closeModal(); });
 
   function openSettings() {
     const p = profile;
