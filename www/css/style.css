@@ -94,7 +94,9 @@ h2 { font-size: 24px; }
 h3 { font-size: 19px; }
 p { margin: 0; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
-html, body { overflow-x: hidden; }
+/* niente scorrimento sul body: con overflow su html E body il body diventava un contenitore alto quanto lo schermo e window.scrollTo non scorreva più (il pulsante «Avanti» restava fuori vista) */
+html { overflow-x: hidden; }
+body { overflow-x: clip; }
 
 /* ============================================================
    Componenti comuni: pulsanti, schede, fumetti, interruttori, finestre
