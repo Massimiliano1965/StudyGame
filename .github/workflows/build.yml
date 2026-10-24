@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write   # serve per pubblicare la Release con l'APK
+    permissions:
+      contents: write   # serve per pubblicare la Release con l'APK
     strategy:
       fail-fast: false
       matrix:
@@ -116,3 +118,15 @@ jobs:
             --prerelease \
             --title "APK di prova Gioca e Impara" \
             --notes "APK debug ricostruito dal commit ${GITHUB_SHA::7}"
+
+      # link diretto con il numero della build, solo per la versione per tutti (quella con dedica contiene un nome e non va in pubblico)
+      - name: Pubblica la Release con l'APK
+        if: ${{ matrix.dedica == '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          N: ${{ github.run_number }}
+        run: |
+          cp platforms/android/app/build/outputs/apk/debug/app-debug.apk "GiocaEImpara-$N.apk"
+          gh release create "gioca-$N" "GiocaEImpara-$N.apk" \
+            --title "Gioca e Impara build $N" \
+            --notes "APK debug dal commit ${GITHUB_SHA::7}"
