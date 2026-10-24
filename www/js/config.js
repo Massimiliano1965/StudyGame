@@ -12,13 +12,15 @@ const CONFIG = {
   LIM_PLAY_RANGE: [10, 240],   // gioco dentro l'app prima del «cervello esploso»: da 10 minuti a 4 ore (suggeriti: PLAY_MIN_BY_CLASS)
   // Minuti per risposta, secondo il livello scelto rispetto alla classe REALE (bloccata dal PIN dei genitori):
   // low = esercizi di una classe inferiore, same = della sua classe, high = di una classe superiore
-  REWARD: { low: { ok: 1, ko: 1.5 }, same: { ok: 2, ko: 1 }, high: { ok: 3, ko: 0 } },
+  REWARD: { low: { ok: 1, ko: 0.5 }, same: { ok: 2, ko: 1 }, high: { ok: 3, ko: 1.5 } },
   // 3/10/2026: ogni esercizio vale fino a 3 risposte giuste; guadagno per risposta giusta e perdita per sbagliata, secondo il livello scelto.
   // Alla 1ª-2ª elementare le sbagliate non tolgono mai niente.
+  // 24/10/2026: ogni sbagliata costa la METÀ di una giusta, a ogni livello. Così con il 33% di giuste si è in pari e indovinare a caso
+  // (25% con 4 risposte) fa sempre perdere minuti: non conviene tirare a indovinare né scegliere il livello per sfruttare la tabella.
   RIGHT: { low: 0.5, same: 1, high: 1.5 },
-  WRONG: { low: 1.5, same: 1, high: 0 },
+  WRONG: { low: 0.25, same: 0.5, high: 0.75 },
   FEST_STEP: [5, 5, 10],   // festa dei traguardi ogni N minuti: elementari 5, medie 10 (a partire dai minuti garantiti)
-  HIGH_CAP: 30,       // minuti al giorno guadagnabili col livello più alto; oltre, vale come il proprio livello
+  HIGH_CAP: 12,       // minuti al giorno guadagnabili col livello più alto; oltre, vale come il proprio livello
   // «Il cervello esplode»: il bambino è libero di giocare quanto vuole; solo dopo i minuti di PLAY_MIN_BY_CLASS di gioco VERO nella giornata
   // (contati solo mentre è dentro gli esercizi, anche in più volte) compare il cervello che esplode e dice «basta, spegni il telefono».
   // Gli esercizi si fermano per COOLDOWN_MIN minuti; scatta a fine esercizio, mai a metà. I minuti già guadagnati restano usabili.

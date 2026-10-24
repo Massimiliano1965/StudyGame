@@ -1,6 +1,6 @@
 // ===== Minuti di telefono guadagnati =====
 // Si parte dai minuti garantiti (scelti dai genitori, altrimenti CONFIG.MIN_MINUTES). Il premio dipende dal livello scelto rispetto alla classe reale:
-// livello più basso +1 / −1,5; il proprio +2 / −1; più alto +3 / 0 (con tetto giornaliero HIGH_CAP).
+// livello più basso +1 / −0,5; il proprio +2 / −1; più alto +3 / −1,5 (con tetto giornaliero HIGH_CAP).
 // Non si scende mai sotto il minimo garantito e non si supera il tetto della fascia.
 const Credit = (() => {
   let classId = 0;
@@ -12,6 +12,8 @@ const Credit = (() => {
   const listeners = [];
 
   const notify = () => listeners.forEach(fn => fn(state));
+  // con l'app aperta a cavallo della mezzanotte i conti ripartono dal giorno nuovo (prima si aggiornavano solo al rientro in primo piano)
+  function fresh() { if (state.day !== Storage.today()) { state = Storage.loadDay(minG()); state.minutes = clamp(state.minutes); notify(); } }
   const band = () => classId <= 1 ? 0 : classId <= 4 ? 1 : 2;
   // minuti di gioco dentro l'app prima del «cervello esploso»: scelti dai genitori (lim.play), altrimenti i suggeriti per classe
   const playSugg = () => CONFIG.PLAY_MIN_BY_CLASS[classId] || 0;
@@ -27,9 +29,10 @@ const Credit = (() => {
   // state.sess = minuti guadagnati nella sessione in corso; state.cdUntil = fine della pausa (ms).
   const cdLeft = () => Math.max(0, (state.cdUntil || 0) - Date.now());
   const cooling = () => CONFIG.COOLDOWN_MIN > 0 && cdLeft() > 0;
-  function endCooldown() { state.cdUntil = 0; state.sess = 0; state.play = 0; state.playDue = false; Storage.saveDay(state); notify(); }
+  function endCooldown() { fresh(); state.cdUntil = 0; state.sess = 0; state.play = 0; state.playDue = false; Storage.saveDay(state); notify(); }
   // tempo di gioco vero: chiamata una volta al secondo mentre il bambino è dentro gli esercizi
   function playTick() {
+    fresh();
     if (!(playLimit() > 0) || !(CONFIG.COOLDOWN_MIN > 0) || cooling() || state.playDue) return;
     state.play = (state.play || 0) + 1;
     if (state.play >= playLimit()) { state.playDue = true; Storage.saveDay(state); }
@@ -71,6 +74,7 @@ const Credit = (() => {
 
   // rel: -1 livello più basso, 0 il proprio, +1 più alto
   function answer(isCorrect, rel) {
+    fresh();
     const before = state.minutes;
     let r = rel || 0;
     if (r > 0 && (state.hi || 0) >= CONFIG.HIGH_CAP) r = 0;   // tetto del livello alto raggiunto: vale come il proprio
@@ -89,6 +93,7 @@ const Credit = (() => {
   // Guadagno per giusta (CONFIG.RIGHT) e perdita per sbagliata (CONFIG.WRONG; 0 alla 1ª-2ª elementare e con «nessuna penalità»).
   // Restituisce anche il traguardo raggiunto (milestone, in minuti) se c'è da fare festa: una sola volta per traguardo al giorno.
   function result(right, wrong, rel) {
+    fresh();
     const before = state.minutes;
     let r = rel || 0;
     if (r > 0 && (state.hi || 0) >= CONFIG.HIGH_CAP) r = 0;
@@ -111,11 +116,11 @@ const Credit = (() => {
   }
 
   // regalo di un genitore: dentro il tetto del giorno
-  function gift(n) { const b = state.minutes; state.minutes = clamp(b + n); state.gift = (state.gift || 0) + n; Storage.saveDay(state); notify(); return state.minutes - b; }
+  function gift(n) { fresh(); const b = state.minutes; state.minutes = clamp(b + n); state.gift = (state.gift || 0) + n; Storage.saveDay(state); notify(); return state.minutes - b; }
   function noPenalty() { state.noPen = true; Storage.saveDay(state); }
-  const get = () => state.minutes;
+  const get = () => { fresh(); return state.minutes; };
   // minuti interi guadagnati ma non ancora usati per sbloccare il telefono (granted = già consegnati al blocco)
-  const available = () => Math.max(0, Math.floor(state.minutes) - (state.granted || 0));
+  const available = () => { fresh(); return Math.max(0, Math.floor(state.minutes) - (state.granted || 0)); };
   function claim() {
     const n = available();
     if (n > 0) { state.granted = Math.floor(state.minutes); Storage.saveDay(state); notify(); }

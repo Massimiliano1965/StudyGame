@@ -434,7 +434,7 @@
     const min = Credit.get(), cap = Credit.max(), pct = Math.round(min / cap * 100), mark = Math.round(Credit.minG() / cap * 100);
     const pc = playClass(), rel = relOf(pc), subs = subjectsForClass(pc);
     const hiFull = rel > 0 && Credit.highFull();
-    const tag = rel < 0 ? "Più facili: " + Credit.fmtDelta(CONFIG.RIGHT.low) + " min a risposta giusta" : rel > 0 ? (hiFull ? "Tetto di oggi raggiunto: valgono come i tuoi" : "Più difficili: " + Credit.fmtDelta(CONFIG.RIGHT.high) + " min a risposta giusta e nessun minuto perso") : "Il tuo livello: " + Credit.fmtDelta(CONFIG.RIGHT.same) + " min a risposta giusta";
+    const tag = rel < 0 ? "Più facili: " + Credit.fmtDelta(CONFIG.RIGHT.low) + " min a risposta giusta" : rel > 0 ? (hiFull ? "Tetto di oggi raggiunto: valgono come i tuoi" : "Più difficili: " + Credit.fmtDelta(CONFIG.RIGHT.high) + " min a risposta giusta") : "Il tuo livello: " + Credit.fmtDelta(CONFIG.RIGHT.same) + " min a risposta giusta";
     $app.innerHTML = `<section class="screen home">
       ${brandHtml()}
       <div class="top">
@@ -1318,6 +1318,7 @@
     openModal(`<h2>🔒 Blocco del telefono</h2>
       <p class="center">Le altre app (giochi, video, social) si aprono <b>solo con i minuti guadagnati</b> qui.<br>Telefonate e sveglia funzionano sempre.</p>
       <p class="center muted">Ci vogliono circa 3 minuti: vi guidiamo passo passo, con le figure.</p>
+      <p class="center muted" style="font-size:14px"><b>Onestà:</b> è un aiuto, non una cassaforte. Un ragazzino che sa usare le Impostazioni può aggirarlo (cambiando la data, cancellando i dati dell'app o forzandone l'arresto). Funziona bene con il dialogo; per i più grandi si può affiancare il controllo parentale di Android (Family Link).</p>
       <button class="btn big flash" data-act="lock-start">🔒 Sì, attiviamolo</button>
       <button class="btn ghost" data-act="lock-skip">Salta: lo faccio dopo dalle Impostazioni</button>`);
   }
@@ -1575,9 +1576,10 @@
       <p><b>Chi l'ha pensata.</b> Gioca e Impara è stata ideata e creata da <b>Massimiliano Previtali</b>, educatore linguistico con 20 anni di esperienza nell'insegnamento delle lingue.</p>
       <p><b>L'idea.</b> Sono convinto che la ripetizione faccia la perfezione, e che il divertimento abbia un potere d'insegnamento infinitamente superiore a quello «imposto»: ciò che si impara giocando resta. Per questo il nome comincia con «Gioca».</p>
       <p><b>Il telefono: meglio usarlo bene.</b> Sono contrario all'uso spropositato dei cellulari. Ma viviamo in un mondo tecnologico e i bambini la tecnologia la usano comunque: allora cerchiamo di usarla al meglio, e di impedire che la usino male. Qui il tempo di telefono si guadagna: prima si gioca e si impara, poi arriva il tempo per i propri giochi.</p>
+      <p><b>Limiti del blocco.</b> Il blocco del telefono è un aiuto educativo, non una protezione a prova di tutto: chi sa usare le Impostazioni può aggirarlo cambiando la data, cancellando i dati dell'app o forzandone l'arresto. Per i ragazzi più grandi conviene affiancarlo al controllo parentale di Android (Family Link) e, soprattutto, al dialogo.</p>
       <p><b>Non sostituisce la scuola.</b> Gioca e Impara non sostituisce l'insegnamento né l'aiuto dei genitori: è solo un piccolo aiuto per fissare in mente alcune cose divertendosi, perché la ripetizione è ciò che fa davvero imparare e diventare bravi in qualcosa.</p>
       <p><b>Da dove vengono le domande.</b> Si basano sui programmi ministeriali italiani, consultati su internet: le <i>Indicazioni nazionali per il curricolo della scuola dell'infanzia e del primo ciclo d'istruzione</i> (D.M. 254 del 16 novembre 2012, con il documento di aggiornamento «Indicazioni nazionali e nuovi scenari» del 2018), ancora in vigore nell'anno scolastico 2026/27 per quasi tutte le classi. Le nuove Indicazioni (D.M. 221 del 9 dicembre 2025, Gazzetta Ufficiale n. 21 del 27 gennaio 2026) dal 2026/27 si applicano solo alle classi prime di primaria e media e poi, anno dopo anno, alle altre. Le domande sono state scritte per questa app e possono contenere errori.</p>
-      <p><b>Come si guadagnano i minuti.</b> La classe vera si sceglie all'inizio e si cambia solo con il PIN dei genitori. Ogni esercizio vale fino a 3 risposte giuste. Gli esercizi della propria classe danno ${Credit.fmtDelta(CONFIG.RIGHT.same)} minuto a risposta giusta; quelli di classi inferiori ${Credit.fmtDelta(CONFIG.RIGHT.low)} (e le risposte sbagliate costano di più); quelli di classi superiori ${Credit.fmtDelta(CONFIG.RIGHT.high)} e le risposte sbagliate non tolgono niente. Alla 1ª e 2ª elementare le risposte sbagliate non tolgono mai minuti.</p>
+      <p><b>Come si guadagnano i minuti.</b> La classe vera si sceglie all'inizio e si cambia solo con il PIN dei genitori. Ogni esercizio vale fino a 3 risposte giuste. Gli esercizi della propria classe danno ${Credit.fmtDelta(CONFIG.RIGHT.same)} minuto a risposta giusta; quelli di classi inferiori ${Credit.fmtDelta(CONFIG.RIGHT.low)}; quelli di classi superiori ${Credit.fmtDelta(CONFIG.RIGHT.high)}. Dalla 3ª elementare ogni risposta sbagliata toglie la metà di quanto dà una giusta (${Credit.fmtDelta(CONFIG.WRONG.low)}, ${Credit.fmtDelta(CONFIG.WRONG.same)} o ${Credit.fmtDelta(CONFIG.WRONG.high)} minuti secondo il livello): così rispondere a caso non conviene. Alla 1ª e 2ª elementare le risposte sbagliate non tolgono mai minuti.</p>
       <p><b>Il tempo lo decidono i genitori.</b> Nessuno meglio di mamma e papà sa quanto telefono va bene per il proprio figlio. L'app parte con valori prudenti: ${CONFIG.MIN_MINUTES} minuti garantiti al giorno e un massimo di ${CONFIG.MAX_BY_BAND[0]} minuti alle elementari, ${CONFIG.MAX_BY_BAND[2]} alle medie. Sono solo un suggerimento: si cambiano quando volete, in su o in giù, da <b>Impostazioni → Tempo di telefono</b>, con il PIN dei genitori.</p>
       <p><b>Il cervello che esplode.</b> Anche giocare qui dentro è tempo di schermo. Dopo un certo tempo di esercizi nella giornata (suggeriti: ${CONFIG.PLAY_MIN_BY_CLASS[0]} minuti fino alla 3ª elementare, ${Credit.format(CONFIG.PLAY_MIN_BY_CLASS[3])} in 4ª e 5ª, ${Credit.format(CONFIG.PLAY_MIN_BY_CLASS[5])} alle medie) compare il cervello che esplode e gli esercizi si fermano per ${Credit.format(CONFIG.COOLDOWN_MIN)}; i minuti già guadagnati restano. Anche questo lo decidete voi, dallo stesso posto.</p>
       <p><b>Gli occhi.</b> I colori sono morbidi e riposanti (niente bianco abbagliante né nero con colori fluorescenti), i testi sono grandi e non ci sono lampeggi. Ogni ${brk().eyeMin} minuti di gioco compare una pausa per gli occhi: si guarda lontano per ${fmtBrkSec(brk().eyeSec)}. Ogni ${brk().longMin} minuti c'è una pausa lunga di ${fmtBrkSec(brk().longSec)} per muoversi e bere. I genitori possono cambiare i tempi da <b>Impostazioni → Pause</b>. Ricordiamo che per la vista dei bambini contano soprattutto le pause e il tempo all'aperto.</p>
@@ -1851,6 +1853,13 @@
   });
 
   // ---------- avvio ----------
+  let problemShown = {};
+  Storage.setProblemHandler(kind => {
+    if (problemShown[kind]) return; problemShown[kind] = true;
+    const msg = kind === "full" ? "La memoria del telefono è piena: i progressi di oggi potrebbero non essere salvati. Libera un po' di spazio."
+      : "Non riesco a leggere alcuni dati salvati. Una copia è stata conservata e l'app riparte da capo.";
+    setTimeout(() => toast(msg, 7000), kind === "full" ? 0 : 6500);   // i dati illeggibili si scoprono all'avvio: si aspetta che passi l'eventuale altro avviso
+  });
   let booted = false;
   function boot() {
     if (booted) return;

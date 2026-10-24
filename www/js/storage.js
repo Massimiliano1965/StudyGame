@@ -9,11 +9,22 @@ const Storage = (() => {
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   };
 
+  // problemi di salvataggio: l'app li mostra una volta sola (memoria piena, dati illeggibili)
+  let onProblem = null; const pending = [];
+  const problem = kind => { try { if (onProblem) onProblem(kind); else pending.push(kind); } catch (e) {} };
   function read(key) {
-    try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
+    let raw = null;
+    try { raw = localStorage.getItem(key); } catch (e) { return null; }
+    if (raw === null) return null;
+    try { return JSON.parse(raw); }
+    catch (e) {   // dati rovinati: si conserva una copia, così non si perdono in silenzio
+      try { localStorage.setItem(key + "_bad", raw); } catch (e2) {}
+      problem("unreadable");
+      return null;
+    }
   }
   function write(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch (e) { return false; }
+    try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch (e) { problem("full"); return false; }
   }
 
   const loadProfile = () => read(K_PROFILE);
@@ -30,8 +41,9 @@ const Storage = (() => {
   const saveDay = s => write(K_DAY, s);
 
   function resetAll() {
+    try { const old = localStorage.getItem(K_PROFILE); if (old) localStorage.setItem(K_PROFILE + "_bak", old); } catch (e) {}
     try { localStorage.removeItem(K_PROFILE); localStorage.removeItem(K_DAY); localStorage.removeItem("sg2_hist"); } catch (e) {}
   }
 
-  return { loadProfile, saveProfile, loadDay, saveDay, resetAll, today };
+  return { loadProfile, saveProfile, loadDay, saveDay, resetAll, today, setProblemHandler: fn => { onProblem = fn; pending.splice(0).forEach(k => problem(k)); } };
 })();
