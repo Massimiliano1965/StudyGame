@@ -104,14 +104,15 @@ jobs:
           name: ${{ matrix.dedica != '' && format('StudyGame-apk-{0}', matrix.dedica) || 'StudyGame-apk' }}
           path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
 
-      # link diretto con il numero della build, solo per la versione per tutti (quella con dedica contiene un nome e non va in pubblico)
+      # link diretto con il numero della build: versione per tutti (gioca-N) e versione con dedica (gioca-d1-N)
       - name: Pubblica la Release con l'APK
-        if: ${{ matrix.dedica == '' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           N: ${{ github.run_number }}
+          COD: ${{ matrix.dedica }}
         run: |
-          cp platforms/android/app/build/outputs/apk/debug/app-debug.apk "GiocaEImpara-$N.apk"
-          gh release create "gioca-$N" "GiocaEImpara-$N.apk" \
-            --title "Gioca e Impara build $N" \
+          SUF=""; [ -n "$COD" ] && SUF="-$(echo "$COD" | tr 'A-Z' 'a-z')"
+          cp platforms/android/app/build/outputs/apk/debug/app-debug.apk "GiocaEImpara${SUF}-$N.apk"
+          gh release create "gioca${SUF}-$N" "GiocaEImpara${SUF}-$N.apk" \
+            --title "Gioca e Impara${SUF} build $N" \
             --notes "APK debug dal commit ${GITHUB_SHA::7}"
