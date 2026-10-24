@@ -19,8 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write   # serve per pubblicare la Release con l'APK
-    permissions:
-      contents: write   # serve per pubblicare la Release con l'APK
     strategy:
       fail-fast: false
       matrix:
@@ -105,19 +103,6 @@ jobs:
         with:
           name: ${{ matrix.dedica != '' && format('StudyGame-apk-{0}', matrix.dedica) || 'StudyGame-apk' }}
           path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
-
-      # link diretto, sempre lo stesso: solo la versione per tutti (quella con dedica contiene un nome e non va in pubblico)
-      - name: Pubblica nella Release apk-di-prova
-        if: ${{ matrix.dedica == '' }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cp platforms/android/app/build/outputs/apk/debug/app-debug.apk StudyGame.apk
-          gh release delete apk-di-prova --cleanup-tag -y || true
-          gh release create apk-di-prova StudyGame.apk \
-            --prerelease \
-            --title "APK di prova Gioca e Impara" \
-            --notes "APK debug ricostruito dal commit ${GITHUB_SHA::7}"
 
       # link diretto con il numero della build, solo per la versione per tutti (quella con dedica contiene un nome e non va in pubblico)
       - name: Pubblica la Release con l'APK
