@@ -1,6 +1,9 @@
 name: Prova API 36 (solo prova, non pubblica)
 
 on:
+  push:
+    branches: [claude/eager-hypatia-8mp3jn]
+    paths: ['.github/workflows/prova-api36.yml']
   workflow_dispatch:
 
 jobs:
