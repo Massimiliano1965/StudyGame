@@ -27,11 +27,11 @@ jobs:
           gradle-version: "8.13"
 
       - name: Installa Cordova
-        run: npm install -g cordova@12
+        run: npm install -g cordova@13
 
-      # cordova-android 14 punta ad Android 15 (API 35), richiesto da Google Play per le nuove app
+      # cordova-android 15 punta ad Android 16 (API 36): provato con successo il 01/11/2026
       - name: Aggiungi piattaforma Android
-        run: cordova platform add android@14.0.1
+        run: cordova platform add android@15.1.0
 
       - name: Aggiungi plugin
         run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 cordova-plugin-camera@7.0.0 ./plugins-local/speechrecognition ./plugins-local/studylock

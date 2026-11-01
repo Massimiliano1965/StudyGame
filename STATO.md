@@ -12,3 +12,8 @@ Aggiornato: 29/10/2026
 
 ## Per aprire una nuova chat
 > Lavoriamo su «Gioca e Impara» (repo Massimiliano1965/StudyGame, ramo main). Leggi prima STATO.md e StudyGame-riassunto-prossima-chat.md. Oggi voglio fare: ...
+
+## 01/11/2026 — Controllo completo (Claude)
+- Provati in automatico 3400 giri di tutti i 29 giochi, tutte le classi e materie: nessun errore. 4054 domande controllate (risposte, indice giusto, spiegazioni): nessun problema vero.
+- Costruzione con Android 16 (API 36, Cordova-android 15.1.0): provata e riuscita. Workflow `build.yml` e `release-aab.yml` portati a Cordova 13 + android 15.1.0 + Gradle 8.13 (sul ramo, da provare su main).
+- Per il Play Store restano: informativa privacy su una pagina web pubblica (es. GitHub Pages), segreti della chiave nuova, email sviluppatore.

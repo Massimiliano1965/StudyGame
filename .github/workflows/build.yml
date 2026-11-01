@@ -75,13 +75,13 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.7"
+          gradle-version: "8.13"
 
       - name: Installa Cordova
-        run: npm install -g cordova@12
+        run: npm install -g cordova@13
 
       - name: Aggiungi piattaforma Android
-        run: cordova platform add android@13.0.0
+        run: cordova platform add android@15.1.0
 
       - name: Aggiungi plugin voce, microfono, fotocamera e blocco
         run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 cordova-plugin-camera@7.0.0 ./plugins-local/speechrecognition ./plugins-local/studylock
