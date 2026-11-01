@@ -1483,3 +1483,10 @@ body.playing { overscroll-behavior-y: none; }
 @keyframes albNew { 50% { filter: brightness(1.25) drop-shadow(0 0 8px #FFD23F); } }
 @keyframes pkSpin { to { transform: rotate(360deg); } }
 @keyframes holoShine { 0% { transform: translateX(-120%) skewX(-12deg); } 55%, 100% { transform: translateX(330%) skewX(-12deg); } }
+
+/* ===== Sfida del giorno e ripasso (01/11/2026) ===== */
+.card.daily { margin-top: 10px; }
+.card.daily .bar { height: 16px; }
+.card.daily .daily-tx { margin: 8px 0 6px; font-size: 15px; line-height: 1.35; }
+.card.daily.done .bar > i { background: #FFD21F; }
+.card.daily .btn.small { margin-top: 4px; width: 100%; }

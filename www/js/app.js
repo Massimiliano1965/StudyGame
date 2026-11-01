@@ -429,6 +429,18 @@
 
   const brandHtml = () => `<div class="brand">${Logo.svg("brand-em")}<span class="b1">Gioca</span><span class="b2">e</span><span class="b3">Impara</span></div>${DEDICA ? `<div class="brand-for">Ideata per ${esc(DEDICA)} ❤️</div>` : ""}`;
 
+  // sfida del giorno + ripasso degli errori (extra.js)
+  function dailyHtml() {
+    const d = Extra.daily(), g = Extra.goal(), n = Math.min(d.n, g), done = d.n >= g;
+    const errs = Extra.count();
+    return `<div class="card daily ${done ? "done" : ""}">
+      <div class="row"><h3>🌟 Sfida del giorno</h3><span class="num">${n}/${g}</span></div>
+      <div class="bar" role="img" aria-label="${n} su ${g}"><i style="width:${Math.round(n / g * 100)}%"></i></div>
+      <p class="daily-tx">${done ? "Fatto! Hai vinto la figurina in più di oggi. Complimenti!" : `Rispondi bene a ${g} sfide oggi e vinci una figurina in più.`}</p>
+      ${errs ? `<button class="btn ghost small" data-act="review">🔁 Ripassa i miei errori (${errs})</button>` : ""}
+    </div>`;
+  }
+
   function renderHome() {
     const p = profile, th = themeFor(p.classId);
     const min = Credit.get(), cap = Credit.max(), pct = Math.round(min / cap * 100), mark = Math.round(Credit.minG() / cap * 100);
@@ -450,6 +462,7 @@
         <div class="bar-labels"><span>${esc(Credit.format(Credit.minG()))} garantiti</span><span>massimo ${esc(Credit.format(cap))}</span></div>
         ${lockHomeHtml()}
       </div>
+      ${dailyHtml()}
       <div class="lvl-box lvl${rel}"><button class="icon-btn" data-act="lvl-down" aria-label="Esercizi più facili" ${pc <= 0 ? "disabled" : ""}>◀</button>
         <div class="lvl-mid"><small>Esercizi di</small><b>${esc(classLabel(pc))}</b><span class="lvl-tag">${esc(tag)}</span></div>
         <button class="icon-btn" data-act="lvl-up" aria-label="Esercizi più difficili" ${pc >= 7 ? "disabled" : ""}>▶</button></div>
@@ -512,12 +525,12 @@
     return false;
   }
 
-  function startGame(ids) {
+  function startGame(ids, review) {
     if (cdGate()) return;
-    const ok = ids.filter(isReady);
+    const ok = review ? ids.slice() : ids.filter(isReady);
     if (!ok.length) { toast("Scegli almeno una sfida con il bollino verde."); return; }
     game = { subjects: ok, streak: 0, right: 0, listening: false, lastKind: "", round: null, cls: playClass(), rel: relOf(playClass()),
-      sec: 0, rounds: 0, okCount: 0, loseRun: 0, help: false, helpAt: 0, nextBreak: brk().longMin * 60 };
+      sec: 0, rounds: 0, okCount: 0, loseRun: 0, help: false, helpAt: 0, nextBreak: brk().longMin * 60, review: review ? review.slice() : null };
     lastJingle = { sid: null, at: 0 };
     nextQuestion();
   }
@@ -558,15 +571,20 @@
       if (game.sec >= (game.nextEye || B.eyeMin * 60)) { game.nextEye = game.sec + B.eyeMin * 60; eyeBreak(nextQuestion); return; }
     }
     Games.stop();
-    game.sid = pick(game.subjects);
+    // ripasso degli errori: si rifanno le domande sbagliate (i minuti non cambiano)
+    const rev = game.review ? game.review.shift() : null;
+    if (game.review && !rev) { game.review = null; toast("Ripasso finito! Bravo! 🌟", 3500); showHome(); return; }
+    game.revEntry = rev || null;
+    game.sid = rev ? rev.sid : pick(game.subjects);
     // lingua straniera della voce: inglese, oppure quella scelta nelle Impostazioni per la seconda lingua
     if (game.sid === "lingua2") { L2.use(profile.l2); Voice.setForeign(L2.loc()); }
     else Voice.setForeign("en-US");
-    game.round = Games.pick(game.sid, game.cls, game.lastKind, themeFor(profile.classId) === "piccoli" ? CONFIG.GAME_SHARE_SMALL : CONFIG.GAME_SHARE);
+    if (rev) { game.round = rev.orig.round || null; game.q = rev.orig.round ? null : rev.orig.q; }
+    else game.round = Games.pick(game.sid, game.cls, game.lastKind, themeFor(profile.classId) === "piccoli" ? CONFIG.GAME_SHARE_SMALL : CONFIG.GAME_SHARE);
     game.lastKind = game.round ? game.round.kind : "quiz";
-    game.q = game.round ? null : Questions.next(game.sid, game.cls);
+    if (!rev) game.q = game.round ? null : Questions.next(game.sid, game.cls);
     game.answered = false; game.chosen = -1; game.mood = "happy"; game.fb = null; game.listening = false;
-    game.practice = false; game.orig = plain({ q: game.q, round: game.round });
+    game.practice = !!rev; game.orig = plain({ q: game.q, round: game.round });
     renderGame();
     saveResume();
     // stacchetto musicale: all'inizio della sfida, poi solo se cambia materia e sono passati 90 secondi
@@ -801,6 +819,10 @@
         (game.loseRun >= 5 || (game.sec >= 1200 && game.rounds >= 5 && game.okCount / game.rounds < 0.3))) game.help = true;
     game.answered = true; game.mood = ok ? "cheer" : "sad"; game.listening = false;
     if (!game.practice) { if (ok) { game.streak++; game.right++; } else { game.streak = 0; } }
+    // ripasso e sfida del giorno (extra.js): sbagliata = da ripassare; riuscita = avanza la sfida; ripassata bene = esce dall'elenco
+    if (!game.practice && !ok) Extra.noteError(game.sid, game.cls, game.orig);
+    if (!game.practice && ok && Extra.won()) game.bonus = Album.draw(themeFor(profile.classId));
+    if (game.practice && ok && game.revEntry) Extra.fixed(game.revEntry.id);
     const th = themeFor(profile.classId);
     let text = expl || "";
     if (!single && ok && m != null && m > 0) text = (text ? text + " " : "") + "Risposte giuste: " + (3 - m) + " su 3.";
@@ -1211,6 +1233,18 @@
     ov.querySelector(".pk-ok").addEventListener("click", close);
   }
 
+  // figurine in attesa: quella del gioco vinto e, se la sfida del giorno è completata, quella in più
+  function takePacks() {
+    const out = [];
+    if (game && game.pack) { out.push(game.pack); game.pack = null; }
+    if (game && game.bonus) { const b = game.bonus; game.bonus = null; b.setDone = "Sfida del giorno"; out.push(b); }
+    return out;
+  }
+  function showPacks(list, after) {
+    if (!list.length) { if (after) after(); return; }
+    showPack(list[0], () => showPacks(list.slice(1), after));
+  }
+
   function openAlbum() {
     albumOpen = true; Voice.stopSpeaking();
     const band = albBand(), B = Album.BANDS[band], st = Album.stats(band), d = Album.load();
@@ -1537,6 +1571,25 @@
     toast(`Salvato: ${Credit.format(Credit.minG())} garantiti, massimo ${Credit.format(Credit.max())}, esercizi ${Credit.format(Credit.playMin())}.`, 4000);
   }
 
+  // riepilogo della settimana (extra.js)
+  function weekHtml() {
+    const w = Extra.week();
+    if (!w.rounds) return `<h3>Questa settimana</h3><p class="muted">Ancora niente da raccontare: appena si gioca, qui compare il riepilogo.</p>`;
+    const sj = x => { const s = SUBJECTS.find(y => y.id === x.id); return (s ? s.icon + " " + esc(s.name) : esc(x.id)) + " (" + x.pct + "%)"; };
+    let trend = "";
+    if (w.prevPct != null && w.pct != null) { const df = w.pct - w.prevPct; trend = df > 0 ? `<li><span>Rispetto alla settimana scorsa</span><span>📈 +${df} punti</span></li>` : df < 0 ? `<li><span>Rispetto alla settimana scorsa</span><span>📉 ${df} punti</span></li>` : `<li><span>Rispetto alla settimana scorsa</span><span>➡ uguale</span></li>`; }
+    const errs = Extra.count();
+    return `<h3>Questa settimana</h3><ul class="rep-list">
+      <li><span>Giorni in cui ha giocato</span><span>📅 ${w.days} su 7</span></li>
+      <li><span>Tempo nell'app</span><span>${fmtSec(w.sec)}</span></li>
+      <li><span>Giochi fatti</span><span>${w.rounds}</span></li>
+      <li><span>Riusciti</span><span>✅ ${w.pct}%</span></li>${trend}
+      ${w.best ? `<li><span>Va forte in</span><span>💪 ${sj(w.best)}</span></li>` : ""}
+      ${w.weak ? `<li><span>Da rinforzare</span><span>🌱 ${sj(w.weak)}</span></li>` : ""}
+      ${errs ? `<li><span>Domande da ripassare</span><span>🔁 ${errs}</span></li>` : ""}
+    </ul>`;
+  }
+
   function openReport() {
     Stats.flush();
     const d = Stats.days(7), t = d[0], pc = (a, b) => (a + b) ? Math.round(a / (a + b) * 100) + "%" : "–";
@@ -1553,6 +1606,7 @@
     }).join("")}</ul>` : `<p class="muted">Ancora nessuna sessione registrata.</p>`;
     openModal(`<h2>📊 Resoconto di ${esc(profile.nick)}</h2>
       <div class="report">
+        ${weekHtml()}
         <h3>Oggi</h3>
         <ul class="rep-list">
           <li><span>Tempo nell'app</span><span>${fmtSec(t.sec)}</span></li>
@@ -1655,7 +1709,7 @@
     "narr-yes": () => narrChoice(true),
     "narr-no": () => narrChoice(false),
     mic: () => listenForAnswer(),
-    "next-q": () => { if (game && game.pack) { const p = game.pack; game.pack = null; showPack(p, nextQuestion); return; } nextQuestion(); },
+    "next-q": () => { const ps = takePacks(); if (ps.length) { showPacks(ps, nextQuestion); return; } nextQuestion(); },
     album: () => { albSet = 0; openAlbum(); Sfx.tap(); },
     "album-close": () => showHome(),
     "album-set": el => { albSet = +el.dataset.i || 0; openAlbum(); Sfx.tap(); },
@@ -1677,7 +1731,7 @@
       renderGame(); saveResume();
       if (profile.autoRead) readQuestion();
     },
-    exit: () => { eyeOpen = false; closeModal(); Voice.stopSpeaking(); Music.stop(); const p = game && game.pack; showHome(); if (p) showPack(p); },
+    exit: () => { eyeOpen = false; closeModal(); Voice.stopSpeaking(); Music.stop(); const ps = takePacks(); showHome(); if (ps.length) showPacks(ps); },
     // impostazioni
     close: () => closeModal(),
     edit: () => askPin("Cambia nome o classe", () => startWizard(true, 0)),
@@ -1697,6 +1751,11 @@
       Storage.saveProfile(profile); toast("PIN sbagliato.");
     },
     editphoto: () => { closeModal(); startWizard(true, 3); },
+    review: () => {
+      const list = Extra.pickErrors(8);
+      if (!list.length) { toast("Nessun errore da ripassare. Bravo!"); renderHome(); return; }
+      startGame([list[0].sid], list);
+    },
     "sel-all": () => { selected = subsNow(); Sfx.tap(); renderHome(); },
     "sel-none": () => { selected = []; Sfx.tap(); renderHome(); },
     info: () => openInfo(),

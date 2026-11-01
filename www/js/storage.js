@@ -42,7 +42,7 @@ const Storage = (() => {
 
   function resetAll() {
     try { const old = localStorage.getItem(K_PROFILE); if (old) localStorage.setItem(K_PROFILE + "_bak", old); } catch (e) {}
-    try { localStorage.removeItem(K_PROFILE); localStorage.removeItem(K_DAY); localStorage.removeItem("sg2_hist"); } catch (e) {}
+    try { localStorage.removeItem(K_PROFILE); localStorage.removeItem(K_DAY); localStorage.removeItem("sg2_hist"); localStorage.removeItem("sg2_daily"); localStorage.removeItem("sg2_errs"); } catch (e) {}
   }
 
   return { loadProfile, saveProfile, loadDay, saveDay, resetAll, today, setProblemHandler: fn => { onProblem = fn; pending.splice(0).forEach(k => problem(k)); } };
