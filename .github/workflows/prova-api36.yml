@@ -1,0 +1,35 @@
+name: Prova API 36 (solo prova, non pubblica)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  prova:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+      - run: npm install -g cordova@13
+      - run: cordova platform add android@15.1.0
+      - run: cordova plugin add cordova-plugin-tts-advanced@0.5.3 cordova-plugin-camera@7.0.0 ./plugins-local/speechrecognition ./plugins-local/studylock
+      - name: Build APK di prova
+        run: |
+          cat > build.json <<JSON
+          {"android": {"debug": {"keystore": "$GITHUB_WORKSPACE/signing/studygame.keystore", "storePassword": "studygame", "alias": "studygame", "password": "studygame", "keystoreType": "pkcs12"}}}
+          JSON
+          cordova build android --debug --buildConfig=build.json 2>&1 | tee build.log
+      - name: Livelli Android dell'APK
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/aapt2" dump badging platforms/android/app/build/outputs/apk/debug/app-debug.apk | grep -E "sdkVersion|targetSdk"
+      - if: failure()
+        run: tail -n 80 build.log
