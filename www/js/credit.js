@@ -117,6 +117,15 @@ const Credit = (() => {
 
   // regalo di un genitore: dentro il tetto del giorno
   function gift(n) { fresh(); const b = state.minutes; state.minutes = clamp(b + n); state.gift = (state.gift || 0) + n; Storage.saveDay(state); notify(); return state.minutes - b; }
+  // bonus ripasso: pochi secondi per ogni domanda sbagliata rifatta bene (tetto giornaliero), dentro il tetto del giorno
+  function review(n, cap) {
+    fresh();
+    const used = state.rev || 0, g = Math.max(0, Math.min(n, cap - used));
+    if (!g) return 0;
+    const b = state.minutes; state.minutes = clamp(b + g); state.rev = used + g;
+    Storage.saveDay(state); notify();
+    return state.minutes - b;
+  }
   function noPenalty() { state.noPen = true; Storage.saveDay(state); }
   const get = () => { fresh(); return state.minutes; };
   // minuti interi guadagnati ma non ancora usati per sbloccare il telefono (granted = già consegnati al blocco)
@@ -143,5 +152,5 @@ const Credit = (() => {
   }
   const fmtDelta = n => String(Math.abs(n)).replace(".", ",");
 
-  return { answer, result, get, available, claim, cooling, cdLeft, endCooldown, playTick, cooldownDue, startCooldown, status, progress, onChange, refresh, format, fmtDelta, max, minG, bandMax, playMin, playSugg, setLimits, setClass, highFull, gift, noPenalty };
+  return { answer, result, get, available, claim, cooling, cdLeft, endCooldown, playTick, cooldownDue, startCooldown, status, progress, onChange, refresh, format, fmtDelta, max, minG, bandMax, playMin, playSugg, setLimits, setClass, highFull, gift, review, noPenalty };
 })();

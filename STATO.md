@@ -19,3 +19,4 @@ Aggiornato: 29/10/2026
 - Per il Play Store restano: informativa privacy su una pagina web pubblica (es. GitHub Pages), segreti della chiave nuova, email sviluppatore.
 - NOVITÀ (01/11/2026, sul ramo, da provare sul telefono): «Sfida del giorno» (5 sfide riuscite = figurina in più; riquadro in home), «Ripassa i miei errori» (le domande sbagliate si ricordano e si rifanno senza perdere minuti; fino a 30), «Questa settimana» in cima al Resoconto (giorni, tempo, % riusciti, confronto con la settimana scorsa, materia forte e da rinforzare). Codice in `www/js/extra.js`; salvati sul telefono in `sg2_daily` e `sg2_errs`.
 - `pagina-privacy.yml`: pubblica la Privacy su GitHub Pages (una volta: Settings > Pages > Source = GitHub Actions).
+- Ripasso errori rifatto bene = +15 secondi (max 2 min al giorno). Frecce di classe ora dette «Ripasso (classi passate)» e «Anticipo (classi future)», anche nel Resoconto.

@@ -436,7 +436,7 @@
     return `<div class="card daily ${done ? "done" : ""}">
       <div class="row"><h3>🌟 Sfida del giorno</h3><span class="num">${n}/${g}</span></div>
       <div class="bar" role="img" aria-label="${n} su ${g}"><i style="width:${Math.round(n / g * 100)}%"></i></div>
-      <p class="daily-tx">${done ? "Fatto! Hai vinto la figurina in più di oggi. Complimenti!" : `Rispondi bene a ${g} sfide oggi e vinci una figurina in più.`}</p>
+      <p class="daily-tx">${done ? "Fatto! Hai vinto la figurina in più di oggi. Complimenti!" : `Rispondi bene a ${g} sfide oggi e vinci una figurina in più. Con le frecce ◀ ▶ qui sotto puoi ripassare le classi passate o anticipare quelle future: chi si prepara prima ha un passo in più!`}</p>
       ${errs ? `<button class="btn ghost small" data-act="review">🔁 Ripassa i miei errori (${errs})</button>` : ""}
     </div>`;
   }
@@ -446,7 +446,7 @@
     const min = Credit.get(), cap = Credit.max(), pct = Math.round(min / cap * 100), mark = Math.round(Credit.minG() / cap * 100);
     const pc = playClass(), rel = relOf(pc), subs = subjectsForClass(pc);
     const hiFull = rel > 0 && Credit.highFull();
-    const tag = rel < 0 ? "Più facili: " + Credit.fmtDelta(CONFIG.RIGHT.low) + " min a risposta giusta" : rel > 0 ? (hiFull ? "Tetto di oggi raggiunto: valgono come i tuoi" : "Più difficili: " + Credit.fmtDelta(CONFIG.RIGHT.high) + " min a risposta giusta") : "Il tuo livello: " + Credit.fmtDelta(CONFIG.RIGHT.same) + " min a risposta giusta";
+    const tag = rel < 0 ? "🔁 Ripasso delle classi passate: " + Credit.fmtDelta(CONFIG.RIGHT.low) + " min a risposta giusta" : rel > 0 ? (hiFull ? "Tetto di oggi raggiunto: valgono come i tuoi" : "🚀 Anticipo delle classi future: " + Credit.fmtDelta(CONFIG.RIGHT.high) + " min a risposta giusta") : "Il tuo livello: " + Credit.fmtDelta(CONFIG.RIGHT.same) + " min a risposta giusta";
     $app.innerHTML = `<section class="screen home">
       ${brandHtml()}
       <div class="top">
@@ -809,6 +809,8 @@
     const right = single ? (ok ? 1 : 0) : ok ? (m == null ? 3 : Math.max(0, 3 - m)) : 0;
     const wrong = single ? (ok ? 0 : 1) : ok ? (m == null ? 0 : m) : (m == null ? 1 : Math.max(1, Math.min(3, m)));
     const r = game.practice ? { delta: 0, rel: game.rel } : Credit.result(right, wrong, game.rel);
+    // ripasso degli errori rifatto bene: 15 secondi di gioco (massimo 2 minuti al giorno)
+    if (game.practice && ok && game.revEntry) r.delta = Credit.review(0.25, 2);
     game.fest = game.practice ? 0 : (r.milestone || 0);
     if (!game.practice) {
       Stats.round(game.sid, ok, r.rel === 0 && game.rel < 0 ? -1 : game.rel);
@@ -826,7 +828,7 @@
     const th = themeFor(profile.classId);
     let text = expl || "";
     if (!single && ok && m != null && m > 0) text = (text ? text + " " : "") + "Risposte giuste: " + (3 - m) + " su 3.";
-    if (game.practice) text = (text ? text + " " : "") + "Ripasso: i minuti non cambiano.";
+    if (game.practice) text = (text ? text + " " : "") + (game.revEntry ? (r.delta > 0 ? "Ripasso riuscito: +15 secondi di gioco!" : "Ripasso riuscito! Il bonus di oggi è finito, ma ripassare serve sempre.") : "Ripasso: i minuti non cambiano.");
     else if (ok && r.delta === 0 && Credit.get() >= Credit.max()) text = (text ? text + " " : "") + "Hai già il massimo di oggi, ma continua pure per allenarti!";
     if (!game.practice && !ok && r.delta === 0) text = (text ? text + " " : "") + (r.rel > 0 ? "Livello più alto: non perdi minuti, e provando si impara!" : "I minuti garantiti restano tuoi.");
     if (r.cooldown || Credit.cooldownDue()) text = (text ? text + " " : "") + "Hai giocato tantissimo: il cervello sta per esplodere! Dopo questo esercizio basta, si spegne il telefono.";
@@ -1618,7 +1620,7 @@
           ${t.help ? `<li><span>Richieste di aiuto</span><span>🙋 ${t.help}</span></li>` : ""}
         </ul>
         ${subj ? `<h3>Per materia</h3><ul class="rep-list">${subj}</ul>` : ""}
-        ${(t.lvl.low[0] + t.lvl.low[1] + t.lvl.same[0] + t.lvl.same[1] + t.lvl.high[0] + t.lvl.high[1]) ? `<h3>Per livello</h3><ul class="rep-list">${lv("low", "⬇ Più facili")}${lv("same", "⭐ Della sua classe")}${lv("high", "⬆ Più difficili")}</ul>` : ""}
+        ${(t.lvl.low[0] + t.lvl.low[1] + t.lvl.same[0] + t.lvl.same[1] + t.lvl.high[0] + t.lvl.high[1]) ? `<h3>Per livello</h3><ul class="rep-list">${lv("low", "🔁 Ripasso (classi passate)")}${lv("same", "⭐ Della sua classe")}${lv("high", "🚀 Anticipo (classi future)")}</ul>` : ""}
         <h3>Ultimi 7 giorni</h3><ul class="rep-list">${rows}</ul>
         <h3>Sessioni di gioco · data e ora</h3>${sessHtml}
       </div>
