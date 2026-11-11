@@ -1492,3 +1492,6 @@ body.playing { overscroll-behavior-y: none; }
 .card.daily .daily-tx { margin: 8px 0 6px; font-size: 15px; line-height: 1.35; }
 .card.daily.done .bar > i { background: #FFD21F; }
 .card.daily .btn.small { margin-top: 4px; width: 100%; }
+.lvl-box .lvl-mid { cursor: pointer; }
+.lvl-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+.lvl-list .btn { margin: 0; }
