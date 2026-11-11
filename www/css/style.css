@@ -324,7 +324,7 @@ body.calm .welcome .band { transition: none; }
 .cls-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .cls-grid .choice { font-size: 14px; padding: 8px 4px; min-height: 66px; }
 .cls-grid .choice .big-num { font-size: 26px; }
-.parent-note { margin: 8px 0 4px; padding: 10px 12px; background: #ffd23f; color: var(--edge, #0d0c33); border: 3px solid var(--edge, #0d0c33); border-radius: 14px; font-weight: 800; font-size: 16px; text-align: center; line-height: 1.25; }
+.parent-note { margin: 8px 0 4px; padding: 10px 12px; background: #ffd23f; color: #0d0c33; border: 3px solid #0d0c33; border-radius: 14px; font-weight: 800; font-size: 16px; text-align: center; line-height: 1.25; }
 
 /* ============================================================
    Home: profilo, tempo di telefono, livello, materie
@@ -480,7 +480,7 @@ body.calm .spark, body.calm .confetto, body.calm .halo { display: none !importan
 .fest-in { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; padding: 0 12px; }
 .fest .hero { width: min(78vw, 330px); height: min(78vw, 330px); }
 .fest .hero svg { width: 100%; height: 100%; }
-.fest-banner { font-weight: 900; text-align: center; color: var(--edge, #0d0c33); background: #ffd23f; border: 4px solid var(--edge, #0d0c33); border-radius: 14px; box-shadow: 0 6px 0 var(--edge, #0d0c33); padding: 8px 18px; }
+.fest-banner { font-weight: 900; text-align: center; color: #0d0c33; background: #ffd23f; border: 4px solid #0d0c33; border-radius: 14px; box-shadow: 0 6px 0 #0d0c33; padding: 8px 18px; }
 .fest-banner.b1 { font-size: 22px; transform: rotate(-3deg); background: #ff5a8a; color: #fff; animation: festban .6s .2s both cubic-bezier(.2,1.6,.4,1); }
 .fest-banner.b2 { font-size: 30px; line-height: 1.1; transform: rotate(2deg); animation: festban .6s .5s both cubic-bezier(.2,1.6,.4,1); }
 .fest-tap { color: #fff; opacity: .75; font-weight: 700; margin-top: 4px; }
@@ -590,7 +590,7 @@ body[data-theme="teen"] .screen.play .nbub { background: #14171f; border-width: 
 body[data-theme="ragazzi"] .screen.play .nbub:before, body[data-theme="teen"] .screen.play .nbub:before { border-right-color: #2a3a8c; }
 body[data-theme="teen"] .screen.play .nbub:before { border-right-color: #14171f; }
 body[data-theme="ragazzi"] .screen.play .nbub:after, body[data-theme="teen"] .screen.play .nbub:after { border-right-color: rgba(255,255,255,.22); border-color: transparent rgba(255,255,255,.22) transparent transparent; }
-body[data-theme="ragazzi"] .nbub .bsub, body[data-theme="teen"] .nbub .bsub { color: #fff; border: 0; background: color-mix(in srgb, var(--sc) 70%, #000); }
+body[data-theme="ragazzi"] .nbub .bsub, body[data-theme="teen"] .nbub .bsub { color: #fff; border: 0; background: color-mix(in srgb, var(--sc) 45%, #000); }   /* più scuro: la scritta bianca si legge anche sul giallo */
 /* giochi: personaggio e fumetto 40px più in alto (c'era una fascia vuota sotto i pulsanti) e il fumetto è alto abbastanza perché
    il gioco parta SOTTO i piedi del personaggio (prima la prima riga/carta finiva sotto di lui) */
 .screen.play:not(.quiz) { padding-top: 52px; }
@@ -599,6 +599,8 @@ body[data-theme="ragazzi"] .nbub .bsub, body[data-theme="teen"] .nbub .bsub { co
 .screen.play #gbox { margin-top: 4px; }
 /* 5) nome della materia sopra la domanda: più grande */
 .screen.play .nbub .bsub { font-size: 14px; padding: 1px 10px; }
+.screen.play .nbub .bsub { background: color-mix(in srgb, var(--sc) 45%, #fff); }   /* tinta chiara: la scritta scura si legge su ogni materia */
+body[data-theme="ragazzi"] .screen.play .nbub .bsub, body[data-theme="teen"] .screen.play .nbub .bsub { background: color-mix(in srgb, var(--sc) 45%, #000); }
 /* 6) 1ª–3ª elementare: domanda più grande nel fumetto */
 body[data-theme="piccoli"] .screen.play .nbub { font-size: 18px; line-height: 1.25; }
 
