@@ -26,12 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Prepara la versione web (senza Cordova, con avviso blocco schermo)
-        run: |
-          cp -r www site
-          cp web/webnote.js site/js/webnote.js
-          sed -i '/src="cordova.js"/d' site/index.html
-          sed -i 's|  <script src="js/config.js"></script>|  <script src="js/webnote.js"></script>\n  <script src="js/config.js"></script>|' site/index.html
-          grep -q webnote.js site/index.html
+        run: sh web/build.sh
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
