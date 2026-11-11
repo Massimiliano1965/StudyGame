@@ -19,7 +19,9 @@
 #webnote .wn-sub{font-size:15px;background:#F2F6F8;border-radius:12px;padding:8px 10px}
 #webnote button{margin-top:6px;width:100%;padding:14px;font:inherit;font-size:18px;font-weight:600;color:#fff;background:#EE7A98;border:3px solid #474C70;border-radius:16px}`;
   document.head.appendChild(st);
-  const add = () => { document.body.appendChild(el); document.getElementById("wn-ok").onclick = () => el.remove(); };
+  // quando l'app apre una sua finestra rende "inerte" tutto il resto della pagina: questo avviso deve restare toccabile e avere la precedenza
+  new MutationObserver(() => { if (el.hasAttribute("inert")) el.removeAttribute("inert"); }).observe(el, { attributes: true, attributeFilter: ["inert"] });
+  const add = () => { document.body.appendChild(el); el.removeAttribute("inert"); document.getElementById("wn-ok").onclick = () => el.remove(); };
   if (document.body) add(); else document.addEventListener("DOMContentLoaded", add);
 })();
 
