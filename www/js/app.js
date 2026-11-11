@@ -1100,7 +1100,13 @@
   const nameSay = () => hasDedica() ? `Ciao ${DEDICA}! Benvenuto in Gioca e Impara! Questa app è tutta tua. Tocca Avanti e scegli la tua classe.` : !smallKids() ? "Come ti chiami? Scrivi il tuo nome nella casella." : Voice.canListen()
     ? "Come ti chiami? Tocca il microfono e dì il tuo nome. Oppure chiedi a mamma o papà di scrivere il tuo nome."
     : "Come ti chiami? Chiedi a mamma o papà di scrivere il tuo nome.";
-  const stepSay = i => i === 0 ? nameSay() : STEP_SAY.steps[i];
+  // i nomi detti a voce sono quelli dei personaggi mostrati per la classe (3 alle elementari piccole, 5 dopo)
+  const compagniSay = () => {
+    const st = wiz.d.classId == null ? (wiz.editing ? 0 : (bandClass() || 0)) : wiz.d.classId;
+    const n = Characters.familiesFor(st).map(f => f.pet);
+    return "Scegli il tuo compagno: " + n.slice(0, -1).join(", ") + " o " + n[n.length - 1] + ". Tocca quello che ti piace di più.";
+  };
+  const stepSay = i => i === 0 ? nameSay() : i === 2 ? compagniSay() : STEP_SAY.steps[i];
 
   // il nome a voce, per chi ancora non sa scrivere
   function listenName() {
