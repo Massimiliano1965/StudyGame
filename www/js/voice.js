@@ -202,8 +202,12 @@ const Voice = (() => {
           return;
         }
         if (window.speechSynthesis) {
-          window.speechSynthesis.cancel();
-          const voices = window.speechSynthesis.getVoices() || [];
+          const S = window.speechSynthesis;
+          const busy = S.speaking || S.pending || Date.now() - lastCancel < 200;
+          S.cancel();
+          const go = () => {
+          if (my !== token) { resolve(); return; }
+          const voices = S.getVoices() || [];
           segs.forEach((s, i) => {
             const en = s.l === "en";
             const u = new SpeechSynthesisUtterance(s.t);
@@ -212,10 +216,14 @@ const Voice = (() => {
               ? (voices.find(x => x.lang.replace("_", "-").toLowerCase() === LANG_EN.toLowerCase()) || voices.find(x => x.lang.toLowerCase().startsWith(LANG_EN.slice(0, 2).toLowerCase())))
               : voices.find(x => /^it/i.test(x.lang));
             if (vc) u.voice = vc;
-            u.onerror = e => { fail(e && e.error); done(); };
+            u.onerror = e => { const why = e && e.error; if (why !== "interrupted" && why !== "canceled") fail(why); done(); };
             if (i === segs.length - 1) u.onend = () => done();
-            window.speechSynthesis.speak(u);
+            S.speak(u);
           });
+          };
+          // nel browser (Chrome su Android, Safari) una frase messa in coda subito dopo aver fermato la precedente
+          // viene scartata o resta dietro la vecchia: si aspetta un attimo che la voce si sia fermata davvero
+          if (busy) setTimeout(go, 140); else go();
           return;
         }
       } catch (e) { fail(e); }
@@ -223,8 +231,10 @@ const Voice = (() => {
     });
   }
 
+  let lastCancel = 0;
   function stopSpeaking() {
     token++;
+    try { if (speaking || (window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending))) lastCancel = Date.now(); } catch (e) {}
     setSpeaking(false);
     try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
     try { if (window.TTS && window.TTS.stop) { const r = window.TTS.stop(); if (r && r.catch) r.catch(() => {}); } } catch (e) {}

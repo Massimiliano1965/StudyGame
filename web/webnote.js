@@ -22,3 +22,37 @@
   const add = () => { document.body.appendChild(el); document.getElementById("wn-ok").onclick = () => el.remove(); };
   if (document.body) add(); else document.addEventListener("DOMContentLoaded", add);
 })();
+
+// Solo versione web: nel browser c'è meno altezza che nell'app (barre del browser) e il testo può essere ingrandito
+// dal telefono. Le schermate iniziali e della creazione del profilo si rimpiccioliscono quel tanto che basta
+// per stare tutte nello schermo, senza scorrere e senza che i pulsanti in basso coprano il resto.
+(function () {
+  if (window.cordova) return;
+  var st = document.createElement("style");
+  st.textContent = "html{-webkit-text-size-adjust:100%;text-size-adjust:100%}";
+  document.head.appendChild(st);
+  var busy = false;
+  function fit() {
+    busy = false;
+    var sc = document.querySelector("#app > .screen.wz");
+    if (!sc) return;
+    sc.style.zoom = "";
+    var root = document.documentElement, z = 1;
+    for (var k = 0; k < 4; k++) {
+      var need = root.scrollHeight, have = window.innerHeight;
+      if (need <= have + 1) break;
+      z = Math.max(0.6, z * have / need - 0.01);
+      sc.style.zoom = z;
+      if (z <= 0.6) break;
+    }
+  }
+  function ask() { if (!busy) { busy = true; requestAnimationFrame(fit); } }
+  function start() {
+    var app = document.getElementById("app");
+    if (!app) return;
+    new MutationObserver(ask).observe(app, { childList: true, subtree: true });
+    window.addEventListener("resize", ask);
+    ask();
+  }
+  if (document.body) start(); else document.addEventListener("DOMContentLoaded", start);
+})();

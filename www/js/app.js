@@ -101,7 +101,7 @@
   const JINGLE_GAP = 90000;   // dentro una sfida con tante materie, uno stacchetto al massimo ogni 90 secondi
   let lastJingle = { sid: null, at: 0 };
 
-  Games.setTap(() => Sfx.tap());
+  Games.setTap(() => { Sfx.tap(); if (Voice.isSpeaking()) Voice.stopSpeaking(); });   // appena il bambino risponde la lettura si ferma: riparte dal punto nuovo
   Games.setBoom(() => { Sfx.no(); cheerAfterErrors(); });
   Games.setAvatar(() => charSvg(profile, "happy"));
   Games.setSpeak(card => Voice.speak(fin(card.mq ? mqSegs(card.mq) : card.sort ? sortSegs(card) : card.words ? oddSegs(card) : vfSegs(card)), msg => toast(msg, 6000)), () => !!(profile && profile.autoRead), () => Voice.canSpeak() && !!(profile && profile.autoRead));
