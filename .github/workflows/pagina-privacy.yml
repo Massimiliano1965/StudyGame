@@ -1,11 +1,11 @@
-name: Pagina Privacy (GitHub Pages)
+name: Versione web + Privacy (GitHub Pages)
 
-# Pubblica www/privacy.html su una pagina web pubblica: serve l'indirizzo per il Play Store.
+# Pubblica la versione web (iPhone, PC, Android) e la Privacy su GitHub Pages: indirizzo https://massimiliano1965.github.io/StudyGame/
 # Prima volta: Settings > Pages > Source = "GitHub Actions". Poi parte da sola quando cambia privacy.html.
 on:
   push:
     branches: [main]
-    paths: ['www/privacy.html', '.github/workflows/pagina-privacy.yml']
+    paths: ['www/**', 'web/**', '.github/workflows/pagina-privacy.yml']
   workflow_dispatch:
 
 permissions:
@@ -25,7 +25,13 @@ jobs:
       url: ${{ steps.dep.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - run: mkdir site && cp www/privacy.html site/index.html && cp www/privacy.html site/privacy.html
+      - name: Prepara la versione web (senza Cordova, con avviso blocco schermo)
+        run: |
+          cp -r www site
+          cp web/webnote.js site/js/webnote.js
+          sed -i '/src="cordova.js"/d' site/index.html
+          sed -i 's|  <script src="js/config.js"></script>|  <script src="js/webnote.js"></script>\n  <script src="js/config.js"></script>|' site/index.html
+          grep -q webnote.js site/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
