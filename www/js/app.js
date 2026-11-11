@@ -464,7 +464,7 @@
       </div>
       ${dailyHtml()}
       <div class="lvl-box lvl${rel}"><button class="icon-btn" data-act="lvl-down" aria-label="Esercizi più facili" ${pc <= 0 ? "disabled" : ""}>◀</button>
-        <div class="lvl-mid"><small>Esercizi di</small><b>${esc(classLabel(pc))}</b><span class="lvl-tag">${esc(tag)}</span></div>
+        <div class="lvl-mid" data-act="lvl-pick" role="button" tabindex="0" aria-label="Scegli la classe degli esercizi"><small>Esercizi di ▾</small><b>${esc(classLabel(pc))}</b><span class="lvl-tag">${esc(tag)}</span></div>
         <button class="icon-btn" data-act="lvl-up" aria-label="Esercizi più difficili" ${pc >= 7 ? "disabled" : ""}>▶</button></div>
       ${cdBannerHtml()}
       <div class="sel-head"><h2>Scegli le sfide</h2>
@@ -1706,6 +1706,13 @@
       Sfx.tap(); renderHome();
     },
     surprise: () => startGame([pick(subjectsForClass(playClass()).filter(s => isReady(s.id))).id]),
+    "lvl-pick": () => {
+      const cur = playClass(), own = profile.classId;
+      openModal(`<h2>Scegli la classe</h2><p class="center muted">Puoi ripassare le classi passate o provare quelle future quando vuoi.</p>
+        <div class="lvl-list">${CONFIG.CLASSES.map(c => `<button class="btn ${c.id === cur ? "flash" : "alt"}" data-act="lvl-set" data-id="${c.id}">${esc(c.label)}${c.id === own ? " ⭐ la tua" : ""}</button>`).join("")}</div>
+        <button class="btn ghost" data-act="close">Chiudi</button>`);
+    },
+    "lvl-set": el => { viewClass = +el.dataset.id; selected = subsNow(); Sfx.tap(); closeModal(); renderHome(); },
     "lvl-down": () => { viewClass = Math.max(0, playClass() - 1); selected = subsNow(); Sfx.tap(); renderHome(); },
     "lvl-up": () => { viewClass = Math.min(7, playClass() + 1); selected = subsNow(); Sfx.tap(); renderHome(); },
     play: () => startGame(selected),
