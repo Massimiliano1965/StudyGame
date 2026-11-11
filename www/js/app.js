@@ -246,7 +246,7 @@
       canNext = d.classId != null;
       const grp = (title, from, to) => `<div class="group-title">${title}</div><div class="grid2 cls-grid">${CONFIG.CLASSES.slice(from, to).map(c =>
         `<button class="choice ${d.classId === c.id ? "sel" : ""}" data-act="class" data-id="${c.id}"><span class="big-num">${c.short}</span><span>${c.level === "Medie" ? "media" : "elementare"}</span></button>`).join("")}</div>`;
-      body = `<div class="center"><h1>Che classe fai?</h1><p class="muted" style="margin-top:6px">Così ti preparo le sfide giuste.${wiz.editing ? "" : " Attenzione: dopo, la classe si cambia solo con il PIN dei genitori."}</p></div>
+      body = `<div class="center"><h1>Che classe fai?</h1><p class="muted" style="margin-top:6px">Così ti preparo le sfide giuste.${(wiz.editing || !window.cordova) ? "" : " Attenzione: dopo, la classe si cambia solo con il PIN dei genitori."}</p></div>
         ${!wiz.editing && bandOf() ? grp(bandOf().from < 5 ? "Elementari" : "Medie", bandOf().from, bandOf().to) + `<button class="btn ghost small" data-act="band-all">Le altre classi</button>`
           : grp("Elementari", 0, 5) + grp("Medie", 5, 8)}`;
     } else if (s === 2) {
@@ -357,7 +357,7 @@
     selected = subsNow();
     showHome();
     // installazione nuova: i genitori scelgono subito il PIN
-    if (firstTime && !presetPin() && !profile.pin) setTimeout(openParentSetup, 700);
+    if (window.cordova && firstTime && !presetPin() && !profile.pin) setTimeout(openParentSetup, 700);
   }
 
   // ====================================================================
@@ -1486,6 +1486,7 @@
       ${btns}`);
   }
   function openParentSetup() {
+    if (!window.cordova) { if (!profile || profile.setup) startChildSetup(); return; }   // versione web: i genitori non hanno niente da impostare (niente PIN né blocco)
     const setup = setupOn();
     if (setup) { openTips(true); return; }
     openModal(`<h2>👨‍👩‍👧 Chiedi ai tuoi genitori!</h2>
