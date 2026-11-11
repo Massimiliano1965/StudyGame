@@ -1,13 +1,3 @@
-// Solo versione web: se il browser ingrandisce la pagina (zoom o caratteri grandi del telefono) lo schermo diventa
-// più stretto di quello per cui l'app è disegnata e i pulsanti in alto si accavallano. Si disegna sempre a 360 di
-// larghezza e il browser la adatta allo schermo: l'aspetto resta uguale a quello dell'app.
-(function () {
-  if (window.cordova) return;
-  var m = document.querySelector('meta[name="viewport"]');
-  var w = Math.min(window.innerWidth || 360, (window.screen && screen.width) || 360);
-  if (m && w < 360) m.setAttribute("content", "width=360, viewport-fit=cover");
-})();
-
 // Solo versione web: avviso sull'app scaricabile con il blocco schermo (nell'app Android non compare)
 (function () {
   if (window.cordova) return;
