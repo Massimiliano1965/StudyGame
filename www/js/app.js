@@ -1473,12 +1473,14 @@
   // ---------- configurazione dei genitori: il PIN (impostazione da adulti) ----------
   // «1 minuto per vostro figlio»: tempo deciso dai genitori, pausa occhi, responsabilità. Alla configurazione e poi a ogni avvio, finché i genitori (col PIN) dicono di non mostrarla più.
   function openTips(setup, fromSettings) {
-    const btns = setup ? `<p class="center" style="margin:8px 0">Adesso scegliete il <b>PIN dei genitori</b>: poi si crea il profilo del bambino.</p><button class="btn big flash" data-act="parent-go">Avanti ▶</button>`
+    const btns = setup && !window.cordova ? `<p class="center" style="margin:8px 0">Adesso si crea il profilo del bambino.</p><button class="btn big flash" data-act="child-go">Avanti ▶</button>`
+      : setup ? `<p class="center" style="margin:8px 0">Adesso scegliete il <b>PIN dei genitori</b>: poi si crea il profilo del bambino.</p><button class="btn big flash" data-act="parent-go">Avanti ▶</button>`
       : `<button class="btn big flash" data-act="close">Ho capito</button>` +
         (profile && profile.tipsOff ? (fromSettings ? `<button class="btn ghost" data-act="tips-on">Rimostra all'avvio</button>` : "") : `<button class="btn ghost" data-act="tips-hide">Non mostrare più</button>`);
     openModal(`<h2>👨‍👩‍👧 Per i genitori: 1 minuto per vostro figlio</h2>
-      <p class="center muted" style="font-size:15px;margin:0 0 8px">${setup ? "La configurazione può sembrare noiosa, ma vale la pena: queste tre cose fanno la differenza." : "Un promemoria: bastano pochi secondi per i vostri figli."}</p>
+      <p class="center muted" style="font-size:15px;margin:0 0 8px">${setup ? "La configurazione può sembrare noiosa, ma vale la pena: queste cose fanno la differenza." : "Un promemoria: bastano pochi secondi per i vostri figli."}</p>
       <div class="sp-points">
+        ${window.cordova ? "" : `<div class="sp-pt"><span><svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true" style="vertical-align:-0.12em"><rect x="5" y="11" width="14" height="10" rx="2.5" fill="#F2C35A" stroke="#474C70" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="#474C70" stroke-width="2" stroke-linecap="round"/></svg></span><p><b>Il blocco del telefono è solo su Android.</b> Qui sul web i minuti si contano, ma non sbloccano altre app: il blocco c'è solo nell'app Android (non ancora per iPhone).</p></div>`}
         <div class="sp-pt"><span>⏱️</span><p><b>Il tempo lo decidete voi.</b> Scegliete quanti minuti di telefono si possono guadagnare e il massimo al giorno. Il bambino li conquista studiando.</p></div>
         <div class="sp-pt"><span>👀</span><p><b>Gli occhi si riposano.</b> Ogni ${brk().eyeMin} minuti di gioco c'è una pausa di ${fmtBrkSec(brk().eyeSec)}, e ogni ${brk().longMin} minuti una pausa lunga di ${fmtBrkSec(brk().longSec)} per muoversi e bere. Voi potete cambiare i tempi.</p></div>
         <div class="sp-pt"><span>🌱</span><p><b>Impara a gestirsi.</b> Vede i suoi minuti, sceglie come usarli e capisce che il tempo è una risorsa: è il primo passo della responsabilità.</p></div>
@@ -1486,7 +1488,7 @@
       ${btns}`);
   }
   function openParentSetup() {
-    if (!window.cordova) { if (!profile || profile.setup) startChildSetup(); return; }   // versione web: i genitori non hanno niente da impostare (niente PIN né blocco)
+    if (!window.cordova) { if (!profile || profile.setup) openTips(true); return; }   // versione web: presentazione per i genitori, ma niente PIN né blocco
     const setup = setupOn();
     if (setup) { openTips(true); return; }
     openModal(`<h2>👨‍👩‍👧 Chiedi ai tuoi genitori!</h2>
@@ -1802,6 +1804,7 @@
       if (!setupOn()) renderHome();
     },
     "info-setup-ok": () => openParentSetup(),
+    "child-go": () => startChildSetup(),
     "tips": () => openTips(false, true),
     "tips-hide": () => askPin("Non mostrare più", () => openModal(`<h2>Sei sicuro?</h2><p class="center">Questo promemoria non comparirà più all'avvio. Potrete rivederlo da Impostazioni → «Consigli per i genitori».</p>
       <div class="btn-row"><button class="btn alt" data-act="close">No, lascialo</button><button class="btn" data-act="tips-hide-yes">Sì, non mostrare più</button></div>`)),
